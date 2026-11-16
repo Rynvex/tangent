@@ -1,0 +1,262 @@
+{
+ "name": "thesis-method",
+ "title": "Methods chapter of the thesis",
+ "main": [
+  {
+   "user": "How should I structure the methods chapter?",
+   "assistant": "If we look at the methods chapter again, ethics approval numbers go in the first section. From what you described, the instrument belongs in an appendix with a summary in the chapter. Many people forget that interview protocols go in an appendix. If we look at the methods chapter again, a power analysis justifies the sample size. A practical note: examiners read the methods for replicability. If we look at the methods chapter again, the pilot changed two survey items."
+  },
+  {
+   "user": "Do I justify the sample size?",
+   "assistant": "One thing worth keeping in mind: ethics approval numbers go in the first section. If we look at the methods chapter again, interview protocols go in an appendix. A practical note: interview protocols go in an appendix. One thing worth keeping in mind: the instrument belongs in an appendix with a summary in the chapter. If we look at the methods chapter again, the instrument belongs in an appendix with a summary in the chapter. Many people forget that multiple imputation is defensible for under 10% missingness."
+  },
+  {
+   "user": "How much detail on the survey instrument?",
+   "assistant": "Many people forget that examiners read the methods for replicability. One thing worth keeping in mind: a power analysis justifies the sample size. From what you described, examiners read the methods for replicability. From what you described, examiners read the methods for replicability. If we look at the methods chapter again, interview protocols go in an appendix. Many people forget that multiple imputation is defensible for under 10% missingness."
+  },
+  {
+   "user": "Where do the ethics notes go?",
+   "assistant": "A practical note: multiple imputation is defensible for under 10% missingness. One thing worth keeping in mind: interview protocols go in an appendix. On the methods chapter, pre-registration strengthens confirmatory claims. One thing worth keeping in mind: examiners read the methods for replicability. One thing worth keeping in mind: interview protocols go in an appendix. Many people forget that the pilot changed two survey items."
+  },
+  {
+   "user": "How do I describe the pilot study?",
+   "assistant": "Many people forget that multiple imputation is defensible for under 10% missingness. A practical note: the pilot changed two survey items. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, pre-registration strengthens confirmatory claims. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. From what you described, ethics approval numbers go in the first section."
+  },
+  {
+   "user": "Should the analysis plan be pre-registered?",
+   "assistant": "From what you described, examiners read the methods for replicability. Many people forget that the instrument belongs in an appendix with a summary in the chapter. If we look at the methods chapter again, pre-registration strengthens confirmatory claims. Many people forget that a power analysis justifies the sample size. Many people forget that ethics approval numbers go in the first section. From what you described, the pilot changed two survey items."
+  },
+  {
+   "user": "How do I handle missing data?",
+   "assistant": "On the methods chapter, a power analysis justifies the sample size. Many people forget that interview protocols go in an appendix. On the methods chapter, interview protocols go in an appendix. On the methods chapter, pre-registration strengthens confirmatory claims. One thing worth keeping in mind: multiple imputation is defensible for under 10% missingness. From what you described, examiners read the methods for replicability."
+  },
+  {
+   "user": "Do I report the interview protocol in full?",
+   "assistant": "A practical note: multiple imputation is defensible for under 10% missingness. On the methods chapter, a power analysis justifies the sample size. A practical note: examiners read the methods for replicability. If we look at the methods chapter again, pre-registration strengthens confirmatory claims. If we look at the methods chapter again, the pilot changed two survey items. On the methods chapter, ethics approval numbers go in the first section."
+  },
+  {
+   "user": "How should I structure the methods chapter? (follow-up 1)",
+   "assistant": "On the methods chapter, the pilot changed two survey items. On the methods chapter, a power analysis justifies the sample size. One thing worth keeping in mind: examiners read the methods for replicability. From what you described, multiple imputation is defensible for under 10% missingness. One thing worth keeping in mind: the pilot changed two survey items. From what you described, examiners read the methods for replicability."
+  },
+  {
+   "user": "Do I justify the sample size? (follow-up 1)",
+   "assistant": "From what you described, pre-registration strengthens confirmatory claims. A practical note: the instrument belongs in an appendix with a summary in the chapter. A practical note: multiple imputation is defensible for under 10% missingness. Many people forget that multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, a power analysis justifies the sample size. A practical note: the pilot changed two survey items."
+  },
+  {
+   "user": "How much detail on the survey instrument? (follow-up 1)",
+   "assistant": "From what you described, ethics approval numbers go in the first section. From what you described, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, the pilot changed two survey items. On the methods chapter, pre-registration strengthens confirmatory claims. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. On the methods chapter, pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "Where do the ethics notes go? (follow-up 1)",
+   "assistant": "If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter. A practical note: pre-registration strengthens confirmatory claims. Many people forget that pre-registration strengthens confirmatory claims. If we look at the methods chapter again, pre-registration strengthens confirmatory claims. Many people forget that the pilot changed two survey items."
+  },
+  {
+   "user": "How do I describe the pilot study? (follow-up 1)",
+   "assistant": "On the methods chapter, interview protocols go in an appendix. Many people forget that examiners read the methods for replicability. From what you described, examiners read the methods for replicability. Many people forget that the pilot changed two survey items. From what you described, interview protocols go in an appendix. One thing worth keeping in mind: pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "Should the analysis plan be pre-registered? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: pre-registration strengthens confirmatory claims. From what you described, pre-registration strengthens confirmatory claims. From what you described, the pilot changed two survey items. On the methods chapter, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, examiners read the methods for replicability. From what you described, the instrument belongs in an appendix with a summary in the chapter."
+  },
+  {
+   "user": "How do I handle missing data? (follow-up 1)",
+   "assistant": "Many people forget that ethics approval numbers go in the first section. One thing worth keeping in mind: the pilot changed two survey items. One thing worth keeping in mind: pre-registration strengthens confirmatory claims. Many people forget that multiple imputation is defensible for under 10% missingness. On the methods chapter, a power analysis justifies the sample size. From what you described, pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "Do I report the interview protocol in full? (follow-up 1)",
+   "assistant": "A practical note: ethics approval numbers go in the first section. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter. Many people forget that pre-registration strengthens confirmatory claims. If we look at the methods chapter again, ethics approval numbers go in the first section. From what you described, interview protocols go in an appendix. On the methods chapter, ethics approval numbers go in the first section."
+  },
+  {
+   "user": "How should I structure the methods chapter? (follow-up 2)",
+   "assistant": "If we look at the methods chapter again, examiners read the methods for replicability. From what you described, ethics approval numbers go in the first section. From what you described, the instrument belongs in an appendix with a summary in the chapter. Many people forget that pre-registration strengthens confirmatory claims. If we look at the methods chapter again, a power analysis justifies the sample size. If we look at the methods chapter again, pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "Do I justify the sample size? (follow-up 2)",
+   "assistant": "A practical note: the instrument belongs in an appendix with a summary in the chapter. If we look at the methods chapter again, the pilot changed two survey items. A practical note: the pilot changed two survey items. Many people forget that pre-registration strengthens confirmatory claims. From what you described, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness."
+  },
+  {
+   "user": "How much detail on the survey instrument? (follow-up 2)",
+   "assistant": "On the methods chapter, multiple imputation is defensible for under 10% missingness. One thing worth keeping in mind: multiple imputation is defensible for under 10% missingness. On the methods chapter, ethics approval numbers go in the first section. If we look at the methods chapter again, interview protocols go in an appendix. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. On the methods chapter, ethics approval numbers go in the first section."
+  },
+  {
+   "user": "Where do the ethics notes go? (follow-up 2)",
+   "assistant": "Many people forget that interview protocols go in an appendix. If we look at the methods chapter again, the pilot changed two survey items. One thing worth keeping in mind: pre-registration strengthens confirmatory claims. If we look at the methods chapter again, a power analysis justifies the sample size. On the methods chapter, the pilot changed two survey items. On the methods chapter, ethics approval numbers go in the first section."
+  },
+  {
+   "user": "How do I describe the pilot study? (follow-up 2)",
+   "assistant": "Many people forget that examiners read the methods for replicability. A practical note: ethics approval numbers go in the first section. On the methods chapter, examiners read the methods for replicability. Many people forget that interview protocols go in an appendix. One thing worth keeping in mind: a power analysis justifies the sample size. One thing worth keeping in mind: the pilot changed two survey items."
+  },
+  {
+   "user": "Should the analysis plan be pre-registered? (follow-up 2)",
+   "assistant": "If we look at the methods chapter again, examiners read the methods for replicability. On the methods chapter, multiple imputation is defensible for under 10% missingness. From what you described, a power analysis justifies the sample size. From what you described, the instrument belongs in an appendix with a summary in the chapter. On the methods chapter, interview protocols go in an appendix. One thing worth keeping in mind: pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "How do I handle missing data? (follow-up 2)",
+   "assistant": "On the methods chapter, ethics approval numbers go in the first section. One thing worth keeping in mind: a power analysis justifies the sample size. From what you described, ethics approval numbers go in the first section. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter. Many people forget that interview protocols go in an appendix. On the methods chapter, multiple imputation is defensible for under 10% missingness."
+  },
+  {
+   "user": "Do I report the interview protocol in full? (follow-up 2)",
+   "assistant": "One thing worth keeping in mind: the pilot changed two survey items. If we look at the methods chapter again, the pilot changed two survey items. On the methods chapter, multiple imputation is defensible for under 10% missingness. From what you described, interview protocols go in an appendix. On the methods chapter, examiners read the methods for replicability. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter."
+  },
+  {
+   "user": "How should I structure the methods chapter? (follow-up 3)",
+   "assistant": "On the methods chapter, a power analysis justifies the sample size. A practical note: a power analysis justifies the sample size. Many people forget that examiners read the methods for replicability. If we look at the methods chapter again, a power analysis justifies the sample size. From what you described, interview protocols go in an appendix. From what you described, the instrument belongs in an appendix with a summary in the chapter."
+  },
+  {
+   "user": "Do I justify the sample size? (follow-up 3)",
+   "assistant": "From what you described, a power analysis justifies the sample size. Many people forget that multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. From what you described, the pilot changed two survey items. One thing worth keeping in mind: the pilot changed two survey items. A practical note: pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "How much detail on the survey instrument? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: a power analysis justifies the sample size. Many people forget that examiners read the methods for replicability. On the methods chapter, multiple imputation is defensible for under 10% missingness. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter. A practical note: pre-registration strengthens confirmatory claims. Many people forget that multiple imputation is defensible for under 10% missingness."
+  },
+  {
+   "user": "Where do the ethics notes go? (follow-up 3)",
+   "assistant": "If we look at the methods chapter again, examiners read the methods for replicability. On the methods chapter, multiple imputation is defensible for under 10% missingness. Many people forget that pre-registration strengthens confirmatory claims. Many people forget that interview protocols go in an appendix. A practical note: pre-registration strengthens confirmatory claims. A practical note: multiple imputation is defensible for under 10% missingness."
+  },
+  {
+   "user": "How do I describe the pilot study? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: examiners read the methods for replicability. If we look at the methods chapter again, ethics approval numbers go in the first section. Many people forget that the pilot changed two survey items. A practical note: a power analysis justifies the sample size. A practical note: ethics approval numbers go in the first section. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter."
+  },
+  {
+   "user": "Should the analysis plan be pre-registered? (follow-up 3)",
+   "assistant": "From what you described, pre-registration strengthens confirmatory claims. On the methods chapter, the pilot changed two survey items. Many people forget that interview protocols go in an appendix. Many people forget that a power analysis justifies the sample size. Many people forget that multiple imputation is defensible for under 10% missingness. Many people forget that a power analysis justifies the sample size."
+  },
+  {
+   "user": "How do I handle missing data? (follow-up 3)",
+   "assistant": "If we look at the methods chapter again, pre-registration strengthens confirmatory claims. If we look at the methods chapter again, a power analysis justifies the sample size. A practical note: examiners read the methods for replicability. One thing worth keeping in mind: the instrument belongs in an appendix with a summary in the chapter. On the methods chapter, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, a power analysis justifies the sample size."
+  },
+  {
+   "user": "Do I report the interview protocol in full? (follow-up 3)",
+   "assistant": "Many people forget that a power analysis justifies the sample size. One thing worth keeping in mind: multiple imputation is defensible for under 10% missingness. From what you described, examiners read the methods for replicability. On the methods chapter, a power analysis justifies the sample size. Many people forget that a power analysis justifies the sample size. Many people forget that interview protocols go in an appendix."
+  },
+  {
+   "user": "How should I structure the methods chapter? (follow-up 4)",
+   "assistant": "If we look at the methods chapter again, the pilot changed two survey items. On the methods chapter, the pilot changed two survey items. If we look at the methods chapter again, examiners read the methods for replicability. On the methods chapter, ethics approval numbers go in the first section. If we look at the methods chapter again, a power analysis justifies the sample size. If we look at the methods chapter again, examiners read the methods for replicability."
+  },
+  {
+   "user": "Do I justify the sample size? (follow-up 4)",
+   "assistant": "If we look at the methods chapter again, pre-registration strengthens confirmatory claims. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter. One thing worth keeping in mind: ethics approval numbers go in the first section. A practical note: ethics approval numbers go in the first section. From what you described, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, pre-registration strengthens confirmatory claims."
+  },
+  {
+   "user": "How much detail on the survey instrument? (follow-up 4)",
+   "assistant": "From what you described, multiple imputation is defensible for under 10% missingness. On the methods chapter, multiple imputation is defensible for under 10% missingness. If we look at the methods chapter again, multiple imputation is defensible for under 10% missingness. A practical note: ethics approval numbers go in the first section. A practical note: the instrument belongs in an appendix with a summary in the chapter. One thing worth keeping in mind: interview protocols go in an appendix."
+  },
+  {
+   "user": "Where do the ethics notes go? (follow-up 4)",
+   "assistant": "One thing worth keeping in mind: multiple imputation is defensible for under 10% missingness. On the methods chapter, the instrument belongs in an appendix with a summary in the chapter. Many people forget that interview protocols go in an appendix. Many people forget that interview protocols go in an appendix. If we look at the methods chapter again, interview protocols go in an appendix. One thing worth keeping in mind: the instrument belongs in an appendix with a summary in the chapter."
+  }
+ ],
+ "pins": [
+  2,
+  17
+ ],
+ "branches": [
+  {
+   "name": "sample",
+   "parent": "main",
+   "at": 3,
+   "purpose": "Sample size justification",
+   "end": "merge",
+   "card": {
+    "question": "Is n = 180 enough?",
+    "conclusion": "Yes: a power analysis for a medium effect at 0.8 power needs 159"
+   },
+   "leaf": {
+    "kind": "answer",
+    "line": "n = 180 is enough; the power analysis needs 159"
+   },
+   "exchanges": [
+    {
+     "user": "What effect size do I assume?",
+     "assistant": "One thing worth keeping in mind: 0.8 power is the convention. If we look at Sample size justification again, medium effects are typical in this field. One thing worth keeping in mind: 0.8 power is the convention. Many people forget that 0.8 power is the convention. If we look at Sample size justification again, 0.8 power is the convention. One thing worth keeping in mind: 0.8 power is the convention."
+    },
+    {
+     "user": "What power?",
+     "assistant": "On Sample size justification, 0.8 power is the convention. A practical note: 0.8 power is the convention. One thing worth keeping in mind: 0.8 power is the convention. If we look at Sample size justification again, medium effects are typical in this field. One thing worth keeping in mind: 0.8 power is the convention. A practical note: 0.8 power is the convention."
+    },
+    {
+     "user": "What effect size do I assume? (follow-up 1)",
+     "assistant": "A practical note: medium effects are typical in this field. Many people forget that 0.8 power is the convention. A practical note: medium effects are typical in this field. A practical note: medium effects are typical in this field. A practical note: medium effects are typical in this field. A practical note: medium effects are typical in this field."
+    },
+    {
+     "user": "What power? (follow-up 1)",
+     "assistant": "One thing worth keeping in mind: medium effects are typical in this field. One thing worth keeping in mind: medium effects are typical in this field. One thing worth keeping in mind: 0.8 power is the convention. From what you described, medium effects are typical in this field. One thing worth keeping in mind: medium effects are typical in this field. From what you described, medium effects are typical in this field."
+    }
+   ]
+  },
+  {
+   "name": "mixed",
+   "parent": "main",
+   "at": 12,
+   "purpose": "Mixed methods framing",
+   "end": "discard",
+   "leaf": {
+    "kind": "dead_end",
+    "line": "Not framing it as mixed methods: the interviews only illustrate"
+   },
+   "exchanges": [
+    {
+     "user": "Is this mixed methods?",
+     "assistant": "On Mixed methods framing, mixed methods needs an integration step. One thing worth keeping in mind: mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. From what you described, mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step."
+    },
+    {
+     "user": "What would that require?",
+     "assistant": "A practical note: mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. From what you described, mixed methods needs an integration step. A practical note: mixed methods needs an integration step. A practical note: mixed methods needs an integration step. One thing worth keeping in mind: mixed methods needs an integration step."
+    },
+    {
+     "user": "Is this mixed methods? (follow-up 1)",
+     "assistant": "A practical note: mixed methods needs an integration step. If we look at Mixed methods framing again, mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. If we look at Mixed methods framing again, mixed methods needs an integration step."
+    },
+    {
+     "user": "What would that require? (follow-up 1)",
+     "assistant": "On Mixed methods framing, mixed methods needs an integration step. Many people forget that mixed methods needs an integration step. A practical note: mixed methods needs an integration step. Many people forget that mixed methods needs an integration step. On Mixed methods framing, mixed methods needs an integration step. Many people forget that mixed methods needs an integration step."
+    }
+   ]
+  },
+  {
+   "name": "missing",
+   "parent": "main",
+   "at": 20,
+   "purpose": "Missing data",
+   "end": "merge",
+   "card": {
+    "question": "How do I handle missing responses?",
+    "conclusion": "Multiple imputation, with a complete-case analysis as a robustness check"
+   },
+   "leaf": {
+    "kind": "decision",
+    "line": "Multiple imputation, complete-case analysis as a robustness check"
+   },
+   "exchanges": [
+    {
+     "user": "How much is missing?",
+     "assistant": "Many people forget that 6% of responses have a missing item. If we look at Missing data again, multiple imputation is standard here. On Missing data, multiple imputation is standard here. Many people forget that multiple imputation is standard here. Many people forget that 6% of responses have a missing item. One thing worth keeping in mind: 6% of responses have a missing item."
+    },
+    {
+     "user": "Which method?",
+     "assistant": "Many people forget that multiple imputation is standard here. On Missing data, multiple imputation is standard here. If we look at Missing data again, 6% of responses have a missing item. From what you described, 6% of responses have a missing item. If we look at Missing data again, multiple imputation is standard here. Many people forget that multiple imputation is standard here."
+    },
+    {
+     "user": "How much is missing? (follow-up 1)",
+     "assistant": "A practical note: 6% of responses have a missing item. From what you described, multiple imputation is standard here. Many people forget that 6% of responses have a missing item. On Missing data, 6% of responses have a missing item. If we look at Missing data again, 6% of responses have a missing item. From what you described, multiple imputation is standard here."
+    },
+    {
+     "user": "Which method? (follow-up 1)",
+     "assistant": "From what you described, 6% of responses have a missing item. A practical note: multiple imputation is standard here. One thing worth keeping in mind: 6% of responses have a missing item. A practical note: 6% of responses have a missing item. One thing worth keeping in mind: multiple imputation is standard here. From what you described, multiple imputation is standard here."
+    }
+   ]
+  }
+ ],
+ "asks": [
+  {
+   "line": "main",
+   "question": "Draft the opening paragraph of the analysis section.",
+   "expect": [
+    "n = 180 with a power analysis needing 159",
+    "Multiple imputation with a complete-case robustness check",
+    "Not mixed methods"
+   ]
+  }
+ ]
+}

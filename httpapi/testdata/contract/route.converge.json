@@ -1,0 +1,45 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/converge",
+  "request": {
+    "criteria": [
+      "Safety",
+      "Speed"
+    ],
+    "lineIds": [
+      "00000000-0000-4000-8000-000000000002",
+      "00000000-0000-4000-8000-000000000003"
+    ]
+  },
+  "response": {
+    "comparison": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "criteria": [
+        "Safety",
+        "Speed"
+      ],
+      "decidedAt": null,
+      "decidedBy": "",
+      "decidedLineId": "",
+      "id": "00000000-0000-4000-8000-000000000004",
+      "lineIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003"
+      ],
+      "matrix": null,
+      "parentLineId": "00000000-0000-4000-8000-000000000001",
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "status": "drafting",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "job": {
+      "jobId": "00000000-0000-4000-8000-000000000005",
+      "kind": "converge",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "model": "fake-1",
+      "provider": "fake"
+    }
+  },
+  "status": 201
+}

@@ -1,0 +1,105 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/preview",
+  "request": {
+    "content": "What about food?"
+  },
+  "response": {
+    "blocks": [
+      {
+        "content": "You are the agent in an interactive conversation with an operator. Rules:\n- Be concise and concrete; answer the operator's question first.\n- Only when a clearly separate question would pull this conversation off its topic, you may end the reply with at most 3 lines like [BRANCH-SUGGEST]{\"purpose\":\"one short sentence\",\"kind\":\"investigate\"} (kind is investigate or alternative; an optional excerpt quotes the part of your reply it comes from). This only offers a side line to the operator, it opens nothing; do not suggest on every reply.",
+        "key": "rules",
+        "tokens": 135
+      },
+      {
+        "content": "Reply lines (removed before the operator sees the reply):\n- Only when the operator's new message clearly shifts the main conversation to a new sub-topic or stage, end your reply with one line [CHAPTER]{\"title\":\"short stage title (4-15 chars in the operator's language)\"}. Do not output it if the topic continues.",
+        "key": "reply_lines",
+        "tokens": 78
+      },
+      {
+        "content": "When should I go to Kyoto?",
+        "key": "history",
+        "role": "user",
+        "tokens": 7
+      },
+      {
+        "content": "Kyoto in autumn is lovely.",
+        "key": "history",
+        "role": "assistant",
+        "tokens": 7
+      },
+      {
+        "content": "And where should I stay?",
+        "key": "history",
+        "role": "user",
+        "tokens": 6
+      },
+      {
+        "content": "Fake reply to: And where should I stay?",
+        "key": "history",
+        "role": "assistant",
+        "tokens": 10
+      },
+      {
+        "content": "What about food?",
+        "key": "user_message",
+        "role": "user",
+        "tokens": 4
+      }
+    ],
+    "budget": {
+      "history": 24000,
+      "shares": [
+        {
+          "owner": "history",
+          "tokens": 30
+        }
+      ],
+      "total": 40000,
+      "used": 30
+    },
+    "estimatedCostUsd": 0.000247,
+    "model": "fake-1",
+    "prompt": {
+      "earlier": "",
+      "history": [
+        {
+          "content": "When should I go to Kyoto?",
+          "role": "user"
+        },
+        {
+          "content": "Kyoto in autumn is lovely.",
+          "role": "assistant"
+        },
+        {
+          "content": "And where should I stay?",
+          "role": "user"
+        },
+        {
+          "content": "Fake reply to: And where should I stay?",
+          "role": "assistant"
+        }
+      ],
+      "notesChanged": false,
+      "sections": [
+        {
+          "body": "You are the agent in an interactive conversation with an operator. Rules:\n- Be concise and concrete; answer the operator's question first.\n- Only when a clearly separate question would pull this conversation off its topic, you may end the reply with at most 3 lines like [BRANCH-SUGGEST]{\"purpose\":\"one short sentence\",\"kind\":\"investigate\"} (kind is investigate or alternative; an optional excerpt quotes the part of your reply it comes from). This only offers a side line to the operator, it opens nothing; do not suggest on every reply.\n",
+          "key": "rules",
+          "title": ""
+        }
+      ],
+      "summary": null,
+      "trailing": [
+        {
+          "body": "Reply lines (removed before the operator sees the reply):\n- Only when the operator's new message clearly shifts the main conversation to a new sub-topic or stage, end your reply with one line [CHAPTER]{\"title\":\"short stage title (4-15 chars in the operator's language)\"}. Do not output it if the topic continues.\n",
+          "key": "reply_lines",
+          "title": ""
+        }
+      ],
+      "userMessage": "What about food?"
+    },
+    "provider": "fake",
+    "totalTokens": 247
+  },
+  "status": 200
+}

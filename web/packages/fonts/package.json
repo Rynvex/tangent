@@ -1,0 +1,35 @@
+{
+  "name": "@tangent/fonts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Optional self-hosted fonts for Tangent (SIL OFL 1.1), split by script so pages load only what they show.",
+  "sideEffects": ["*.css"],
+  "exports": {
+    "./latin.css": "./latin.css",
+    "./tc.css": "./tc.css",
+    "./serif.css": "./serif.css",
+    "./host.css": "./host.css",
+    "./NOTICES": "./NOTICES"
+  },
+  "scripts": {
+    "fonts": "node scripts/build.mjs",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/geist-mono": "catalog:",
+    "@fontsource/geist-sans": "catalog:",
+    "@fontsource/noto-sans-tc": "catalog:",
+    "@fontsource/noto-serif-tc": "catalog:",
+    "@fontsource/source-serif-4": "catalog:",
+    "@ibm/plex-mono": "catalog:",
+    "@ibm/plex-sans": "catalog:",
+    "@ibm/plex-sans-tc": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

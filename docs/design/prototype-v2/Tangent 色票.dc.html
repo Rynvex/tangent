@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>body { margin: 0; }</style>
+</helmet>
+<div data-theme="light" style="min-height:100vh;background:var(--tg-background);color:var(--tg-foreground);font-family:var(--tg-font-sans);font-size:var(--tg-text-base)">
+<div style="max-width:1080px;margin:0 auto;padding:40px 24px 80px;display:flex;flex-direction:column;gap:20px">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">Tangent・色票 v1</span>
+    <h1 style="margin:0;font-size:var(--tg-text-xl);font-weight:600;color:var(--tg-foreground-strong)">--tg-* token × 三套主題</h1>
+    <p style="margin:0;color:var(--tg-muted);max-width:680px;text-wrap:pretty">對比度以各主題的 background 為底計算；宿主欄是宿主深色主題（#090a0f）。--tg-primary 在宿主裡只當填色（按鈕、選取線、圖示 ≥ 3:1），文字與連結改用 --tg-primary-text。文字類需 ≥ 4.5，圖形與狀態色需 ≥ 3。標 <b>新</b> 的是這次新增的 token；表面色（surface、border 等）不計對比，只列色值。</p>
+  </header>
+  <sc-for list="{{ groups }}" as="g" hint-placeholder-count="4">
+    <section style="display:flex;flex-direction:column;gap:0;border:1px solid var(--tg-border);border-radius:var(--tg-radius);overflow:hidden;background:var(--tg-surface)">
+      <div style="display:grid;grid-template-columns:minmax(200px,1.3fr) repeat(3,minmax(150px,1fr));gap:12px;padding:10px 14px;background:var(--tg-surface-sunken);font-size:var(--tg-text-xs);color:var(--tg-muted);font-weight:600">
+        <span>{{ g.label }}</span><span>淺色</span><span>深色</span><span>宿主主題</span>
+      </div>
+      <sc-for list="{{ g.rows }}" as="r">
+        <div style="display:grid;grid-template-columns:minmax(200px,1.3fr) repeat(3,minmax(150px,1fr));gap:12px;align-items:center;padding:8px 14px;border-top:1px solid var(--tg-border)">
+          <span style="display:flex;align-items:center;gap:6px;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ r.name }}<sc-if value="{{ r.isNew }}"><span style="font-family:var(--tg-font-sans);color:var(--tg-primary-text);font-weight:600">新</span></sc-if></span>
+          <sc-for list="{{ r.cells }}" as="c">
+            <span style="display:flex;align-items:center;gap:8px;min-width:0">
+              <span style="width:44px;height:28px;flex:none;border-radius:6px;background:{{ c.bg }};border:1px solid rgba(128,128,128,0.25);display:grid;place-items:center;font-size:12px;font-weight:600;color:{{ c.fg }}">{{ c.sample }}</span>
+              <span style="display:flex;flex-direction:column;min-width:0;font-family:var(--tg-font-mono);font-size:11px">
+                <span>{{ c.hex }}</span>
+                <sc-if value="{{ c.hasRatio }}"><span style="color:{{ c.passColor }}">{{ c.ratio }}</span></sc-if>
+              </span>
+            </span>
+          </sc-for>
+        </div>
+      </sc-for>
+    </section>
+  </sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const T = [
+  ['表面與文字', [
+    ['background', '#f7f5f0', '#111214', '#090a0f', 'surface'], ['surface', '#fffdf8', '#17181b', '#12141d', 'surface'], ['surface-raised', '#ffffff', '#1d1f23', '#1a1d2b', 'surface'], ['surface-sunken', '#efece4', '#0c0d0f', '#06070a', 'surface'],
+    ['border', '#e2ddd1', '#2a2c31', 'rgba(255,255,255,0.10)', 'surface'], ['border-strong', '#cfc8b8', '#3a3d44', 'rgba(255,255,255,0.18)', 'ui'], ['accent', '#ece8dd', '#24262b', '#1a1d2b', 'surface'],
+    ['foreground', '#1d1b16', '#e8e6e1', '#e6e8ef', 'text'], ['foreground-strong', '#0d0c09', '#f7f5f0', '#f1f2f6', 'text'], ['muted', '#5c574d', '#a39f96', '#9aa0b4', 'text'], ['subtle', '#706a5e', '#8a867d', '#868ca3', 'text']]],
+  ['主色與語意', [
+    ['primary', '#0f766e', '#2dd4bf', '#5458e8', 'ui'], ['primary-text', '#0f766e', '#2dd4bf', '#a5b4fc', 'text', 1], ['primary-soft', '#d5f0ec', '#123a36', '#1b1d3a', 'surface'], ['ring', '#0d9488', '#5eead4', '#a5b4fc', 'ui'],
+    ['destructive', '#b42318', '#f87171', '#f87171', 'text'], ['destructive-soft', '#fde7e4', '#3a1714', '#2e1a1c', 'surface'], ['warning', '#a15c07', '#fbbf24', '#fbbf24', 'text'], ['warning-soft', '#fbefd9', '#33260d', '#2e2410', 'surface', 1],
+    ['success', '#157347', '#4ade80', '#4ade80', 'text'], ['success-soft', '#dcf1e5', '#12301f', '#122a1d', 'surface', 1], ['highlight', '#fbe7a6', '#4a3b0c', '#3a3212', 'surface', 1],
+    ['suggestion', '#6b4fa0', '#c4b5fd', '#f9a8d4', 'text', 1], ['suggestion-soft', '#efe9f8', '#251f36', '#2c1a2a', 'surface', 1]]],
+  ['支線狀態與結論卡', [
+    ['branch-open', '#0f766e', '#2dd4bf', '#a5b4fc', 'ui'], ['branch-merged', '#4f46e5', '#a5b4fc', '#d8b4fe', 'ui'], ['branch-discarded', '#706a5e', '#8a867d', '#8b91a7', 'ui'], ['branch-promoted', '#b45309', '#fbbf24', '#fbbf24', 'ui'],
+    ['card', '#f1eefb', '#1e1c33', '#1e1838', 'surface'], ['card-border', '#c9c2f2', '#3f3a72', '#3f3470', 'surface'], ['status-thinking', '#0e7490', '#67e8f9', '#67e8f9', 'ui']]],
+  ['收尾類型', [
+    ['leaf-conclusion', '#4f46e5', '#a5b4fc', '#d8b4fe', 'ui', 1], ['leaf-decision', '#157347', '#4ade80', '#4ade80', 'ui', 1], ['leaf-answer', '#0e7490', '#67e8f9', '#67e8f9', 'ui', 1], ['leaf-deadend', '#8a3b2a', '#f0a08c', '#fdba8c', 'ui', 1], ['leaf-pending', '#a15c07', '#fbbf24', '#fbbf24', 'ui', 1]]],
+  ['論證類型（D2）', [
+    ['arg-question', '#0e7490', '#67e8f9', '#67e8f9', 'ui', 1], ['arg-idea', '#6b4fa0', '#c4b5fd', '#f9a8d4', 'ui', 1], ['arg-pro', '#157347', '#4ade80', '#4ade80', 'ui', 1], ['arg-con', '#b42318', '#f87171', '#f87171', 'ui', 1], ['arg-decision', '#0f766e', '#2dd4bf', '#a5b4fc', 'ui', 1]]]
+];
+const hexOf = (h, bg) => { if (!h.startsWith('rgba')) return h; const [r, g, b, a] = h.match(/[\d.]+/g).map(Number); const B = [1, 3, 5].map(i => parseInt(bg.slice(i, i + 2), 16)); return '#' + [r, g, b].map((v, i) => Math.round(v * a + B[i] * (1 - a)).toString(16).padStart(2, '0')).join(''); };
+const lum = h => { const c = [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16) / 255).map(v => v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)); return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]; };
+const cr = (a, b) => { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); };
+const BG = ['#f7f5f0', '#111214', '#090a0f'], FG = ['#1d1b16', '#e8e6e1', '#e6e8ef'];
+class Component extends DCLogic {
+  renderVals() {
+    return { groups: T.map(([label, rows]) => ({ label, rows: rows.map(([name, ...rest]) => {
+      const [l, d, h, kind, isNew] = rest;
+      return { name: '--tg-' + name, isNew: !!isNew, cells: [l, d, h].map((hex, i) => {
+        const r = cr(hexOf(hex, BG[i]), BG[i]), need = kind === 'text' ? 4.5 : 3, has = kind !== 'surface';
+        return { hex, bg: kind === 'surface' ? hex : BG[i], fg: kind === 'surface' ? FG[i] : hex, sample: 'Aa', hasRatio: has, ratio: r.toFixed(2) + ' : 1　' + (r >= need ? (kind === 'text' ? 'AA' : '≥3') : '不足'), passColor: r >= need ? 'var(--tg-muted)' : 'var(--tg-destructive)' };
+      }) };
+    }) })) };
+  }
+}
+</script>
+</body>
+</html>

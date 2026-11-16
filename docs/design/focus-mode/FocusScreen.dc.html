@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&family=Geist:wght@400;500;600&display=swap">
+<style>body { margin: 0; -webkit-font-smoothing: antialiased; }</style>
+</helmet>
+<div ref="{{ rootRef }}" data-theme="{{ theme }}" style="{{ frameStyle }}">
+<sc-if value="{{ live }}" hint-placeholder-val="{{ false }}">
+<sc-if value="{{ full }}" hint-placeholder-val="{{ true }}">
+
+  <div style="position:absolute;left:0;right:0;top:0;height:52px;display:flex;align-items:center;gap:6px;padding:0 10px 0 14px;border-bottom:1px solid var(--tg-border);background:var(--tg-background)">
+    <nav aria-label="路徑" style="flex:1;min-width:0;display:flex;align-items:center;gap:2px">
+      <sc-if value="{{ crumbMain }}"><span style="height:30px;display:inline-flex;align-items:center;gap:6px;padding:0 6px;color:var(--tg-muted);white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/list.svg) center/contain no-repeat"></span>主線</span><span style="color:var(--tg-subtle)">›</span></sc-if>
+      <sc-if value="{{ crumbDots }}"><span style="padding:0 4px;color:var(--tg-muted)">…</span><span style="color:var(--tg-subtle)">›</span></sc-if>
+      <span aria-current="page" style="min-width:0;display:inline-flex;align-items:center;gap:6px;padding:0 6px;font-weight:500;color:var(--tg-foreground-strong)"><span aria-hidden="true" style="width:14px;height:14px;flex:none;background:var(--tg-branch-open);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/search.svg) center/contain no-repeat"></span><span style="overflow:hidden;white-space:nowrap;text-overflow:ellipsis">改用雲端備份（Backblaze B2）還是第二台 NAS</span></span>
+    </nav>
+    <sc-if value="{{ showGoal }}"><span title="目標：決定 NAS 的備份方式" style="width:32px;height:32px;flex:none;display:grid;place-items:center;border:1px dashed var(--tg-border-strong);border-radius:999px;color:var(--tg-muted)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/target.svg) center/contain no-repeat"></span></span></sc-if>
+    <span style="height:28px;flex:none;display:inline-flex;align-items:center;padding:0 9px;border:1px solid var(--tg-border);border-radius:999px;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted);white-space:nowrap">{{ tokenText }}</span>
+    <span role="button" aria-pressed="true" title="離開專注模式（⌘⇧F）" style="height:{{ btnH }}px;flex:none;display:inline-flex;align-items:center;gap:6px;padding:0 {{ focusPad }}px;border-radius:var(--tg-radius-sm);background:var(--tg-primary-soft);color:var(--tg-primary-text);font-size:var(--tg-text-sm);font-weight:500;white-space:nowrap"><span aria-hidden="true" style="width:16px;height:16px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/columns-2.svg) center/contain no-repeat"></span>{{ focusLabel }}</span>
+    <span style="width:{{ btnH }}px;height:{{ btnH }}px;flex:none;display:grid;place-items:center;color:var(--tg-muted)"><span aria-hidden="true" style="width:16px;height:16px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/ellipsis.svg) center/contain no-repeat"></span></span>
+    <sc-if value="{{ split }}"><span style="width:32px;height:32px;flex:none;display:grid;place-items:center;color:var(--tg-muted)"><span aria-hidden="true" style="width:16px;height:16px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/settings.svg) center/contain no-repeat"></span></span></sc-if>
+  </div>
+
+  <sc-if value="{{ tabs }}">
+    <div style="position:absolute;left:0;right:0;top:52px;height:52px;display:flex;align-items:center;padding:4px 10px;border-bottom:1px solid var(--tg-border)">
+      <div role="tablist" aria-label="專注模式" style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius)">
+        <sc-for list="{{ tabItems }}" as="t" hint-placeholder-count="2">
+          <span role="tab" aria-selected="{{ t.on }}" style="height:40px;display:flex;align-items:center;justify-content:center;gap:6px;border-radius:var(--tg-radius-sm);background:{{ t.bg }};color:{{ t.fg }};font-weight:{{ t.fw }}">{{ t.label }}<sc-if value="{{ t.hasDot }}"><span style="display:inline-flex;align-items:center;gap:4px;font-size:var(--tg-text-xs);font-weight:400;color:var(--tg-muted)"><span style="width:7px;height:7px;border-radius:50%;background:var(--tg-status-thinking)"></span>{{ t.dotText }}</span></sc-if></span>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showChat }}">
+  <section aria-label="對話" style="{{ chatStyle }}">
+    <sc-if value="{{ readonly }}"><div role="status" style="flex:none;display:flex;align-items:center;gap:10px;padding:10px 16px;background:var(--tg-surface-sunken);border-bottom:1px solid var(--tg-border);font-size:var(--tg-text-sm);color:var(--tg-foreground)"><span aria-hidden="true" style="width:15px;height:15px;flex:none;background:var(--tg-muted);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/lock.svg) center/contain no-repeat"></span><span style="text-wrap:pretty">你只有檢視權限：看得到所有支線與紀要，但不能送出或修改。</span></div></sc-if>
+    <div style="flex:none;display:flex;flex-direction:column;gap:4px;padding:10px 16px;background:var(--tg-primary-soft)">
+      <span style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--tg-text-xs);color:var(--tg-muted)"><span style="color:var(--tg-primary-text);font-weight:500">← 回主線</span>查證<span style="display:inline-flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--tg-branch-open)"></span>進行中</span>・從主線 #7 岔出</span>
+      <span style="font-weight:600;color:var(--tg-foreground-strong);text-wrap:pretty">改用雲端備份（Backblaze B2）還是第二台 NAS</span>
+      <sc-if value="{{ canWrite }}"><span style="display:flex;gap:8px;margin-top:2px;font-size:var(--tg-text-sm)"><span style="height:{{ ctlH }}px;display:inline-flex;align-items:center;padding:0 12px;border-radius:var(--tg-radius-sm);background:var(--tg-primary);color:var(--tg-primary-foreground);font-weight:500;white-space:nowrap">結束並帶回</span><span style="height:{{ ctlH }}px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);white-space:nowrap">不帶回</span></span></sc-if>
+    </div>
+    <ol aria-label="訊息" style="flex:1;min-height:0;overflow:hidden;list-style:none;margin:0;padding:20px {{ chatPadX }}px 8px;display:flex;flex-direction:column;gap:20px">
+      <li style="align-self:flex-end;max-width:86%;display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span style="font-size:var(--tg-text-xs);color:var(--tg-subtle)">你・#3</span><div style="padding:10px 14px;border-radius:var(--tg-radius-lg);border-top-right-radius:var(--tg-radius-sm);background:var(--tg-accent);font-size:var(--tg-text-md);line-height:1.6">爸媽家只有一般家用網路，夠不夠每天同步？</div></li>
+      <li style="display:flex;flex-direction:column;gap:6px;max-width:var(--tg-reading-width)"><span style="font-size:var(--tg-text-xs);color:var(--tg-subtle)">AI・#4</span><div style="font-family:var(--tg-font-serif);font-size:var(--tg-text-reading);line-height:var(--tg-leading-reading);display:flex;flex-direction:column;gap:12px"><p style="margin:0;text-wrap:pretty">每天的增量大約 3 GB。只要上傳有 20 Mbps，二十分鐘內就能傳完；真正要看的是爸媽家晚上的實際速度，以及路由器能不能設定排程。</p><p style="margin:0;text-wrap:pretty">如果上傳不穩，B2 反而比較省事：你家這端直接上傳，不必經過爸媽家的網路。</p></div><span style="align-self:flex-start;display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 10px;border:1px solid var(--tg-border-strong);border-radius:999px;font-size:var(--tg-text-xs);color:var(--tg-muted);white-space:nowrap"><span style="width:7px;height:7px;border-radius:50%;background:var(--tg-branch-open)"></span>2 條支線・1 條進行中</span></li>
+      <li style="align-self:flex-end;max-width:86%;display:flex;flex-direction:column;align-items:flex-end;gap:4px"><span style="font-size:var(--tg-text-xs);color:var(--tg-subtle)">你・#5</span><div style="padding:10px 14px;border-radius:var(--tg-radius-lg);border-top-right-radius:var(--tg-radius-sm);background:var(--tg-accent);font-size:var(--tg-text-md);line-height:1.6">那先假設上傳 100M，算一下兩邊的總成本差多少。</div></li>
+    </ol>
+    <div style="flex:none;padding:8px {{ chatPadX }}px 14px">
+      <sc-if value="{{ canWrite }}">
+        <div style="max-width:var(--tg-reading-width);display:flex;flex-direction:column;gap:6px;padding:12px 14px 8px;border:1px solid {{ composerBorder }};border-radius:var(--tg-radius-lg);background:var(--tg-surface);outline:{{ composerOutline }};outline-offset:2px">
+          <sc-if value="{{ prefill }}"><span style="font-size:var(--tg-text-md);line-height:1.6;color:var(--tg-foreground);white-space:pre-wrap;text-wrap:pretty">關於「爸媽家的上傳速度夠不夠」的筆記：晚上 9 點的上傳速度最重要，先請爸媽在那個時段測。<span style="display:block;height:1.6em"></span><span style="display:inline-block;width:1.5px;height:1.1em;vertical-align:-0.15em;background:var(--tg-foreground)"></span></span></sc-if>
+          <sc-if value="{{ noPrefill }}"><span style="min-height:28px;color:var(--tg-subtle);font-size:var(--tg-text-md)">在支線裡繼續問…</span></sc-if>
+          <span style="display:flex;align-items:center;gap:4px;font-size:var(--tg-text-xs);color:var(--tg-muted)"><span style="height:{{ ctlH }}px;display:inline-flex;align-items:center;gap:5px;padding:0 6px"><span aria-hidden="true" style="width:14px;height:14px;background:var(--tg-primary);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/git-branch.svg) center/contain no-repeat"></span>{{ branchLabel }}</span><span style="flex:1"></span><span style="height:{{ ctlH }}px;display:inline-flex;align-items:center;gap:5px;padding:0 6px"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/eye.svg) center/contain no-repeat"></span>{{ previewLabel }}</span><span style="width:{{ sendSize }}px;height:{{ sendSize }}px;display:grid;place-items:center;border-radius:50%;background:var(--tg-primary);color:var(--tg-primary-foreground)"><span aria-hidden="true" style="width:16px;height:16px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-up.svg) center/contain no-repeat"></span></span></span>
+        </div>
+        <sc-if value="{{ prefill }}"><span style="display:block;margin-top:6px;font-size:var(--tg-text-xs);color:var(--tg-muted)">已帶進這一輪，還沒送出。送出前預覽的「你的訊息」看得到它。</span></sc-if>
+      </sc-if>
+      <sc-if value="{{ readonly }}"><div style="height:44px;display:flex;align-items:center;gap:8px;padding:0 14px;border-radius:var(--tg-radius-lg);background:var(--tg-surface-sunken);color:var(--tg-muted);font-size:var(--tg-text-sm)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/lock.svg) center/contain no-repeat"></span>檢視權限・不能送出</div></sc-if>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ split }}">
+    <div role="separator" aria-orientation="vertical" aria-label="調整對話與地圖的寬度" aria-valuenow="{{ ratioPct }}" aria-valuemin="{{ ratioMin }}" aria-valuemax="{{ ratioMax }}" tabindex="0" style="{{ divStyle }}">
+      <span style="{{ divLine }}"></span>
+      <span style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:6px;height:36px;border-radius:3px;background:{{ gripBg }};box-shadow:0 0 0 1px var(--tg-border-strong)"></span>
+      <sc-if value="{{ hasDivChip }}"><span style="position:absolute;top:calc(50% - 56px);left:{{ chipLeft }};right:{{ chipRight }};white-space:nowrap;padding:3px 8px;border-radius:var(--tg-radius-sm);background:var(--tg-foreground-strong);color:var(--tg-background);font-size:var(--tg-text-xs);white-space:nowrap">{{ divChip }}</span></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ showMap }}">
+  <section aria-label="地圖" style="{{ mapStyle }}">
+    <div role="toolbar" aria-label="地圖工具列" style="flex:none;min-height:48px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 10px;border-bottom:1px solid var(--tg-border);opacity:{{ tbOp }}">
+      <span style="display:flex;align-items:center;gap:1px;padding:1px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-sm)"><span style="width:{{ tbBtn }}px;height:{{ tbBtn }}px;display:grid;place-items:center;color:var(--tg-muted)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/zoom-out.svg) center/contain no-repeat"></span></span><span style="min-width:38px;text-align:center;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ zoomPct }}</span><span style="width:{{ tbBtn }}px;height:{{ tbBtn }}px;display:grid;place-items:center;color:var(--tg-muted)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/zoom-in.svg) center/contain no-repeat"></span></span><span title="符合畫面（0）" style="width:{{ tbBtn }}px;height:{{ tbBtn }}px;display:grid;place-items:center;color:var(--tg-muted)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/scan.svg) center/contain no-repeat"></span></span></span>
+      <sc-if value="{{ followOn }}"><span role="switch" aria-checked="true" style="height:{{ tbBtn }}px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:var(--tg-radius-sm);background:var(--tg-primary-soft);color:var(--tg-primary-text);font-size:var(--tg-text-xs);font-weight:500;white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/locate-fixed.svg) center/contain no-repeat"></span>{{ followLabel }}</span></sc-if>
+      <sc-if value="{{ followPaused }}"><span role="status" style="height:{{ tbBtn }}px;display:inline-flex;align-items:center;gap:6px;padding:0 4px 0 9px;border:1px solid var(--tg-warning);border-radius:var(--tg-radius-sm);background:var(--tg-warning-soft);font-size:var(--tg-text-xs);white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:var(--tg-warning);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/locate-off.svg) center/contain no-repeat"></span>{{ pausedText }}<span style="height:24px;display:inline-flex;align-items:center;padding:0 8px;border-radius:var(--tg-radius-sm);background:var(--tg-surface);color:var(--tg-primary-text);font-weight:500">回到這裡</span></span></sc-if>
+      <sc-if value="{{ focusOff }}"><span role="switch" aria-checked="false" style="height:{{ tbBtn }}px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;border-radius:var(--tg-radius-sm);color:var(--tg-muted);font-size:var(--tg-text-xs);white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/focus.svg) center/contain no-repeat"></span>{{ focusTbLabel }}</span></sc-if>
+      <sc-if value="{{ focusOnTb }}"><span style="height:{{ tbBtn }}px;max-width:220px;display:inline-flex;align-items:center;gap:6px;padding:0 2px 0 9px;border-radius:var(--tg-radius-sm);background:var(--tg-primary);color:var(--tg-primary-foreground);font-size:var(--tg-text-xs);font-weight:500;white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;flex:none;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/focus.svg) center/contain no-repeat"></span><span style="overflow:hidden;text-overflow:ellipsis">聚焦：{{ focusTitle }}</span><span aria-label="取消聚焦" style="width:24px;height:24px;flex:none;display:grid;place-items:center"><span aria-hidden="true" style="width:13px;height:13px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat"></span></span></span></sc-if>
+      <span style="height:{{ tbBtn }}px;display:inline-flex;align-items:center;gap:6px;padding:0 9px;color:var(--tg-muted);font-size:var(--tg-text-xs);white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/layers.svg) center/contain no-repeat"></span>{{ layersLabel }}</span>
+      <span title="呈現方式" style="height:{{ tbBtn }}px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);color:var(--tg-foreground);font-size:var(--tg-text-xs);white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:var(--tg-muted);mask:url({{ shapeIcon }}) center/contain no-repeat"></span>{{ shapeLabel }}<span aria-hidden="true" style="width:12px;height:12px;background:var(--tg-muted);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/chevron-down.svg) center/contain no-repeat"></span></span>
+      <sc-if value="{{ showOutlineSwitch }}"><span style="margin-left:auto;display:flex;gap:1px;padding:1px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);font-size:var(--tg-text-xs)"><span style="height:26px;display:grid;place-items:center;padding:0 9px;color:var(--tg-muted)">大綱</span><span style="height:26px;display:grid;place-items:center;padding:0 9px;border-radius:4px;background:var(--tg-primary-soft);color:var(--tg-primary-text);font-weight:500">地圖</span></span></sc-if>
+    </div>
+    <sc-if value="{{ hasFocusNote }}"><div style="flex:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:6px 12px;border-bottom:1px solid var(--tg-border);background:var(--tg-surface-sunken);font-size:var(--tg-text-xs);color:var(--tg-muted)"><sc-if value="{{ outside }}"><span role="status" style="display:inline-flex;align-items:center;gap:6px;color:var(--tg-foreground)"><span style="width:7px;height:7px;border-radius:50%;background:var(--tg-warning)"></span>你在聚焦範圍外</span><span style="height:24px;display:inline-flex;align-items:center;padding:0 8px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);color:var(--tg-foreground);white-space:nowrap">改聚焦這裡</span><span>・</span></sc-if>只影響地圖顯示，不影響 AI。</div></sc-if>
+    <div style="position:relative;flex:1;min-height:0;overflow:hidden;background-color:var(--tg-background);background-image:radial-gradient(var(--tg-border) 1px, transparent 1px);background-size:24px 24px">
+      <sc-if value="{{ mapError }}"><div role="alert" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--tg-background)"><span aria-hidden="true" style="width:22px;height:22px;background:var(--tg-muted);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/triangle-alert.svg) center/contain no-repeat"></span><span>無法載入地圖。</span><span style="height:32px;display:inline-flex;align-items:center;padding:0 12px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);font-size:var(--tg-text-sm);white-space:nowrap">再試一次</span><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">對話照常可用。</span></div></sc-if>
+      <sc-if value="{{ mapOk }}">
+      <div style="position:absolute;left:0;top:0;transform-origin:0 0;transform:{{ worldTf }}">
+        <svg aria-hidden="true" width="1" height="1" style="position:absolute;left:0;top:0;overflow:visible">
+          <sc-for list="{{ edges }}" as="e" hint-placeholder-count="8"><path d="{{ e.d }}" fill="none" stroke="{{ e.color }}" stroke-width="{{ e.w }}" stroke-linecap="round" opacity="{{ e.op }}"></path></sc-for>
+        </svg>
+        <sc-for list="{{ heads }}" as="hd" hint-placeholder-count="0"><div style="position:absolute;left:{{ hd.x }}px;top:0;width:188px;display:flex;align-items:center;gap:6px;padding-bottom:6px;border-bottom:2px solid {{ hd.color }};font-size:var(--tg-text-sm);font-weight:600;color:var(--tg-foreground-strong)"><span aria-hidden="true" style="width:13px;height:13px;background:{{ hd.color }};mask:url({{ hd.icon }}) center/contain no-repeat"></span>{{ hd.name }}<span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);font-weight:400;color:var(--tg-muted)">{{ hd.n }}</span></div></sc-for>
+        <sc-for list="{{ nodes }}" as="n" hint-placeholder-count="10">
+          <div role="treeitem" aria-label="{{ n.aria }}" aria-current="{{ n.cur }}" aria-selected="{{ n.isSel }}" style="position:absolute;left:{{ n.x }}px;top:{{ n.y }}px;width:188px;height:60px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:6px 10px;border:{{ n.border }};border-radius:var(--tg-radius);background:{{ n.bg }};box-shadow:{{ n.shadow }};opacity:{{ n.op }}">
+            <span style="display:flex;align-items:center;gap:6px;min-width:0;opacity:{{ n.innerOp }}"><span aria-hidden="true" style="width:13px;height:13px;flex:none;background:{{ n.color }};mask:url({{ n.icon }}) center/contain no-repeat"></span><span style="flex:1;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;font-size:var(--tg-text-sm);font-weight:500;color:{{ n.titleColor }}">{{ n.title }}</span></span>
+            <span style="display:flex;align-items:center;gap:5px;min-width:0;opacity:{{ n.innerOp }};padding-right:{{ n.badgePad }}px;font-size:11px;color:var(--tg-muted);white-space:nowrap;overflow:hidden"><sc-if value="{{ n.streaming }}"><span aria-hidden="true" style="width:11px;height:11px;flex:none;background:var(--tg-status-thinking);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/loader-2.svg) center/contain no-repeat"></span></sc-if><span style="overflow:hidden;text-overflow:ellipsis">{{ n.sub }}</span></span>
+            <sc-if value="{{ n.here }}"><span style="position:absolute;left:8px;top:-10px;height:18px;display:inline-flex;align-items:center;padding:0 7px;border-radius:999px;background:var(--tg-primary);color:var(--tg-primary-foreground);font-size:10px;font-weight:600;white-space:nowrap">你在這裡</span></sc-if>
+            <sc-if value="{{ n.isNew }}"><span style="position:absolute;right:8px;top:-10px;height:18px;display:inline-flex;align-items:center;padding:0 7px;border-radius:999px;background:var(--tg-highlight);color:var(--tg-foreground-strong);font-size:10px;font-weight:600">新</span></sc-if>
+            <sc-if value="{{ n.hasBadge }}"><span aria-label="{{ n.badgeAria }}" style="position:absolute;right:6px;bottom:5px;height:16px;display:inline-flex;align-items:center;gap:3px;padding:0 5px;border-radius:999px;background:var(--tg-surface-sunken);color:var(--tg-muted);font-family:var(--tg-font-mono);font-size:10px"><span aria-hidden="true" style="width:10px;height:10px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/notebook-pen.svg) center/contain no-repeat"></span>{{ n.badge }}</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ rootOff }}"><span role="button" aria-label="主線在畫面外，平移到主線" style="position:absolute;left:8px;top:8px;z-index:1;height:28px;display:inline-flex;align-items:center;gap:5px;padding:0 10px 0 8px;border:1px solid var(--tg-border-strong);border-radius:999px;background:var(--tg-surface-raised);box-shadow:var(--tg-shadow);font-size:var(--tg-text-xs);color:var(--tg-foreground);white-space:nowrap"><span aria-hidden="true" style="width:13px;height:13px;background:var(--tg-muted);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-left.svg) center/contain no-repeat"></span>主線</span></sc-if>
+      </sc-if>
+    </div>
+  </section>
+  </sc-if>
+
+  <sc-if value="{{ scrim }}"><div style="{{ scrimStyle }}"></div></sc-if>
+</sc-if>
+
+<sc-if value="{{ panelShow }}" hint-placeholder-val="{{ false }}">
+<aside aria-label="節點面板" aria-live="polite" style="{{ panelStyle }}">
+  <sc-if value="{{ sheetHandle }}"><div style="flex:none;display:flex;justify-content:center;padding:8px 0 2px"><span style="width:36px;height:4px;border-radius:2px;background:var(--tg-border-strong)"></span></div></sc-if>
+  <div style="flex:none;display:flex;flex-direction:column;gap:6px;padding:12px 10px 12px 16px;border-bottom:1px solid var(--tg-border)">
+    <div style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);color:var(--tg-muted)">
+      <span aria-hidden="true" style="width:13px;height:13px;background:{{ p.color }};mask:url({{ p.icon }}) center/contain no-repeat"></span>{{ p.kindLabel }}<sc-if value="{{ p.hasStatus }}"><span style="display:inline-flex;align-items:center;gap:5px"><span style="width:6px;height:6px;border-radius:50%;background:{{ p.color }}"></span>{{ p.statusLabel }}</span></sc-if>
+      <sc-if value="{{ p.isHere }}"><span style="height:18px;display:inline-flex;align-items:center;padding:0 7px;border-radius:999px;background:var(--tg-primary);color:var(--tg-primary-foreground);font-size:10px;font-weight:600">你在這裡</span></sc-if>
+      <span style="flex:1"></span>
+      <sc-if value="{{ p.canGo }}"><span style="height:{{ ctlSm }}px;display:inline-flex;align-items:center;gap:4px;padding:0 8px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);color:var(--tg-foreground);font-size:var(--tg-text-xs);font-weight:500;white-space:nowrap">到這條 <span style="font-family:var(--tg-font-mono);color:var(--tg-muted)">↵</span></span></sc-if>
+      <span aria-label="關閉節點面板" style="width:{{ ctlSm }}px;height:{{ ctlSm }}px;display:grid;place-items:center;color:var(--tg-muted)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat"></span></span>
+    </div>
+    <sc-if value="{{ p.readonlyLine }}"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">你只有檢視權限。</span></sc-if>
+    <sc-if value="{{ p.titleView }}"><div style="display:flex;align-items:flex-start;gap:6px;margin:0 -6px;padding:2px 6px;border-radius:var(--tg-radius-sm);background:{{ p.titleHoverBg }}"><h3 style="flex:1;margin:0;font-size:var(--tg-text-lg);line-height:1.35;font-weight:600;color:var(--tg-foreground-strong);text-wrap:pretty">{{ p.title }}</h3><sc-if value="{{ p.titleEditable }}"><span aria-label="改標題（F2）" style="width:24px;height:24px;flex:none;margin-top:2px;display:grid;place-items:center;color:var(--tg-muted);opacity:{{ p.pencilOp }}"><span aria-hidden="true" style="width:13px;height:13px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/pencil.svg) center/contain no-repeat"></span></span></sc-if></div></sc-if>
+    <sc-if value="{{ p.titleEditing }}"><div style="display:flex;flex-direction:column;gap:6px"><span style="min-height:36px;display:flex;align-items:center;padding:6px 10px;border:1px solid {{ p.editBorder }};border-radius:var(--tg-radius);background:var(--tg-surface);outline:2px solid var(--tg-ring);outline-offset:2px;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">{{ p.editText }}<span style="display:inline-block;width:1.5px;height:1.1em;margin-left:1px;background:var(--tg-foreground)"></span></span><sc-if value="{{ p.editError }}"><span role="alert" style="font-size:var(--tg-text-xs);color:var(--tg-destructive);text-wrap:pretty">沒有存成：連線中斷。標題還是原本的，可以再按一次儲存。</span></sc-if><sc-if value="{{ p.renameNote }}"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted);text-wrap:pretty">改名後，主線之後的回合裡，這張結論卡的來源會用新名字。</span></sc-if><span style="display:flex;align-items:center;gap:8px;font-size:var(--tg-text-xs);color:var(--tg-muted)"><span style="flex:1">Enter 儲存・Esc 放棄・{{ p.editCount }}</span><span style="height:{{ ctlSm }}px;display:inline-flex;align-items:center;padding:0 10px;border-radius:var(--tg-radius-sm);background:var(--tg-primary);color:var(--tg-primary-foreground);font-weight:500;white-space:nowrap">{{ p.saveLabel }}</span></span></div></sc-if>
+    <sc-if value="{{ p.phaseRename }}"><span style="align-self:flex-start;padding:1px 6px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:10px">階段二・結束的支線改名</span></sc-if>
+  </div>
+  <div style="flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;scrollbar-width:thin;display:flex;flex-direction:column;gap:14px;padding:12px 16px 14px">
+    <sc-if value="{{ p.hasPos }}"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:var(--tg-text-sm);color:var(--tg-muted)"><span>{{ p.posText }}</span><sc-if value="{{ p.hasArg }}"><span style="height:20px;display:inline-flex;align-items:center;padding:0 7px;border:1px solid var(--tg-arg-question);border-radius:4px;color:var(--tg-arg-question);font-size:11px;font-weight:500">分岔處是「問題」</span></sc-if></div></sc-if>
+    <sc-if value="{{ p.hasAsideTtl }}"><div style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-sm);color:var(--tg-muted)"><span aria-hidden="true" style="width:13px;height:13px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/clock.svg) center/contain no-repeat"></span>3 天後清除</div></sc-if>
+    <sc-if value="{{ p.hasLeaf }}"><div style="display:flex;flex-direction:column;gap:4px;padding:9px 11px;border-radius:var(--tg-radius);background:var(--tg-surface-sunken)"><span style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);font-weight:500;color:var(--tg-muted)"><span aria-hidden="true" style="width:13px;height:13px;background:var(--tg-leaf-conclusion);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/flag.svg) center/contain no-repeat"></span>收尾：結論<span style="flex:1"></span><sc-if value="{{ canWrite }}"><span style="color:var(--tg-primary-text)">改</span></sc-if></span><span style="text-wrap:pretty">8TB×2 做鏡像，能撐四年</span></div></sc-if>
+    <sc-if value="{{ p.hasCard }}"><div style="display:flex;flex-direction:column;gap:6px;padding:10px 12px;border:1px solid var(--tg-card-border);border-radius:var(--tg-radius);background:var(--tg-card)"><span style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);font-weight:500;color:var(--tg-muted)"><span aria-hidden="true" style="width:12px;height:12px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/lock.svg) center/contain no-repeat"></span>結論卡・已帶回主線 #4</span><span style="font-size:var(--tg-text-sm);text-wrap:pretty;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">資料 3.2 TB、每月增加 80 GB，兩顆 8 TB 做鏡像能撐約四年；4 TB 兩年內就會滿。需要你決定：要不要留一顆冷備份。</span><span style="display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:var(--tg-text-xs)"><span style="color:var(--tg-muted);text-wrap:pretty">結論卡是歷史紀錄，要修正請寫紀要或備忘。</span><span style="flex:none;color:var(--tg-primary-text);font-weight:500">到結論卡 →</span></span></div></sc-if>
+
+    <sc-if value="{{ p.hasNotes }}">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-if value="{{ p.twoKinds }}">
+        <div role="tablist" aria-label="筆記" style="display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:2px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius)">
+          <sc-for list="{{ p.noteTabs }}" as="t" hint-placeholder-count="2"><span role="tab" aria-selected="{{ t.on }}" style="min-height:{{ segH }}px;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 6px;border-radius:var(--tg-radius-sm);background:{{ t.bg }};color:{{ t.fg }};font-size:var(--tg-text-xs);font-weight:{{ t.fw }};white-space:nowrap">{{ t.label }}<span style="font-family:var(--tg-font-mono)">{{ t.n }}</span><sc-if value="{{ t.phase2 }}"><span style="padding:0 4px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:9px;font-weight:400">階段二</span></sc-if></span></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ p.oneKind }}"><span style="font-size:var(--tg-text-sm);font-weight:600">紀要（給 AI）<span style="margin-left:6px;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);font-weight:400;color:var(--tg-muted)">{{ p.noteCount }}</span></span></sc-if>
+      <span style="display:flex;align-items:flex-start;gap:6px;font-size:var(--tg-text-xs);color:var(--tg-muted);text-wrap:pretty"><span aria-hidden="true" style="width:13px;height:13px;flex:none;margin-top:2px;background:currentColor;mask:url({{ p.noteHeadIcon }}) center/contain no-repeat"></span><span>{{ p.noteHead }}<sc-if value="{{ p.noteHead2 }}"><span style="display:block">掛在這個節點只是標出處，AI 看到的是整頁紀要。</span></sc-if></span></span>
+      <sc-if value="{{ p.empty }}"><div style="padding:14px 12px;border:1px solid var(--tg-border);border-radius:var(--tg-radius);font-size:var(--tg-text-sm);color:var(--tg-muted);text-align:center;text-wrap:pretty">{{ p.emptyText }}</div></sc-if>
+      <sc-for list="{{ p.items }}" as="it" hint-placeholder-count="3">
+        <div style="position:relative;display:flex;align-items:flex-start;gap:8px;padding:8px 6px 8px 10px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-sm);background:{{ it.bg }};opacity:{{ it.op }}">
+          <sc-if value="{{ it.hasCheck }}"><span role="checkbox" aria-checked="{{ it.done }}" aria-label="{{ it.checkAria }}" aria-disabled="{{ readonly }}" style="width:{{ it.checkSize }}px;height:{{ it.checkSize }}px;flex:none;margin:-4px -4px -4px -6px;display:grid;place-items:center"><span style="width:16px;height:16px;box-sizing:border-box;display:grid;place-items:center;border:1.5px solid {{ it.checkBorder }};border-radius:4px;background:{{ it.checkBg }};color:var(--tg-primary-foreground)"><sc-if value="{{ it.done }}"><span aria-hidden="true" style="width:11px;height:11px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/check.svg) center/contain no-repeat"></span></sc-if></span></span></sc-if>
+          <span style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><sc-if value="{{ it.hasSec }}"><span style="font-size:11px;font-weight:500;color:var(--tg-muted)">{{ it.sec }}</span></sc-if><span style="font-size:var(--tg-text-sm);text-wrap:pretty;text-decoration:{{ it.deco }};color:{{ it.textColor }}">{{ it.text }}</span><sc-if value="{{ it.hasMeta }}"><span style="font-size:11px;color:var(--tg-subtle)">{{ it.meta }}</span></sc-if></span>
+          <sc-if value="{{ canWrite }}"><span aria-label="筆記的動作" style="width:{{ ctlSm }}px;height:{{ ctlSm }}px;flex:none;display:grid;place-items:center;border-radius:var(--tg-radius-sm);background:{{ it.menuBg }};color:var(--tg-muted)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/ellipsis.svg) center/contain no-repeat"></span></span></sc-if>
+          <sc-if value="{{ it.menuOpen }}"><div role="menu" style="position:absolute;right:4px;top:38px;z-index:3;width:210px;display:flex;flex-direction:column;padding:4px;border:1px solid var(--tg-border-strong);border-radius:var(--tg-radius);background:var(--tg-surface-raised);box-shadow:var(--tg-shadow-overlay)"><sc-for list="{{ it.menu }}" as="m" hint-placeholder-count="4"><sc-if value="{{ m.sep }}"><span style="height:1px;margin:4px 6px;background:var(--tg-border)"></span></sc-if><span role="menuitem" style="min-height:{{ menuH }}px;display:flex;align-items:center;gap:9px;padding:0 9px;white-space:nowrap;border-radius:var(--tg-radius-sm);background:{{ m.bg }};font-size:var(--tg-text-sm);color:{{ m.color }}"><span aria-hidden="true" style="width:14px;height:14px;flex:none;background:currentColor;mask:url({{ m.icon }}) center/contain no-repeat"></span>{{ m.label }}</span></sc-for></div></sc-if>
+        </div>
+      </sc-for>
+      <sc-if value="{{ p.editing }}"><div style="display:flex;flex-direction:column;gap:6px;padding:8px 10px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);outline:2px solid var(--tg-ring);outline-offset:2px"><span style="font-size:var(--tg-text-sm);text-wrap:pretty">B2 帳單要設 50 美元警示，超過就先停同步<span style="display:inline-block;width:1.5px;height:1.1em;margin-left:1px;vertical-align:-0.15em;background:var(--tg-foreground)"></span></span><span style="display:flex;align-items:center;gap:8px;font-size:11px;color:var(--tg-muted)"><span style="flex:1">Enter 儲存・⇧Enter 換行・Esc 取消</span><span style="font-family:var(--tg-font-mono)">22 / 4000</span></span></div></sc-if>
+      <sc-if value="{{ p.canAdd }}"><span style="min-height:{{ ctlSm }}px;display:inline-flex;align-items:center;gap:6px;padding:0 8px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);font-size:var(--tg-text-xs);color:var(--tg-foreground);opacity:{{ p.addOp }}" aria-disabled="{{ p.addDisabled }}"><span aria-hidden="true" style="width:13px;height:13px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/plus.svg) center/contain no-repeat"></span>{{ p.addLabel }}<span style="margin-left:auto;font-family:var(--tg-font-mono);color:var(--tg-subtle)">N</span></span></sc-if>
+      <sc-if value="{{ p.full }}"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted);text-wrap:pretty">18 / 18 條有效，已經滿了。先完成或取代一條，才能新增。</span></sc-if>
+      <sc-if value="{{ p.undo }}"><div role="status" style="display:flex;align-items:center;gap:10px;padding:6px 6px 6px 12px;border-radius:var(--tg-radius-sm);background:var(--tg-foreground-strong);color:var(--tg-background);font-size:var(--tg-text-sm)"><span style="flex:1">已刪除一則備忘。</span><span style="height:26px;display:inline-flex;align-items:center;padding:0 8px;font-weight:600;text-decoration:underline">復原</span><span style="font-family:var(--tg-font-mono);font-size:11px;opacity:.75">4s</span></div></sc-if>
+      <sc-if value="{{ p.seeAll }}"><span style="font-size:var(--tg-text-xs);color:var(--tg-primary-text)">看全部紀要（{{ p.allCount }}）→</span></sc-if>
+    </div>
+    </sc-if>
+
+    <sc-if value="{{ p.hasRel }}"><div style="display:flex;flex-direction:column;gap:6px"><span style="display:flex;justify-content:space-between;font-size:var(--tg-text-xs);font-weight:500;color:var(--tg-muted)">關聯 1<sc-if value="{{ canWrite }}"><span style="color:var(--tg-primary-text)">新增關聯</span></sc-if></span><span style="display:flex;flex-direction:column;gap:2px;padding:7px 10px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-sm);font-size:var(--tg-text-sm)"><span style="color:var(--tg-primary-text)">→ RAID 5 還是 RAID 1</span><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">異地備份不能取代 RAID</span></span></div></sc-if>
+    <sc-if value="{{ p.hasActions }}"><div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ p.actions }}" as="a" hint-placeholder-count="3"><span style="height:{{ ctlSm }}px;display:inline-flex;align-items:center;padding:0 10px;border:{{ a.border }};border-radius:var(--tg-radius-sm);background:{{ a.bg }};color:{{ a.color }};font-size:var(--tg-text-xs);font-weight:{{ a.fw }};opacity:{{ a.op }};white-space:nowrap" title="{{ a.why }}">{{ a.label }}</span></sc-for></div></sc-if>
+    <span style="font-size:var(--tg-text-xs);color:var(--tg-subtle)">{{ p.stats }}</span>
+  </div>
+</aside>
+</sc-if>
+</sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;w&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:1440,&quot;tsType&quot;:&quot;number&quot;},&quot;h&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:900,&quot;tsType&quot;:&quot;number&quot;},&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;,&quot;host&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;sel&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;uplink&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;phase&quot;:{&quot;editor&quot;:&quot;int&quot;,&quot;default&quot;:2,&quot;tsType&quot;:&quot;number&quot;},&quot;tab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;chat&quot;,&quot;map&quot;],&quot;default&quot;:&quot;chat&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;notesTab&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;notes&quot;,&quot;memo&quot;],&quot;default&quot;:&quot;notes&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;notesState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;list&quot;,&quot;menu&quot;,&quot;full&quot;,&quot;editing&quot;,&quot;undo&quot;,&quot;emptyMemo&quot;],&quot;default&quot;:&quot;list&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+const IC = n => `https://unpkg.com/lucide-static@0.460.0/icons/${n}.svg`;
+const NODES = [
+  { id: 'root', parent: null, title: 'NAS 備份規劃', kind: 'main', status: 'open', fork: 0, msgs: 24 },
+  { id: 'size', parent: 'root', title: '4TB 與 8TB 怎麼選', kind: 'i', status: 'merged', fork: 3, msgs: 8, leaf: '8TB×2 做鏡像' },
+  { id: 'raid', parent: 'root', title: 'RAID 5 還是 RAID 1', kind: 'i', status: 'merged', fork: 5, msgs: 10, leaf: '兩顆就用 RAID 1' },
+  { id: 'fs', parent: 'raid', title: '檔案系統：ZFS 或 Btrfs', kind: 'i', status: 'open', fork: 6, msgs: 7 },
+  { id: 'b2', parent: 'root', title: '改用雲端備份（B2）還是第二台 NAS', kind: 'i', status: 'open', fork: 7, msgs: 5 },
+  { id: 'uplink', parent: 'b2', title: '爸媽家的上傳速度夠不夠', kind: 'i', status: 'open', fork: 4, msgs: 5 },
+  { id: 'egress', parent: 'b2', title: 'B2 下載費怎麼算', kind: 'a', status: 'answered', fork: 4, msgs: 2, leaf: '每月前 3 倍免費' },
+  { id: 'nas2', parent: 'b2', title: '第二台 NAS 放哪個房間', kind: 'i', status: 'open', fork: 5, msgs: 1, newOnly: true },
+  { id: 'ext', parent: 'root', title: '只用外接硬碟輪流備份', kind: 'l', status: 'discarded', fork: 4, msgs: 4, leaf: '死路：太容易忘記換' },
+  { id: 'laptop', parent: 'root', title: '用舊筆電當 NAS', kind: 'l', status: 'discarded', fork: 2, msgs: 6, leaf: '死路：只有一個 SATA 槽' },
+  { id: 'ups', parent: 'root', title: 'UPS 要不要買', kind: 'i', status: 'open', fork: 11, msgs: 3 },
+  { id: 'auto', parent: 'root', title: '自動化備份腳本', kind: 'i', status: 'open', fork: 14, msgs: 9 },
+  { id: 'timer', parent: 'auto', title: 'cron 還是 systemd timer', kind: 'i', status: 'open', fork: 6, msgs: 4 },
+];
+const KIND = { main: ['主線', IC('list')], i: ['查證', IC('search')], a: ['順口問', IC('message-circle-question')], l: ['另一條路', IC('split')] };
+const STATUS = { open: ['進行中', 'var(--tg-branch-open)'], merged: ['已帶回', 'var(--tg-branch-merged)'], discarded: ['未帶回', 'var(--tg-branch-discarded)'], answered: ['已回答', 'var(--tg-leaf-answer)'] };
+const NOTES = {
+  uplink: [['待確認', '晚上 9 點的上傳速度最重要，先請爸媽在那個時段測。'], ['待辦', '請爸媽用 speedtest 測三個時段'], ['已確認的事實', '爸媽家是 300M 方案，上傳 100M']],
+  b2: [['待確認', '異地備份先以 B2 為主，第二台 NAS 當備案']], size: [['已決定', '買兩顆 8TB 做鏡像']], raid: [['已決定', '用 RAID 1']],
+};
+const MEMOS = { uplink: [['B2 帳單要設 50 美元警示，超過就先停同步']], b2: [['問小舅他家的網路，也許可以放那邊']] };
+
+class Component extends DCLogic {
+  state = { live: false };
+  rootRef = el => {
+    if (!el || this.el === el) return; this.el = el; this.io?.disconnect();
+    if (typeof IntersectionObserver === 'undefined') { this.setState({ live: true }); return; }
+    this.io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { this.io.disconnect(); this.setState({ live: true }); } }, { rootMargin: '800px' });
+    this.io.observe(el);
+    const order = (window.__tgFsOrder = (window.__tgFsOrder || 0) + 1);
+    this.t = setTimeout(() => { if (!this.state.live) this.setState({ live: true }); }, 400 + order * 180);
+  };
+  componentWillUnmount() { this.io?.disconnect(); clearTimeout(this.t); }
+  renderVals() {
+    const P = this.props;
+    const w = +(P.w ?? 1440), h = +(P.h ?? 900), theme = P.theme ?? 'light';
+    const only = P.only === 'panel';
+    const phase = +(P.phase ?? 2), core = !!P.core, readonly = !!P.readonly, notesOn = !(P.notesOff || core && !P.coreNotes);
+    const memoOn = phase === 2 && !core && notesOn;
+    const sel = P.sel || '', current = P.current || 'b2';
+    const tabs = w < 1024, split = !tabs;
+    const tab = P.tab || 'chat';
+    const showAsides = !!P.showAsides || sel === 'egress';
+    const touch = w < 768;
+    const ctlH = touch ? 44 : 32, ctlSm = touch ? 44 : 28;
+    // geometry
+    const top = tabs ? 104 : 52, DIV = 9;
+    let chatW = w, mapX = 0, mapW = w;
+    if (split) {
+      const ratio = P.split === 'chatMin' ? 420 / w : P.split === 'mapMin' ? (w - 360 - DIV) / w : +(P.ratio ?? (w < 1440 ? 0.45 : 0.5));
+      chatW = Math.round(Math.max(420, Math.min(w - 360 - DIV, w * ratio)));
+      mapX = chatW + DIV; mapW = w - mapX;
+    }
+    const showChat = split || tab === 'chat', showMap = split || tab === 'map';
+    const compact = mapW < 640;
+    const panelBottom = tabs || compact;
+    const panelShow = only || (!!sel && showMap && !P.mapError);
+    const mapTop = top, tbH = 48 + (P.focus || P.outside ? 30 : 0);
+    // map layout (logic tree to the right)
+    const nodes0 = NODES.filter(n => (!n.newOnly || P.newNode) && (n.kind !== 'a' || showAsides));
+    const kids = id => nodes0.filter(n => n.parent === id);
+    const COL = 236, ROW = 78; const pos = {}; let row = 0;
+    const place = (id, d) => { const k = kids(id); if (!k.length) { pos[id] = { x: d * COL, y: row * ROW }; row++; return pos[id].y; } const ys = k.map(c => place(c.id, d + 1)); pos[id] = { x: d * COL, y: (ys[0] + ys[ys.length - 1]) / 2 }; return pos[id].y; };
+    const grouped = P.shape === 'group'; const heads = [];
+    let treeW, treeH;
+    if (!grouped) { place('root', 0); treeW = 2 * COL + 188; treeH = (row - 1) * ROW + 60; }
+    else {
+      const LT = { size: 'c', raid: 'd', egress: 'a', ext: 'x', laptop: 'x', timer: 'p' };
+      const COLS = [['c', '結論', IC('flag'), 'var(--tg-leaf-conclusion)'], ['d', '決定', IC('gavel'), 'var(--tg-leaf-decision)'], ['a', '答案', IC('corner-down-right'), 'var(--tg-leaf-answer)'], ['p', '待續', IC('hourglass'), 'var(--tg-leaf-pending)'], ['x', '死路', IC('ban'), 'var(--tg-leaf-deadend)'], ['n', '還沒有收尾', IC('circle-dashed'), 'var(--tg-subtle)']];
+      let c = 0, maxN = 0;
+      COLS.forEach(([key, name, icon, color]) => { const list = nodes0.filter(n => n.id !== 'root' && (LT[n.id] || 'n') === key); if (!list.length) return; heads.push({ x: c * 212, name, icon, color, n: list.length }); list.forEach((n, i) => { pos[n.id] = { x: c * 212, y: 44 + i * 72 }; }); maxN = Math.max(maxN, list.length); c++; });
+      treeW = c * 212 - 24; treeH = 44 + maxN * 72;
+    }
+    const vw = mapW - (panelShow && !panelBottom ? 344 : 0), vh = h - mapTop - tbH - (panelShow && panelBottom ? (h - mapTop) * 0.6 : 0);
+    let k = Math.min(1, (vw - 48) / treeW, (vh - 48) / treeH); k = Math.max(0.8, k);
+    const anchor = pos[sel] || pos[current];
+    let tx, ty;
+    if ((vw - 48) / treeW >= 0.8 && (vh - 48) / treeH >= 0.8) { tx = (vw - treeW * k) / 2; ty = (vh - treeH * k) / 2 + 14; }
+    else { tx = Math.min(24, vw - 24 - (anchor.x + 188) * k); ty = vh / 2 - (anchor.y + 30) * k; ty = Math.min(40, Math.max(vh - 40 - treeH * k, ty)); }
+    if (grouped) { k = Math.max(0.8, Math.min(1, (vw - 48) / treeW)); tx = 24; ty = 20; }
+    if (P.followPaused) { tx += 160; ty -= 170; }
+    // focus subtree
+    const focusRoot = P.focus || '';
+    const inFocus = {};
+    if (focusRoot) { const st = [focusRoot]; while (st.length) { const x = st.pop(); inFocus[x] = true; kids(x).forEach(c => st.push(c.id)); } let n = nodes0.find(z => z.id === focusRoot); while (n && n.parent) { inFocus[n.parent] = 'path'; n = nodes0.find(z => z.id === n.parent); } }
+    const counts = id => (NOTES[id]?.length || 0) + (memoOn ? MEMOS[id]?.length || 0 : 0);
+    const nodes = nodes0.filter(n => pos[n.id]).map(n => {
+      const p = pos[n.id]; const [st, col] = STATUS[n.status]; const isSel = sel === n.id, here = current === n.id;
+      const faded = focusRoot && !inFocus[n.id]; const streaming = P.streaming === n.id; const isNew = P.newNode && n.newOnly;
+      const c = notesOn && P.layerNotes !== false ? counts(n.id) : 0;
+      return {
+        x: p.x, y: p.y, title: n.title, icon: KIND[n.kind][1], color: n.kind === 'main' ? 'var(--tg-muted)' : col,
+        sub: streaming ? '回覆中' : n.kind === 'main' ? `主線・${n.msgs} 則` : grouped ? `${st}・來自${n.parent === 'root' ? '主線' : `「${NODES.find(z => z.id === n.parent).title}」`}` : (n.leaf && !core ? n.leaf : `${st}・${n.msgs} 則`),
+        streaming, here, isNew, isSel, cur: here ? 'location' : null,
+        border: isSel ? '2px solid var(--tg-primary)' : here && faded ? '2px solid var(--tg-border-strong)' : here ? '2px solid var(--tg-primary)' : `1.5px solid ${n.status === 'discarded' ? 'var(--tg-border-strong)' : n.kind === 'main' ? 'var(--tg-border-strong)' : col}`,
+        bg: isSel ? 'var(--tg-primary-soft)' : n.status === 'discarded' ? 'var(--tg-surface-sunken)' : 'var(--tg-surface)',
+        shadow: isSel ? '0 0 0 4px var(--tg-primary-soft), var(--tg-shadow)' : 'none',
+        titleColor: n.status === 'discarded' ? 'var(--tg-muted)' : 'var(--tg-foreground-strong)',
+        op: faded && !here ? 0.3 : isNew ? 0.6 : 1, innerOp: faded && here ? 0.3 : 1,
+        hasBadge: c > 0, badge: k < 0.75 ? '' : c, badgePad: c > 0 ? 36 : 0,
+        badgeAria: `${NOTES[n.id]?.length || 0} 則紀要${memoOn ? `、${MEMOS[n.id]?.length || 0} 則備忘` : ''}`,
+        aria: `${KIND[n.kind][0]}・${st}：${n.title}${faded ? '（在聚焦範圍外）' : ''}`,
+      };
+    });
+    const pathSet = {}; { let n = nodes0.find(z => z.id === current); while (n) { pathSet[n.id] = true; n = nodes0.find(z => z.id === n.parent); } }
+    const edges = grouped ? [] : nodes0.filter(n => n.parent).map(n => {
+      const a = pos[n.parent], b = pos[n.id]; const x1 = a.x + 188, y1 = a.y + 30, x2 = b.x, y2 = b.y + 30, mx = (x1 + x2) / 2;
+      const onPath = pathSet[n.id]; const faded = focusRoot && !inFocus[n.id];
+      return { d: `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`, color: onPath ? 'var(--tg-primary)' : n.status === 'discarded' ? 'var(--tg-border-strong)' : STATUS[n.status][1], w: onPath ? 2.5 : 1.5, op: faded ? 0.2 : 0.85 };
+    });
+    // panel
+    const node = NODES.find(n => n.id === (sel || 'uplink'));
+    const isMain = node.kind === 'main', isAside = node.kind === 'a', ended = node.status !== 'open';
+    const notesTab = memoOn ? (P.notesTab || 'notes') : 'notes';
+    const ns = P.notesState || 'list';
+    let items = []; let empty = false, emptyText = '';
+    const noteMenu = memo => [
+      { icon: IC('corner-down-left'), label: '帶進這一輪', color: 'var(--tg-foreground)', bg: 'var(--tg-accent)' },
+      { icon: IC('git-branch'), label: '從這裡繼續談…', color: 'var(--tg-foreground)' },
+      memo ? { icon: IC('notebook-pen'), label: '轉成紀要…', color: 'var(--tg-foreground)' } : { icon: IC('message-square-quote'), label: '到來源', color: 'var(--tg-foreground)' },
+      { icon: IC('pencil'), label: '修改', color: 'var(--tg-foreground)', sep: true },
+      ...(memo ? [] : [{ icon: IC('circle-check'), label: '標成完成', color: 'var(--tg-foreground)' }]),
+      memo ? { icon: IC('trash-2'), label: '刪除', color: 'var(--tg-destructive)' } : { icon: IC('replace'), label: '取代…', color: 'var(--tg-foreground)' },
+    ];
+    if (notesTab === 'notes') {
+      const src = ns === 'full' ? (NOTES[node.id] || []) : (NOTES[node.id] || []);
+      items = src.map(([sec, text], i) => { const done = node.id === 'uplink' && i === 1 && ns !== 'full'; return { hasCheck: true, done, checkBg: done ? 'var(--tg-primary)' : 'var(--tg-surface)', checkBorder: done ? 'var(--tg-primary)' : 'var(--tg-border-strong)', checkAria: done ? `已完成：${text}` : `標成完成：${text}`, checkSize: touch ? 44 : 24, textColor: done ? 'var(--tg-muted)' : 'var(--tg-foreground)', hasSec: true, sec, text, hasMeta: i === 0 || done, meta: done ? '已完成・今天 20:40' : '出處：#4 的回覆', bg: done ? 'var(--tg-surface-sunken)' : 'var(--tg-surface)', op: 1, deco: done ? 'line-through' : 'none', menuOpen: ns === 'menu' && i === 0, menuBg: ns === 'menu' && i === 0 ? 'var(--tg-accent)' : 'transparent', menu: noteMenu(false) }; });
+      if (!items.length) { empty = true; emptyText = '這個節點還沒有紀要。'; }
+    } else {
+      if (ns === 'emptyMemo') { empty = true; emptyText = '還沒有備忘。寫下不給 AI 的想法；看得到這段對話的人都看得到。'; }
+      else {
+        const src = MEMOS[node.id] || [];
+        items = src.map(([text]) => ({ hasCheck: false, textColor: 'var(--tg-foreground)', hasSec: false, text, hasMeta: true, meta: '今天 20:31', bg: 'var(--tg-surface)', op: ns === 'undo' ? 0.45 : 1, deco: ns === 'undo' ? 'line-through' : 'none', menuOpen: ns === 'menu', menuBg: ns === 'menu' ? 'var(--tg-accent)' : 'transparent', menu: noteMenu(true) }));
+        if (ns === 'editing') items = [];
+      }
+    }
+    const tabCount = { notes: NOTES[node.id]?.length || 0, memo: ns === 'emptyMemo' ? 0 : ns === 'editing' ? 1 : MEMOS[node.id]?.length || 0 };
+    const seg = (key, label) => ({ label, n: tabCount[key], on: notesTab === key, bg: notesTab === key ? 'var(--tg-primary-soft)' : 'transparent', fg: notesTab === key ? 'var(--tg-primary-text)' : 'var(--tg-muted)', fw: notesTab === key ? 500 : 400, phase2: key === 'memo' && P.markPhase !== false });
+    const canWrite = !readonly;
+    const act = (label, v, why) => ({ label, why: why || '', op: why ? 0.45 : 1, fw: v === 'p' ? 500 : 400, bg: v === 'p' ? 'var(--tg-primary)' : v === 'd' ? 'transparent' : 'var(--tg-surface)', color: v === 'p' ? 'var(--tg-primary-foreground)' : v === 'd' ? 'var(--tg-destructive)' : 'var(--tg-foreground)', border: v === 'p' ? '1px solid var(--tg-primary)' : '1px solid var(--tg-border-input)' });
+    let actions = [];
+    if (canWrite) {
+      if (isMain) actions = [act('開支線…', 's')];
+      else if (isAside) actions = [act('記進紀要', 's'), act('停車', 's')];
+      else if (!ended) actions = [act('結束並帶回', 'p', P.streaming === node.id ? '正在回覆，結束後才能帶回' : ''), act('不帶回…', 'd'), act('升為主線…', 's', node.parent !== 'root' ? '只有直接開在主線上的支線能升為主線' : ''), act('獨立成新對話…', 's'), act('開支線…', 's')];
+      else actions = [act('獨立成新對話…', 's')];
+    }
+    const titleEditable = canWrite && (!ended || phase === 2) && !isAside;
+    const titleEditing = !!P.titleEdit || !!P.saveError;
+    const p = {
+      kindLabel: KIND[node.kind][0], icon: KIND[node.kind][1], color: isMain ? 'var(--tg-muted)' : STATUS[node.status][1],
+      hasStatus: !isMain, statusLabel: STATUS[node.status][0], isHere: node.id === current, canGo: node.id !== current,
+      readonlyLine: readonly, title: isMain ? 'NAS 備份規劃' : node.id === 'b2' ? '改用雲端備份（Backblaze B2）還是第二台 NAS' : node.title,
+      titleView: !titleEditing, titleEditing, titleEditable, pencilOp: P.titleHover ? 1 : 0.55, titleHoverBg: P.titleHover ? 'var(--tg-accent)' : 'transparent',
+      editText: P.saveError ? '爸媽家晚上 9 點的上傳速度' : '4TB 與 8TB：容量怎麼選', editBorder: P.saveError ? 'var(--tg-destructive)' : 'var(--tg-border-input)', editError: !!P.saveError,
+      renameNote: ended && !P.saveError, editCount: P.saveError ? '13 / 200' : '13 / 200', saveLabel: P.saveError ? '再儲存一次' : '儲存',
+      phaseRename: ended && phase === 2 && titleEditing && P.markPhase !== false && !isMain,
+      hasPos: !isMain, posText: isMain ? '' : node.parent === 'root' ? `從主線 #${node.fork} 岔出` : `從「${NODES.find(n => n.id === node.parent)?.title}」的 #${node.fork} 岔出`, hasArg: !core && !isMain && !isAside && node.id === 'uplink',
+      hasAsideTtl: isAside,
+      hasLeaf: !core && ended && !isAside && node.status === 'merged', hasCard: node.status === 'merged',
+      hasNotes: notesOn, twoKinds: memoOn, oneKind: notesOn && !memoOn, noteTabs: [seg('notes', '紀要（給 AI）'), seg('memo', '備忘（不給 AI）')], noteCount: tabCount.notes,
+      noteHeadIcon: notesTab === 'notes' ? IC('eye') : IC('eye-off'),
+      noteHead: notesTab === 'notes' ? '這頁每一輪都會給 AI・約 1.1k / 2k token' : '不會給 AI。看得到這段對話的人都看得到。', noteHead2: notesTab === 'notes',
+      empty, emptyText, items, editing: notesTab === 'memo' && ns === 'editing',
+      canAdd: canWrite && !(notesTab === 'memo' && ns === 'editing'), addLabel: notesTab === 'notes' ? '新增紀要（待確認）' : '新增備忘', addOp: ns === 'full' && notesTab === 'notes' ? 0.45 : 1, addDisabled: ns === 'full' && notesTab === 'notes' ? 'true' : 'false',
+      full: ns === 'full' && notesTab === 'notes', undo: ns === 'undo' && notesTab === 'memo', seeAll: notesTab === 'notes', allCount: 18,
+      hasRel: !core && node.id === 'b2', hasActions: actions.length > 0, actions,
+      stats: isMain ? '24 則訊息・7 條支線・最後更新 今天 20:14' : `${node.msgs} 則訊息・${kids(node.id).length} 條支線・最後更新 今天 20:14`,
+    };
+    // styles
+    const frameStyle = { position: 'relative', overflow: 'hidden', width: only ? 320 : w, height: only ? h : h, background: 'var(--tg-background)', color: 'var(--tg-foreground)', fontFamily: 'var(--tg-font-sans)', fontSize: 'var(--tg-text-base)', lineHeight: 1.5, borderRadius: only ? 10 : (tabs ? 16 : 10), boxShadow: '0 0 0 1px var(--tg-border-strong), 0 20px 50px -24px rgba(0,0,0,.35)' };
+    const chatStyle = { position: 'absolute', left: 0, top, width: split ? chatW : w, bottom: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+    const mapStyle = { position: 'absolute', left: split ? mapX : 0, top, right: 0, bottom: 0, display: 'flex', flexDirection: 'column', overflow: 'hidden' };
+    const divActive = !!P.split && P.split !== 'mid';
+    const divStyle = { position: 'absolute', left: chatW, top: 52, width: DIV, bottom: 0, cursor: 'col-resize', outline: P.divFocus ? '2px solid var(--tg-ring)' : 'none', outlineOffset: -2, zIndex: 5 };
+    const divLine = { position: 'absolute', left: 4, top: 0, bottom: 0, width: 1, background: divActive || P.divFocus ? 'var(--tg-primary)' : 'var(--tg-border-strong)' };
+    let panelStyle;
+    if (only) panelStyle = { position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: 'var(--tg-surface)' };
+    else if (tabs) panelStyle = { position: 'absolute', left: 0, right: 0, bottom: 0, height: Math.round(h * 0.66), zIndex: 6, display: 'flex', flexDirection: 'column', borderRadius: 'var(--tg-radius-lg) var(--tg-radius-lg) 0 0', background: 'var(--tg-surface)', boxShadow: 'var(--tg-shadow-overlay)' };
+    else if (compact) panelStyle = { position: 'absolute', left: mapX, right: 0, bottom: 0, height: Math.round((h - mapTop) * 0.6), zIndex: 4, display: 'flex', flexDirection: 'column', borderRadius: 'var(--tg-radius-lg) var(--tg-radius-lg) 0 0', borderTop: '1px solid var(--tg-border-strong)', background: 'var(--tg-surface)', boxShadow: 'var(--tg-shadow-overlay)' };
+    else panelStyle = { position: 'absolute', right: 12, top: mapTop + tbH + 10, maxHeight: h - (mapTop + tbH + 10) - 12, width: 320, zIndex: 4, display: 'flex', flexDirection: 'column', border: '1px solid var(--tg-border-strong)', borderRadius: 'var(--tg-radius-lg)', background: 'var(--tg-surface)', boxShadow: 'var(--tg-shadow-overlay)' };
+    const scrim = tabs && panelShow && tab === 'map';
+    const streamingElsewhere = !!P.streaming && P.streaming !== current;
+    const tabItem = (key, label) => ({ label, on: tab === key, bg: tab === key ? 'var(--tg-primary-soft)' : 'transparent', fg: tab === key ? 'var(--tg-primary-text)' : 'var(--tg-muted)', fw: tab === key ? 500 : 400, hasDot: key === 'map' && streamingElsewhere && tab !== 'map', dotText: '回覆中' });
+    return {
+      rootRef: this.rootRef, live: this.state.live,
+      theme, frameStyle, full: !only, split, tabs, showChat, showMap, chatStyle, mapStyle, divStyle, divLine,
+      gripBg: divActive || P.divFocus ? 'var(--tg-primary)' : 'var(--tg-surface-raised)',
+      ratioPct: Math.round(chatW / w * 100), ratioMin: Math.round(420 / w * 100), ratioMax: Math.round((w - 369) / w * 100),
+      chipLeft: P.split === 'chatMin' ? '12px' : 'auto', chipRight: P.split === 'mapMin' ? '12px' : 'auto',
+      hasDivChip: P.split === 'chatMin' || P.split === 'mapMin', divChip: P.split === 'chatMin' ? '對話已到最窄 420px' : '地圖已到最窄 360px',
+      crumbMain: w >= 768, crumbDots: w < 768, showGoal: !core && w >= 768, tokenText: w < 768 ? '3.1k' : '3.1k token',
+      btnH: touch ? 44 : 32, focusPad: touch ? 12 : 10, focusLabel: touch ? '' : '專注',
+      tabItems: [tabItem('chat', '對話'), tabItem('map', '地圖')],
+      readonly, canWrite, ctlH, ctlSm, segH: touch ? 44 : 28, menuH: touch ? 44 : 32, sendSize: touch ? 44 : 32,
+      chatPadX: chatW < 560 ? 16 : 28, branchLabel: chatW < 520 ? '' : '開支線', previewLabel: chatW < 520 ? '' : '送出前預覽',
+      prefill: !!P.prefill, noPrefill: !P.prefill, composerBorder: P.prefill ? 'var(--tg-ring)' : 'var(--tg-border-input)', composerOutline: P.prefill ? '2px solid var(--tg-ring)' : 'none',
+      tbOp: P.mapError ? 0.45 : 1, tbBtn: touch ? 44 : 28, zoomPct: Math.round(k * 100) + '%',
+      followOn: !P.followPaused, followPaused: !!P.followPaused, followLabel: compact ? '' : '跟隨', pausedText: compact ? '已暫停' : '已暫停跟隨',
+      focusOff: !focusRoot, focusOnTb: !!focusRoot, focusTitle: focusRoot ? NODES.find(n => n.id === focusRoot).title : '', focusTbLabel: compact ? '' : '聚焦子樹',
+      layersLabel: compact ? '' : '圖層', showOutlineSwitch: !compact,
+      rootOff: !grouped && !!pos.root && !P.mapError && tx + 188 * k < 0,
+      heads, shapeLabel: compact ? '' : (grouped ? '收尾分組' : '分層樹'), shapeIcon: grouped ? IC('columns-3') : IC('list-tree'),
+      hasFocusNote: !!focusRoot, outside: !!P.outside,
+      mapError: !!P.mapError, mapOk: !P.mapError, worldTf: `translate(${tx}px, ${ty}px) scale(${k})`, nodes, edges,
+      scrim, scrimStyle: { position: 'absolute', left: 0, right: 0, top, bottom: 0, zIndex: 5, background: 'var(--tg-scrim)' },
+      panelShow, panelStyle, sheetHandle: !only && panelBottom, p,
+    };
+  }
+}
+</script>
+</body>
+</html>

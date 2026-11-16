@@ -1,0 +1,23 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/stream?afterSeq=0",
+  "response": {
+    "deltas": [
+      {
+        "kind": "text",
+        "seq": 1000,
+        "text": "Kyoto in autumn",
+        "turnId": "00000000-0000-4000-8000-000000000002"
+      },
+      {
+        "kind": "text",
+        "seq": 1001,
+        "text": " is lovely.",
+        "turnId": "00000000-0000-4000-8000-000000000002"
+      }
+    ],
+    "seq": 1001,
+    "truncated": false
+  },
+  "status": 200
+}

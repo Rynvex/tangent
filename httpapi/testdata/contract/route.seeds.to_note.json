@@ -1,0 +1,38 @@
+{
+  "method": "POST",
+  "path": "/api/seeds/00000000-0000-4000-8000-000000000001/to-note",
+  "request": {},
+  "response": {
+    "note": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000002",
+      "section": "to_confirm",
+      "sourceCardMessageId": "",
+      "sourceLabel": "主線 #8",
+      "sourceLineId": "00000000-0000-4000-8000-000000000003",
+      "sourceMessageId": "00000000-0000-4000-8000-000000000004",
+      "status": "active",
+      "supersededBy": "",
+      "text": "Check the visa rules",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "revision": 5,
+    "rootLineId": "00000000-0000-4000-8000-000000000003",
+    "seed": {
+      "anchorLineId": "00000000-0000-4000-8000-000000000003",
+      "anchorMessageId": "00000000-0000-4000-8000-000000000004",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "expandedLineId": "",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "noteId": "00000000-0000-4000-8000-000000000002",
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "sourceLabel": "主線 #8",
+      "status": "noted",
+      "text": "Check the visa rules",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 201
+}

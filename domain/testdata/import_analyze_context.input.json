@@ -1,0 +1,33 @@
+{
+  "title": "PG 連線池調校",
+  "units": [
+    {
+      "key": "p1",
+      "question": "PG 連線一直爆 too many connections，要怎麼設定連線池？",
+      "answer": "可以在應用與資料庫之間放 PgBouncer。它會把大量客戶端連線收斂成少數伺服器連線，讓 max_connections 不再被打爆。",
+      "messageCount": 2,
+      "startAt": "2026-11-01T09:00:00Z"
+    },
+    {
+      "key": "p2",
+      "question": "PgBouncer 的 pool_mode 要選 session 還是 transaction？我們是 Django 應用，尖峰大概 400 個連線。",
+      "answer": "好的，這是個很常見的問題！PgBouncer 的 pool_mode 有三種：session、transaction 和 statement。\n\n在 transaction 模式下，連線只在交易期間被占用，所以同樣的 max_client_conn 可以服務更多客戶端。不過 prepared statement 與 SET 指令這類 session 狀態會失效。\n\n```ini\n[pgbouncer]\npool_mode = transaction\ndefault_pool_size = 20\nmax_client_conn = 500\n```\n\n如果你的應用用的是 Django，記得把 CONN_MAX_AGE 設成 0。另外 default_pool_size 要依資料庫的 max_connections 回推，通常留 10–20% 給維運連線。\n\n總結：高併發短交易選 transaction 模式，長交易或依賴 session 狀態的應用維持 session 模式。",
+      "messageCount": 2,
+      "startAt": "2026-11-03T12:10:00Z"
+    },
+    {
+      "key": "p3",
+      "question": "改成 transaction 之後跑 migrate 出現這個錯誤：\n\nTraceback (most recent call last):\n  File \"manage.py\", line 22, in <module>\n    main()\n  File \"/app/venv/lib/python3.12/site-packages/django/db/backends/utils.py\", line 89, in _execute\n    return self.cursor.execute(sql, params)\npsycopg.errors.DuplicatePreparedStatement: prepared statement \"_pg3_0\" already exists\n\n我們的 DATABASES 設定是 ENGINE postgresql、HOST 指向 pgbouncer:6432、CONN_MAX_AGE 0、OPTIONS 沒有特別設定，Django 5.1、psycopg 3.2，PgBouncer 1.21，pool_mode transaction，default_pool_size 20，max_prepared_statements 沒有設。本機直連 Postgres 不會出錯，只有經過 PgBouncer 才會，而且不是每次都出現，大概十次會有三四次，重跑有時候就過了，CI 上也看得到同樣的錯誤，但 staging 環境好像比較少見。請問這是 PgBouncer 還是 psycopg 的問題，要改哪一邊？",
+      "answer": "這是 psycopg 3 的伺服器端 prepared statement 與 transaction 模式衝突造成的。\n\n在 transaction 模式下，同一個客戶端的兩次交易可能落在不同的伺服器連線上，psycopg 自動準備的 _pg3_0 就會撞名。\n\n有兩種修法：在 Django 的 OPTIONS 加上 prepare_threshold: None 關掉自動準備；或升級到 PgBouncer 1.21 以上並設定 max_prepared_statements = 100，讓 PgBouncer 自己追蹤 prepared statement。",
+      "messageCount": 2,
+      "startAt": "2026-11-03T12:25:00Z"
+    },
+    {
+      "key": "p4",
+      "question": "週末想去花蓮，兩天一夜怎麼排？",
+      "answer": "第一天可以走太魯閣的砂卡礑步道，晚上住市區逛東大門夜市。第二天往南到七星潭看日出，再沿台 11 線去石梯坪。",
+      "messageCount": 2,
+      "startAt": "2026-11-05T21:40:00Z"
+    }
+  ]
+}

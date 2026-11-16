@@ -1,0 +1,29 @@
+{
+  "data": {
+    "content": "Kyoto in autumn is lovely.",
+    "createdAt": "2026-01-01T00:00:00Z",
+    "hostMeta": {},
+    "id": "00000000-0000-4000-8000-000000000001",
+    "kind": "chat",
+    "lineId": "00000000-0000-4000-8000-000000000002",
+    "meta": {
+      "actor": "tester",
+      "durationMs": 42,
+      "model": "fake-1",
+      "provider": "fake",
+      "usage": {
+        "costUsd": 0,
+        "inputTokens": 0,
+        "outputTokens": 0
+      }
+    },
+    "pinned": false,
+    "role": "assistant",
+    "seq": 2,
+    "status": "done"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000002",
+  "rootLineId": "00000000-0000-4000-8000-000000000002",
+  "tenant": "tenant-a",
+  "type": "message.updated"
+}

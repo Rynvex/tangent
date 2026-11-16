@@ -1,0 +1,339 @@
+{
+ "name": "kyoto-trip",
+ "title": "Plan a week in Kyoto",
+ "main": [
+  {
+   "user": "When is the best season to visit Kyoto?",
+   "assistant": "If we look at the Kyoto trip again, city buses charge a flat fare inside the centre. From what you described, Gion and Higashiyama are walkable but pricey. A practical note: Gion and Higashiyama are walkable but pricey. A practical note: many ryokan serve dinner at a fixed time. One thing worth keeping in mind: kaiseki lunches cost about a third of dinner. A practical note: Gion and Higashiyama are walkable but pricey."
+  },
+  {
+   "user": "How many days should I give Kyoto itself?",
+   "assistant": "A practical note: late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, kaiseki lunches cost about a third of dinner. Many people forget that late March and the first half of November are the busiest weeks. From what you described, many ryokan serve dinner at a fixed time. If we look at the Kyoto trip again, the subway is faster than buses during festivals. From what you described, Gion and Higashiyama are walkable but pricey."
+  },
+  {
+   "user": "Which neighbourhood is best to stay in?",
+   "assistant": "On the Kyoto trip, late March and the first half of November are the busiest weeks. Many people forget that late March and the first half of November are the busiest weeks. On the Kyoto trip, Arashiyama gets crowded by 9 am. Many people forget that kaiseki lunches cost about a third of dinner. A practical note: the subway is faster than buses during festivals. If we look at the Kyoto trip again, late March and the first half of November are the busiest weeks."
+  },
+  {
+   "user": "How do the city buses work?",
+   "assistant": "A practical note: the subway is faster than buses during festivals. If we look at the Kyoto trip again, many ryokan serve dinner at a fixed time. From what you described, the subway is faster than buses during festivals. Many people forget that the subway is faster than buses during festivals. A practical note: the subway is faster than buses during festivals. On the Kyoto trip, a one-day bus pass rarely pays off now."
+  },
+  {
+   "user": "Is a JR pass worth it for this route?",
+   "assistant": "If we look at the Kyoto trip again, kaiseki lunches cost about a third of dinner. One thing worth keeping in mind: Gion and Higashiyama are walkable but pricey. On the Kyoto trip, a one-day bus pass rarely pays off now. Many people forget that Fushimi Inari is quiet before 7 am. A practical note: Arashiyama gets crowded by 9 am. Many people forget that Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "What should I book in advance?",
+   "assistant": "From what you described, the subway is faster than buses during festivals. If we look at the Kyoto trip again, a one-day bus pass rarely pays off now. If we look at the Kyoto trip again, many ryokan serve dinner at a fixed time. If we look at the Kyoto trip again, kaiseki lunches cost about a third of dinner. A practical note: late March and the first half of November are the busiest weeks. Many people forget that the subway is faster than buses during festivals."
+  },
+  {
+   "user": "Which temples are worth the crowds?",
+   "assistant": "A practical note: kaiseki lunches cost about a third of dinner. From what you described, city buses charge a flat fare inside the centre. Many people forget that Arashiyama gets crowded by 9 am. On the Kyoto trip, Fushimi Inari is quiet before 7 am. Many people forget that many ryokan serve dinner at a fixed time. On the Kyoto trip, Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "Where can I eat kaiseki without a huge bill?",
+   "assistant": "If we look at the Kyoto trip again, city buses charge a flat fare inside the centre. From what you described, kaiseki lunches cost about a third of dinner. Many people forget that many ryokan serve dinner at a fixed time. A practical note: late March and the first half of November are the busiest weeks. From what you described, late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, museum passes are sold at hotels."
+  },
+  {
+   "user": "How do I avoid the morning crowds at Fushimi Inari?",
+   "assistant": "A practical note: museum passes are sold at hotels. One thing worth keeping in mind: city buses charge a flat fare inside the centre. One thing worth keeping in mind: Arashiyama gets crowded by 9 am. One thing worth keeping in mind: late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, Arashiyama gets crowded by 9 am. A practical note: the subway is faster than buses during festivals."
+  },
+  {
+   "user": "What is the etiquette in a ryokan?",
+   "assistant": "From what you described, Arashiyama gets crowded by 9 am. From what you described, museum passes are sold at hotels. From what you described, many ryokan serve dinner at a fixed time. If we look at the Kyoto trip again, Arashiyama gets crowded by 9 am. A practical note: late March and the first half of November are the busiest weeks. One thing worth keeping in mind: Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "When is the best season to visit Kyoto? (follow-up 1)",
+   "assistant": "If we look at the Kyoto trip again, Arashiyama gets crowded by 9 am. A practical note: the subway is faster than buses during festivals. A practical note: late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, Fushimi Inari is quiet before 7 am. One thing worth keeping in mind: Arashiyama gets crowded by 9 am. A practical note: Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "How many days should I give Kyoto itself? (follow-up 1)",
+   "assistant": "From what you described, many ryokan serve dinner at a fixed time. From what you described, kaiseki lunches cost about a third of dinner. If we look at the Kyoto trip again, late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, Arashiyama gets crowded by 9 am. From what you described, museum passes are sold at hotels. If we look at the Kyoto trip again, many ryokan serve dinner at a fixed time."
+  },
+  {
+   "user": "Which neighbourhood is best to stay in? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, city buses charge a flat fare inside the centre. One thing worth keeping in mind: museum passes are sold at hotels. If we look at the Kyoto trip again, Gion and Higashiyama are walkable but pricey. On the Kyoto trip, a one-day bus pass rarely pays off now. On the Kyoto trip, Gion and Higashiyama are walkable but pricey."
+  },
+  {
+   "user": "How do the city buses work? (follow-up 1)",
+   "assistant": "A practical note: late March and the first half of November are the busiest weeks. From what you described, late March and the first half of November are the busiest weeks. From what you described, the subway is faster than buses during festivals. If we look at the Kyoto trip again, Gion and Higashiyama are walkable but pricey. From what you described, city buses charge a flat fare inside the centre. On the Kyoto trip, a one-day bus pass rarely pays off now."
+  },
+  {
+   "user": "Is a JR pass worth it for this route? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: city buses charge a flat fare inside the centre. If we look at the Kyoto trip again, a one-day bus pass rarely pays off now. Many people forget that city buses charge a flat fare inside the centre. Many people forget that a one-day bus pass rarely pays off now. A practical note: a one-day bus pass rarely pays off now. A practical note: Fushimi Inari is quiet before 7 am."
+  },
+  {
+   "user": "What should I book in advance? (follow-up 1)",
+   "assistant": "On the Kyoto trip, many ryokan serve dinner at a fixed time. From what you described, late March and the first half of November are the busiest weeks. From what you described, kaiseki lunches cost about a third of dinner. One thing worth keeping in mind: kaiseki lunches cost about a third of dinner. On the Kyoto trip, a one-day bus pass rarely pays off now. Many people forget that a one-day bus pass rarely pays off now."
+  },
+  {
+   "user": "Which temples are worth the crowds? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: Arashiyama gets crowded by 9 am. A practical note: museum passes are sold at hotels. One thing worth keeping in mind: late March and the first half of November are the busiest weeks. A practical note: late March and the first half of November are the busiest weeks. On the Kyoto trip, city buses charge a flat fare inside the centre. A practical note: city buses charge a flat fare inside the centre."
+  },
+  {
+   "user": "Where can I eat kaiseki without a huge bill? (follow-up 1)",
+   "assistant": "Many people forget that Arashiyama gets crowded by 9 am. If we look at the Kyoto trip again, kaiseki lunches cost about a third of dinner. Many people forget that the subway is faster than buses during festivals. A practical note: Arashiyama gets crowded by 9 am. If we look at the Kyoto trip again, the subway is faster than buses during festivals. A practical note: late March and the first half of November are the busiest weeks."
+  },
+  {
+   "user": "How do I avoid the morning crowds at Fushimi Inari? (follow-up 1)",
+   "assistant": "From what you described, museum passes are sold at hotels. On the Kyoto trip, kaiseki lunches cost about a third of dinner. One thing worth keeping in mind: a one-day bus pass rarely pays off now. On the Kyoto trip, the subway is faster than buses during festivals. On the Kyoto trip, a one-day bus pass rarely pays off now. From what you described, Gion and Higashiyama are walkable but pricey."
+  },
+  {
+   "user": "What is the etiquette in a ryokan? (follow-up 1)",
+   "assistant": "Many people forget that a one-day bus pass rarely pays off now. A practical note: city buses charge a flat fare inside the centre. From what you described, museum passes are sold at hotels. On the Kyoto trip, city buses charge a flat fare inside the centre. On the Kyoto trip, Arashiyama gets crowded by 9 am. One thing worth keeping in mind: museum passes are sold at hotels."
+  },
+  {
+   "user": "When is the best season to visit Kyoto? (follow-up 2)",
+   "assistant": "A practical note: museum passes are sold at hotels. Many people forget that city buses charge a flat fare inside the centre. If we look at the Kyoto trip again, museum passes are sold at hotels. A practical note: late March and the first half of November are the busiest weeks. From what you described, the subway is faster than buses during festivals. One thing worth keeping in mind: Gion and Higashiyama are walkable but pricey."
+  },
+  {
+   "user": "How many days should I give Kyoto itself? (follow-up 2)",
+   "assistant": "Many people forget that museum passes are sold at hotels. If we look at the Kyoto trip again, kaiseki lunches cost about a third of dinner. A practical note: the subway is faster than buses during festivals. Many people forget that Gion and Higashiyama are walkable but pricey. From what you described, kaiseki lunches cost about a third of dinner. A practical note: Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "Which neighbourhood is best to stay in? (follow-up 2)",
+   "assistant": "From what you described, late March and the first half of November are the busiest weeks. A practical note: museum passes are sold at hotels. On the Kyoto trip, a one-day bus pass rarely pays off now. One thing worth keeping in mind: city buses charge a flat fare inside the centre. If we look at the Kyoto trip again, Fushimi Inari is quiet before 7 am. From what you described, city buses charge a flat fare inside the centre."
+  },
+  {
+   "user": "How do the city buses work? (follow-up 2)",
+   "assistant": "One thing worth keeping in mind: kaiseki lunches cost about a third of dinner. Many people forget that a one-day bus pass rarely pays off now. A practical note: Gion and Higashiyama are walkable but pricey. From what you described, Arashiyama gets crowded by 9 am. A practical note: Arashiyama gets crowded by 9 am. One thing worth keeping in mind: Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "Is a JR pass worth it for this route? (follow-up 2)",
+   "assistant": "Many people forget that Gion and Higashiyama are walkable but pricey. On the Kyoto trip, late March and the first half of November are the busiest weeks. One thing worth keeping in mind: city buses charge a flat fare inside the centre. If we look at the Kyoto trip again, city buses charge a flat fare inside the centre. From what you described, the subway is faster than buses during festivals. If we look at the Kyoto trip again, Fushimi Inari is quiet before 7 am."
+  },
+  {
+   "user": "What should I book in advance? (follow-up 2)",
+   "assistant": "From what you described, Arashiyama gets crowded by 9 am. From what you described, Fushimi Inari is quiet before 7 am. On the Kyoto trip, Fushimi Inari is quiet before 7 am. One thing worth keeping in mind: a one-day bus pass rarely pays off now. Many people forget that museum passes are sold at hotels. One thing worth keeping in mind: many ryokan serve dinner at a fixed time."
+  },
+  {
+   "user": "Which temples are worth the crowds? (follow-up 2)",
+   "assistant": "If we look at the Kyoto trip again, museum passes are sold at hotels. From what you described, Gion and Higashiyama are walkable but pricey. A practical note: late March and the first half of November are the busiest weeks. A practical note: Gion and Higashiyama are walkable but pricey. One thing worth keeping in mind: city buses charge a flat fare inside the centre. On the Kyoto trip, Fushimi Inari is quiet before 7 am."
+  },
+  {
+   "user": "Where can I eat kaiseki without a huge bill? (follow-up 2)",
+   "assistant": "If we look at the Kyoto trip again, museum passes are sold at hotels. On the Kyoto trip, kaiseki lunches cost about a third of dinner. If we look at the Kyoto trip again, museum passes are sold at hotels. If we look at the Kyoto trip again, the subway is faster than buses during festivals. From what you described, Gion and Higashiyama are walkable but pricey. From what you described, Fushimi Inari is quiet before 7 am."
+  },
+  {
+   "user": "How do I avoid the morning crowds at Fushimi Inari? (follow-up 2)",
+   "assistant": "If we look at the Kyoto trip again, museum passes are sold at hotels. A practical note: Gion and Higashiyama are walkable but pricey. On the Kyoto trip, a one-day bus pass rarely pays off now. From what you described, late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, late March and the first half of November are the busiest weeks. On the Kyoto trip, late March and the first half of November are the busiest weeks."
+  },
+  {
+   "user": "What is the etiquette in a ryokan? (follow-up 2)",
+   "assistant": "On the Kyoto trip, kaiseki lunches cost about a third of dinner. One thing worth keeping in mind: late March and the first half of November are the busiest weeks. If we look at the Kyoto trip again, the subway is faster than buses during festivals. One thing worth keeping in mind: kaiseki lunches cost about a third of dinner. A practical note: Gion and Higashiyama are walkable but pricey. Many people forget that city buses charge a flat fare inside the centre."
+  },
+  {
+   "user": "When is the best season to visit Kyoto? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: the subway is faster than buses during festivals. A practical note: Gion and Higashiyama are walkable but pricey. If we look at the Kyoto trip again, kaiseki lunches cost about a third of dinner. If we look at the Kyoto trip again, a one-day bus pass rarely pays off now. Many people forget that a one-day bus pass rarely pays off now. From what you described, many ryokan serve dinner at a fixed time."
+  },
+  {
+   "user": "How many days should I give Kyoto itself? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: Gion and Higashiyama are walkable but pricey. On the Kyoto trip, Fushimi Inari is quiet before 7 am. On the Kyoto trip, late March and the first half of November are the busiest weeks. Many people forget that a one-day bus pass rarely pays off now. From what you described, museum passes are sold at hotels. A practical note: many ryokan serve dinner at a fixed time."
+  },
+  {
+   "user": "Which neighbourhood is best to stay in? (follow-up 3)",
+   "assistant": "A practical note: Fushimi Inari is quiet before 7 am. On the Kyoto trip, Gion and Higashiyama are walkable but pricey. If we look at the Kyoto trip again, Fushimi Inari is quiet before 7 am. On the Kyoto trip, many ryokan serve dinner at a fixed time. One thing worth keeping in mind: a one-day bus pass rarely pays off now. If we look at the Kyoto trip again, museum passes are sold at hotels."
+  },
+  {
+   "user": "How do the city buses work? (follow-up 3)",
+   "assistant": "Many people forget that many ryokan serve dinner at a fixed time. From what you described, Fushimi Inari is quiet before 7 am. If we look at the Kyoto trip again, city buses charge a flat fare inside the centre. From what you described, the subway is faster than buses during festivals. One thing worth keeping in mind: the subway is faster than buses during festivals. On the Kyoto trip, Fushimi Inari is quiet before 7 am."
+  },
+  {
+   "user": "Is a JR pass worth it for this route? (follow-up 3)",
+   "assistant": "On the Kyoto trip, a one-day bus pass rarely pays off now. On the Kyoto trip, many ryokan serve dinner at a fixed time. Many people forget that museum passes are sold at hotels. One thing worth keeping in mind: Fushimi Inari is quiet before 7 am. From what you described, kaiseki lunches cost about a third of dinner. From what you described, late March and the first half of November are the busiest weeks."
+  },
+  {
+   "user": "What should I book in advance? (follow-up 3)",
+   "assistant": "From what you described, city buses charge a flat fare inside the centre. From what you described, museum passes are sold at hotels. From what you described, the subway is faster than buses during festivals. If we look at the Kyoto trip again, Gion and Higashiyama are walkable but pricey. If we look at the Kyoto trip again, museum passes are sold at hotels. On the Kyoto trip, museum passes are sold at hotels."
+  },
+  {
+   "user": "Which temples are worth the crowds? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: the subway is faster than buses during festivals. One thing worth keeping in mind: late March and the first half of November are the busiest weeks. On the Kyoto trip, kaiseki lunches cost about a third of dinner. If we look at the Kyoto trip again, a one-day bus pass rarely pays off now. Many people forget that Gion and Higashiyama are walkable but pricey. On the Kyoto trip, Gion and Higashiyama are walkable but pricey."
+  },
+  {
+   "user": "Where can I eat kaiseki without a huge bill? (follow-up 3)",
+   "assistant": "From what you described, late March and the first half of November are the busiest weeks. A practical note: Fushimi Inari is quiet before 7 am. One thing worth keeping in mind: many ryokan serve dinner at a fixed time. If we look at the Kyoto trip again, Gion and Higashiyama are walkable but pricey. On the Kyoto trip, Fushimi Inari is quiet before 7 am. Many people forget that Arashiyama gets crowded by 9 am."
+  },
+  {
+   "user": "How do I avoid the morning crowds at Fushimi Inari? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: city buses charge a flat fare inside the centre. One thing worth keeping in mind: city buses charge a flat fare inside the centre. From what you described, Fushimi Inari is quiet before 7 am. Many people forget that Gion and Higashiyama are walkable but pricey. If we look at the Kyoto trip again, Arashiyama gets crowded by 9 am. One thing worth keeping in mind: a one-day bus pass rarely pays off now."
+  },
+  {
+   "user": "What is the etiquette in a ryokan? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: the subway is faster than buses during festivals. Many people forget that Arashiyama gets crowded by 9 am. From what you described, late March and the first half of November are the busiest weeks. Many people forget that museum passes are sold at hotels. Many people forget that Arashiyama gets crowded by 9 am. One thing worth keeping in mind: the subway is faster than buses during festivals."
+  }
+ ],
+ "pins": [
+  2,
+  17
+ ],
+ "branches": [
+  {
+   "name": "ryokan",
+   "parent": "main",
+   "at": 6,
+   "purpose": "Ryokan or business hotel",
+   "end": "merge",
+   "card": {
+    "question": "Ryokan or business hotel?",
+    "conclusion": "Book one night in a ryokan in Higashiyama, the rest in a business hotel near Kyoto Station"
+   },
+   "leaf": {
+    "kind": "decision",
+    "line": "One ryokan night in Higashiyama, the rest near Kyoto Station"
+   },
+   "exchanges": [
+    {
+     "user": "Is a ryokan worth the price?",
+     "assistant": "A practical note: business hotels near the station are about 9,000 yen. One thing worth keeping in mind: Higashiyama ryokan are close to the temples. Many people forget that a ryokan night with dinner is about 30,000 yen. One thing worth keeping in mind: Higashiyama ryokan are close to the temples. On Ryokan or business hotel, business hotels near the station are about 9,000 yen. A practical note: Higashiyama ryokan are close to the temples."
+    },
+    {
+     "user": "What does a night cost?",
+     "assistant": "If we look at Ryokan or business hotel again, business hotels near the station are about 9,000 yen. If we look at Ryokan or business hotel again, business hotels near the station are about 9,000 yen. If we look at Ryokan or business hotel again, business hotels near the station are about 9,000 yen. On Ryokan or business hotel, business hotels near the station are about 9,000 yen. From what you described, business hotels near the station are about 9,000 yen. From what you described, a ryokan night with dinner is about 30,000 yen."
+    },
+    {
+     "user": "Which area for the ryokan?",
+     "assistant": "On Ryokan or business hotel, business hotels near the station are about 9,000 yen. A practical note: Higashiyama ryokan are close to the temples. On Ryokan or business hotel, Higashiyama ryokan are close to the temples. Many people forget that a ryokan night with dinner is about 30,000 yen. If we look at Ryokan or business hotel again, business hotels near the station are about 9,000 yen. If we look at Ryokan or business hotel again, a ryokan night with dinner is about 30,000 yen."
+    },
+    {
+     "user": "And the other nights?",
+     "assistant": "One thing worth keeping in mind: a ryokan night with dinner is about 30,000 yen. From what you described, business hotels near the station are about 9,000 yen. If we look at Ryokan or business hotel again, business hotels near the station are about 9,000 yen. One thing worth keeping in mind: business hotels near the station are about 9,000 yen. On Ryokan or business hotel, Higashiyama ryokan are close to the temples. A practical note: a ryokan night with dinner is about 30,000 yen."
+    }
+   ]
+  },
+  {
+   "name": "osaka",
+   "parent": "main",
+   "at": 12,
+   "purpose": "Osaka side trip",
+   "end": "discard",
+   "leaf": {
+    "kind": "dead_end",
+    "line": "Skip Osaka: it costs a whole day for food we can find in Kyoto"
+   },
+   "exchanges": [
+    {
+     "user": "Is Osaka worth a day?",
+     "assistant": "One thing worth keeping in mind: the train to Osaka takes 30 minutes. From what you described, Osaka castle is a reconstruction. Many people forget that Osaka castle is a reconstruction. Many people forget that Dotonbori is mostly food stalls. Many people forget that Osaka castle is a reconstruction. One thing worth keeping in mind: the train to Osaka takes 30 minutes."
+    },
+    {
+     "user": "How long is the train?",
+     "assistant": "A practical note: Dotonbori is mostly food stalls. A practical note: Osaka castle is a reconstruction. Many people forget that the train to Osaka takes 30 minutes. From what you described, Dotonbori is mostly food stalls. If we look at Osaka side trip again, Osaka castle is a reconstruction. Many people forget that Osaka castle is a reconstruction."
+    },
+    {
+     "user": "What would we do there?",
+     "assistant": "Many people forget that Dotonbori is mostly food stalls. On Osaka side trip, the train to Osaka takes 30 minutes. If we look at Osaka side trip again, the train to Osaka takes 30 minutes. From what you described, Osaka castle is a reconstruction. If we look at Osaka side trip again, the train to Osaka takes 30 minutes. From what you described, the train to Osaka takes 30 minutes."
+    },
+    {
+     "user": "Is Osaka worth a day? (follow-up 1)",
+     "assistant": "Many people forget that Dotonbori is mostly food stalls. If we look at Osaka side trip again, Dotonbori is mostly food stalls. One thing worth keeping in mind: Dotonbori is mostly food stalls. Many people forget that Osaka castle is a reconstruction. A practical note: Osaka castle is a reconstruction. On Osaka side trip, Osaka castle is a reconstruction."
+    }
+   ]
+  },
+  {
+   "name": "rail",
+   "parent": "main",
+   "at": 20,
+   "purpose": "Rail pass for the week",
+   "end": "merge",
+   "card": {
+    "question": "Is a JR pass worth it?",
+    "conclusion": "No JR pass: buy single Shinkansen tickets and an ICOCA card"
+   },
+   "leaf": {
+    "kind": "conclusion",
+    "line": "No JR pass; single Shinkansen tickets plus an ICOCA card"
+   },
+   "exchanges": [
+    {
+     "user": "What does the JR pass cost now?",
+     "assistant": "If we look at Rail pass for the week again, the 7-day pass costs 50,000 yen since the price rise. If we look at Rail pass for the week again, ICOCA works on buses and subways. One thing worth keeping in mind: a Tokyo-Kyoto round trip is about 28,000 yen. From what you described, the 7-day pass costs 50,000 yen since the price rise. One thing worth keeping in mind: a Tokyo-Kyoto round trip is about 28,000 yen. Many people forget that ICOCA works on buses and subways."
+    },
+    {
+     "user": "What are we actually riding?",
+     "assistant": "A practical note: the 7-day pass costs 50,000 yen since the price rise. A practical note: ICOCA works on buses and subways. Many people forget that ICOCA works on buses and subways. A practical note: a Tokyo-Kyoto round trip is about 28,000 yen. One thing worth keeping in mind: ICOCA works on buses and subways. Many people forget that ICOCA works on buses and subways."
+    },
+    {
+     "user": "What about local trains?",
+     "assistant": "If we look at Rail pass for the week again, the 7-day pass costs 50,000 yen since the price rise. From what you described, the 7-day pass costs 50,000 yen since the price rise. On Rail pass for the week, ICOCA works on buses and subways. Many people forget that a Tokyo-Kyoto round trip is about 28,000 yen. One thing worth keeping in mind: the 7-day pass costs 50,000 yen since the price rise. Many people forget that ICOCA works on buses and subways."
+    },
+    {
+     "user": "What does the JR pass cost now? (follow-up 1)",
+     "assistant": "Many people forget that ICOCA works on buses and subways. A practical note: the 7-day pass costs 50,000 yen since the price rise. A practical note: the 7-day pass costs 50,000 yen since the price rise. A practical note: a Tokyo-Kyoto round trip is about 28,000 yen. From what you described, the 7-day pass costs 50,000 yen since the price rise. One thing worth keeping in mind: a Tokyo-Kyoto round trip is about 28,000 yen."
+    }
+   ]
+  },
+  {
+   "name": "seats",
+   "parent": "rail",
+   "at": 1,
+   "purpose": "Seat reservations",
+   "end": "discard",
+   "leaf": {
+    "kind": "answer",
+    "line": "Reserve seats only for the Friday afternoon train"
+   },
+   "exchanges": [
+    {
+     "user": "Do we need reserved seats?",
+     "assistant": "One thing worth keeping in mind: unreserved cars are 1 to 3. A practical note: Friday afternoon trains fill up. On Seat reservations, unreserved cars are 1 to 3. From what you described, unreserved cars are 1 to 3. A practical note: Friday afternoon trains fill up. One thing worth keeping in mind: Friday afternoon trains fill up."
+    },
+    {
+     "user": "Which trains fill up?",
+     "assistant": "If we look at Seat reservations again, unreserved cars are 1 to 3. On Seat reservations, Friday afternoon trains fill up. From what you described, Friday afternoon trains fill up. One thing worth keeping in mind: Friday afternoon trains fill up. One thing worth keeping in mind: unreserved cars are 1 to 3. From what you described, Friday afternoon trains fill up."
+    },
+    {
+     "user": "Do we need reserved seats? (follow-up 1)",
+     "assistant": "If we look at Seat reservations again, unreserved cars are 1 to 3. Many people forget that unreserved cars are 1 to 3. One thing worth keeping in mind: unreserved cars are 1 to 3. A practical note: unreserved cars are 1 to 3. On Seat reservations, unreserved cars are 1 to 3. If we look at Seat reservations again, Friday afternoon trains fill up."
+    },
+    {
+     "user": "Which trains fill up? (follow-up 1)",
+     "assistant": "One thing worth keeping in mind: unreserved cars are 1 to 3. On Seat reservations, unreserved cars are 1 to 3. On Seat reservations, Friday afternoon trains fill up. If we look at Seat reservations again, Friday afternoon trains fill up. Many people forget that unreserved cars are 1 to 3. On Seat reservations, Friday afternoon trains fill up."
+    }
+   ]
+  },
+  {
+   "name": "kimono",
+   "parent": "main",
+   "at": 30,
+   "purpose": "Kimono rental",
+   "end": "open",
+   "exchanges": [
+    {
+     "user": "Should we rent kimono for a day?",
+     "assistant": "If we look at Kimono rental again, Gion shops include hair styling. A practical note: Gion shops include hair styling. If we look at Kimono rental again, Gion shops include hair styling. On Kimono rental, Gion shops include hair styling. A practical note: rentals start around 4,000 yen. From what you described, Gion shops include hair styling."
+    },
+    {
+     "user": "Where?",
+     "assistant": "If we look at Kimono rental again, Gion shops include hair styling. From what you described, Gion shops include hair styling. On Kimono rental, Gion shops include hair styling. A practical note: Gion shops include hair styling. If we look at Kimono rental again, rentals start around 4,000 yen. From what you described, rentals start around 4,000 yen."
+    },
+    {
+     "user": "Should we rent kimono for a day? (follow-up 1)",
+     "assistant": "A practical note: rentals start around 4,000 yen. Many people forget that Gion shops include hair styling. Many people forget that Gion shops include hair styling. A practical note: rentals start around 4,000 yen. From what you described, rentals start around 4,000 yen. Many people forget that rentals start around 4,000 yen."
+    },
+    {
+     "user": "Where? (follow-up 1)",
+     "assistant": "If we look at Kimono rental again, Gion shops include hair styling. A practical note: Gion shops include hair styling. If we look at Kimono rental again, Gion shops include hair styling. A practical note: rentals start around 4,000 yen. Many people forget that rentals start around 4,000 yen. Many people forget that Gion shops include hair styling."
+    }
+   ]
+  }
+ ],
+ "asks": [
+  {
+   "line": "main",
+   "question": "So where are we sleeping and how are we getting there?",
+   "expect": [
+    "One ryokan night in Higashiyama, the rest near Kyoto Station",
+    "No JR pass; single Shinkansen tickets plus an ICOCA card"
+   ]
+  },
+  {
+   "line": "kimono",
+   "question": "Does the kimono day fit our plan?",
+   "expect": [
+    "The plan skips Osaka",
+    "The stay is near Kyoto Station"
+   ]
+  }
+ ]
+}

@@ -1,0 +1,45 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/groups",
+  "response": {
+    "groups": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "memberLineIds": [
+          "00000000-0000-4000-8000-000000000003",
+          "00000000-0000-4000-8000-000000000004"
+        ],
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "active",
+        "summary": "These branches settle one question together (fake runner).",
+        "summaryStatus": "ready",
+        "title": "Parts",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000005",
+        "memberLineIds": [
+          "00000000-0000-4000-8000-000000000006",
+          "00000000-0000-4000-8000-000000000007"
+        ],
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "active",
+        "summary": "These branches settle one question together (fake runner).",
+        "summaryStatus": "ready",
+        "title": "Ended together (fake runner)",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "limits": {
+      "maxActivePerTree": 50,
+      "maxMembers": 12,
+      "titleMaxRunes": 120
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 200
+}

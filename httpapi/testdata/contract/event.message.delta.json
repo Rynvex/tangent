@@ -1,0 +1,12 @@
+{
+  "data": {
+    "kind": "text",
+    "seq": 1000,
+    "text": "Kyoto in autumn",
+    "turnId": "00000000-0000-4000-8000-000000000001"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000002",
+  "rootLineId": "00000000-0000-4000-8000-000000000002",
+  "tenant": "tenant-a",
+  "type": "message.delta"
+}

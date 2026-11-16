@@ -1,0 +1,52 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/terms",
+  "request": {
+    "explanation": "多版本並行控制：讀不擋寫",
+    "term": "MVCC"
+  },
+  "response": {
+    "change": "created",
+    "keptBranch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "archived": false,
+      "cardMessageId": "",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "keptAt": "2026-01-01T00:00:00Z",
+      "kind": "aside",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": null,
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "button",
+      "parentLineId": "00000000-0000-4000-8000-000000000003",
+      "provider": "fake",
+      "purpose": "quick check",
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "status": "discarded",
+      "unread": 1
+    },
+    "term": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "explanation": "多版本並行控制：讀不擋寫",
+      "id": "00000000-0000-4000-8000-000000000004",
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "sourceLabel": "順口問・quick check",
+      "sourceLineId": "00000000-0000-4000-8000-000000000001",
+      "sourceMessageId": "",
+      "term": "MVCC",
+      "termKey": "mvcc",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 201
+}

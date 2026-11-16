@@ -1,0 +1,38 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/notes/00000000-0000-4000-8000-000000000002/supersede",
+  "request": {
+    "text": "Book the 9:00 train"
+  },
+  "response": {
+    "note": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "section": "todo",
+      "sourceCardMessageId": "",
+      "sourceLineId": "",
+      "sourceMessageId": "",
+      "status": "active",
+      "supersededBy": "",
+      "text": "Book the 9:00 train",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "revision": 4,
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "superseded": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000002",
+      "section": "todo",
+      "sourceCardMessageId": "",
+      "sourceLineId": "",
+      "sourceMessageId": "",
+      "status": "superseded",
+      "supersededBy": "00000000-0000-4000-8000-000000000003",
+      "text": "Book the train",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 201
+}

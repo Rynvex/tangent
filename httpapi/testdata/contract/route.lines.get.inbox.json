@@ -1,0 +1,50 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001",
+  "response": {
+    "archivedAt": null,
+    "awaitingReview": 0,
+    "branchCounts": {
+      "discarded": 1,
+      "merged": 1,
+      "open": 2,
+      "promoted": 0
+    },
+    "branchUnread": 2,
+    "conversationBranch": null,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "createdBy": "tester",
+    "folder": "",
+    "hostMeta": {},
+    "id": "00000000-0000-4000-8000-000000000001",
+    "lastActivityAt": "2026-01-01T00:00:00Z",
+    "model": "fake-1",
+    "notesRevision": 4,
+    "openSeeds": 3,
+    "openSuggestions": 1,
+    "provider": "fake",
+    "spunOffFrom": null,
+    "staleBranches": 0,
+    "status": "idle",
+    "statusDetail": "",
+    "summary": {
+      "decisions": [],
+      "files": [],
+      "openQuestions": [],
+      "suggestedLandings": [],
+      "topic": "The conversation so far (fake summary)",
+      "updatedAt": ""
+    },
+    "tags": [],
+    "tenantId": "tenant-a",
+    "title": "Trip to Kyoto",
+    "unread": 6,
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "usage": {
+      "costUsd": 0.001534,
+      "inputTokens": 1446,
+      "outputTokens": 44
+    }
+  },
+  "status": 200
+}

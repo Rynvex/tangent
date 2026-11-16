@@ -1,0 +1,130 @@
+{
+  "method": "GET",
+  "path": "/api/capabilities",
+  "response": {
+    "features": [
+      {
+        "enabled": true,
+        "name": "notes"
+      },
+      {
+        "enabled": true,
+        "name": "chapters"
+      },
+      {
+        "enabled": true,
+        "name": "aside"
+      },
+      {
+        "enabled": true,
+        "mode": "suggest",
+        "name": "summary"
+      },
+      {
+        "enabled": true,
+        "name": "card_draft"
+      },
+      {
+        "enabled": true,
+        "mode": "suggest",
+        "name": "branch_suggest"
+      },
+      {
+        "enabled": true,
+        "name": "search"
+      },
+      {
+        "enabled": true,
+        "mode": "suggest",
+        "name": "leaf"
+      },
+      {
+        "enabled": true,
+        "name": "parking"
+      },
+      {
+        "enabled": true,
+        "name": "spinoff"
+      },
+      {
+        "enabled": true,
+        "mode": "suggest",
+        "name": "rebalance"
+      },
+      {
+        "enabled": true,
+        "mode": "manual",
+        "name": "goal"
+      },
+      {
+        "enabled": true,
+        "mode": "manual",
+        "name": "relations"
+      },
+      {
+        "enabled": true,
+        "name": "open_loops"
+      },
+      {
+        "enabled": false,
+        "name": "fisheye"
+      },
+      {
+        "enabled": true,
+        "mode": "manual",
+        "name": "group"
+      },
+      {
+        "enabled": true,
+        "mode": "manual",
+        "name": "ibis"
+      },
+      {
+        "enabled": true,
+        "mode": "manual",
+        "name": "fold"
+      },
+      {
+        "enabled": true,
+        "mode": "manual",
+        "name": "diverge"
+      },
+      {
+        "enabled": false,
+        "mode": "off",
+        "name": "memory"
+      },
+      {
+        "enabled": true,
+        "name": "memo"
+      },
+      {
+        "enabled": true,
+        "name": "glossary"
+      },
+      {
+        "enabled": true,
+        "name": "suggestions"
+      }
+    ],
+    "models": [
+      {
+        "models": [
+          "fake-1"
+        ],
+        "provider": "fake"
+      },
+      {
+        "models": [
+          "claude-haiku-4-5",
+          "claude-sonnet-4-5"
+        ],
+        "provider": "anthropic"
+      }
+    ],
+    "permissions": {
+      "canWrite": false
+    }
+  },
+  "status": 200
+}

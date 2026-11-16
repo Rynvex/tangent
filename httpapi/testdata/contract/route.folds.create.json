@@ -1,0 +1,35 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/folds",
+  "request": {
+    "fromMessageId": "00000000-0000-4000-8000-000000000002",
+    "toMessageId": "00000000-0000-4000-8000-000000000003"
+  },
+  "response": {
+    "fold": {
+      "aiDrafted": false,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromMessageId": "00000000-0000-4000-8000-000000000002",
+      "fromSeq": 5,
+      "id": "00000000-0000-4000-8000-000000000004",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "messageCount": 2,
+      "status": "drafting",
+      "summary": "",
+      "toMessageId": "00000000-0000-4000-8000-000000000003",
+      "toSeq": 6,
+      "tokensOriginal": 20,
+      "tokensSummary": 0,
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "job": {
+      "jobId": "00000000-0000-4000-8000-000000000005",
+      "kind": "fold_summary",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "model": "fake-1",
+      "provider": "fake"
+    }
+  },
+  "status": 201
+}

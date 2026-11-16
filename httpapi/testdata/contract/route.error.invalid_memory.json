@@ -1,0 +1,13 @@
+{
+  "method": "POST",
+  "path": "/api/memories",
+  "request": {
+    "kind": "rumour",
+    "text": "x"
+  },
+  "response": {
+    "code": "invalid_memory",
+    "error": "kind must be fact, decision, preference or lesson"
+  },
+  "status": 422
+}

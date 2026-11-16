@@ -1,0 +1,27 @@
+{
+  "method": "PATCH",
+  "path": "/api/folds/00000000-0000-4000-8000-000000000001",
+  "request": {
+    "summary": "Backups: offsite as well."
+  },
+  "response": {
+    "fold": {
+      "aiDrafted": false,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromMessageId": "00000000-0000-4000-8000-000000000002",
+      "fromSeq": 5,
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lineId": "00000000-0000-4000-8000-000000000003",
+      "messageCount": 2,
+      "status": "active",
+      "summary": "Backups: offsite as well.",
+      "toMessageId": "00000000-0000-4000-8000-000000000004",
+      "toSeq": 6,
+      "tokensOriginal": 20,
+      "tokensSummary": 7,
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

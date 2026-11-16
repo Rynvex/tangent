@@ -1,0 +1,2552 @@
+package tangent // import "github.com/Rynvex/tangent"
+
+Package tangent is the conversation-branch engine: it combines the store and the
+domain logic with the host's hooks into the turn protocol, the branch operations
+and background jobs, and publishes events after every commit. See docs/DESIGN.md
+§6.
+
+CONSTANTS
+
+const (
+	BudgetCore    = "core"
+	BudgetHost    = "host"
+	BudgetHistory = "history"
+)
+    Budget owners besides the features.
+
+const (
+	DefaultTurnTimeout = 10 * time.Minute
+	DefaultJobTimeout  = 3 * time.Minute
+)
+    Default timeouts of the runner dispatcher.
+
+const (
+	DefaultMaxQueue       = 64
+	DefaultMaxTenantTurns = 16
+)
+    Default bounds of the runner dispatcher's queue.
+
+const (
+	EventLineCreated     = "line.created"
+	EventLineUpdated     = "line.updated"
+	EventLineDeleted     = "line.deleted"
+	EventMessageCreated  = "message.created"
+	EventMessageUpdated  = "message.updated"
+	EventMessageDelta    = "message.delta"
+	EventBranchChanged   = "branch.changed"
+	EventNotesChanged    = "notes.changed"
+	EventChaptersChanged = "chapters.changed"
+	EventTurnRetrying    = "turn.retrying"
+	// P1 (B8).
+	EventSuggestionChanged = "suggestion.changed"
+	EventLeafChanged       = "leaf.changed"
+	EventSeedsChanged      = "seeds.changed"
+	EventLinkChanged       = "link.changed"
+	// EventSummaryDue: a summary is due (summary in suggest mode).
+	EventSummaryDue = "summary.due"
+	// P2 (B9).
+	EventGoalChanged  = "goal.changed"
+	EventGroupChanged = "group.changed"
+	// EventJobFailed: a feature's background job failed (B9 part C).
+	EventJobFailed = "job.failed"
+	// EventFoldChanged: a fold of a line was made, written, moved or
+	// removed (B10).
+	EventFoldChanged = "fold.changed"
+	// EventComparisonChanged: a comparison of branches was made, filled,
+	// failed or decided (B10).
+	EventComparisonChanged = "comparison.changed"
+	// EventMemoryChanged: a memory was written or superseded (B10; a
+	// tenant's, not a conversation's: rootLineId and lineId are empty).
+	EventMemoryChanged = "memory.changed"
+	// EventMemoChanged: a memo (not sent to the AI) was written, edited or
+	// deleted (B13).
+	EventMemoChanged = "memo.changed"
+)
+    Event types.
+
+const (
+	BranchCreated   = "created"
+	BranchMoved     = "moved"
+	BranchPromoted  = "promoted"
+	BranchDraft     = "draft"
+	BranchMerged    = "merged"
+	BranchDiscarded = "discarded"
+	BranchRenamed   = "renamed"
+	// BranchDetached: the branch became a main line of its own (spinoff).
+	BranchDetached = "detached"
+)
+    Changes reported by branch.changed.
+
+const (
+	// JobKindDiverge proposes directions that become sibling branches.
+	JobKindDiverge = store.JobKindDiverge
+	// JobKindConverge fills a comparison's criteria × options matrix.
+	JobKindConverge = store.JobKindConverge
+)
+    Jobs of the diverge feature.
+
+const (
+	// JobKindFoldSummary writes the summary of a drafting fold.
+	JobKindFoldSummary = store.JobKindFoldSummary
+	// JobKindFoldSuggest summarizes a closed chapter to propose folding it.
+	JobKindFoldSuggest = "fold_suggest"
+	// SuggestionKindFold is a proposed fold (payload FoldSuggestion).
+	SuggestionKindFold = "fold"
+)
+    Jobs and the suggestion kind of the fold feature.
+
+const (
+	// JobKindGoalPropose: a cheap model states the goal from the first exchanges.
+	JobKindGoalPropose = "goal_propose"
+	// JobKindDriftCheck: a cheap model checks the latest exchanges against the goal.
+	JobKindDriftCheck = "drift_check"
+	// SuggestionKindGoalPropose is a proposed goal (payload GoalProposal).
+	SuggestionKindGoalPropose = "goal_propose"
+	// SuggestionKindDrift proposes a branch for a drifting part (payload DriftPayload).
+	SuggestionKindDrift = "drift"
+)
+    Jobs and suggestion kinds of the goal feature.
+
+const (
+	// JobKindGroupSummary writes a group's shared summary.
+	JobKindGroupSummary = store.JobKindGroupSummary
+	// JobKindGroupSuggest proposes groups among a tree's branches.
+	JobKindGroupSuggest = "group_suggest"
+	// SuggestionKindGroup is a proposed group (payload GroupSuggestion).
+	SuggestionKindGroup = "group"
+)
+    Jobs and the suggestion kind of the group feature.
+
+const (
+	GroupActionGroup   = "group"
+	GroupActionCombine = "combine"
+)
+    Actions of accepting a group suggestion.
+
+const (
+	MemoCreated = "created"
+	MemoUpdated = "updated"
+	MemoDeleted = "deleted"
+)
+    Changes reported by memo.changed.
+
+const (
+	// JobKindMemoryExtract proposes memories from what a write settled.
+	JobKindMemoryExtract = store.JobKindMemoryExtract
+	// JobKindMemoryConsolidate looks at two near-duplicate memories.
+	JobKindMemoryConsolidate = store.JobKindMemoryConsolidate
+	// SuggestionKindMemory is a proposed memory (payload MemoryProposal).
+	SuggestionKindMemory = "memory"
+	// SuggestionKindMemoryConsolidate proposes to merge two memories or
+	// flags their conflict (payload MemoryConsolidation).
+	SuggestionKindMemoryConsolidate = "memory_consolidate"
+	// TaskConsolidateMemories is the maintenance task that looks for
+	// near-duplicate memories.
+	TaskConsolidateMemories = "memory.consolidate"
+)
+    Jobs, suggestion kinds and the maintenance task of the memory feature.
+
+const (
+	ProbeKind          = "probe"
+	ProbeKindPermanent = "probe_permanent"
+)
+    Kinds of the probe's suggestions.
+
+const (
+	ProbeDirective          = "[probe:suggest]"
+	ProbeDirectivePermanent = "[probe:suggest-permanent]"
+)
+    Directives a reply carries for the probe.
+
+const (
+	RebalancePromote = "promote"
+	RebalanceSpinoff = "spinoff"
+)
+    Actions the rebalance suggestion offers.
+
+const (
+	// JobKindRelationSuggest: a cheap model relates a branch that ended to
+	// the other branches of its tree.
+	JobKindRelationSuggest = "relation_suggest"
+	// SuggestionKindRelation is a proposed relation (payload RelationPayload).
+	SuggestionKindRelation = "relation"
+)
+    Job and suggestion kinds of the relations feature.
+
+const (
+	FeatureNotes         = "notes"
+	FeatureChapters      = "chapters"
+	FeatureAside         = "aside"
+	FeatureSummary       = "summary"
+	FeatureCardDraft     = "card_draft"
+	FeatureBranchSuggest = "branch_suggest"
+	FeatureLeaf          = "leaf"
+	FeatureParking       = "parking"
+	FeatureSpinoff       = "spinoff"
+	FeatureRebalance     = "rebalance"
+	FeatureGoal          = "goal"
+	FeatureRelations     = "relations"
+	FeatureOpenLoops     = "open_loops"
+	FeatureFisheye       = "fisheye"
+	FeatureGroup         = "group"
+	FeatureIbis          = "ibis"
+	FeatureFold          = "fold"
+	FeatureDiverge       = "diverge"
+	FeatureMemory        = "memory"
+	FeatureMemo          = "memo"
+	// FeatureSuggestions is the suggestion inbox: not a feature of its own,
+	// it is on while a feature that raises suggestions is on.
+	FeatureSuggestions = "suggestions"
+)
+    Names of the built-in features.
+
+const (
+	JobKindCardDraft = store.JobKindCardDraft
+	JobKindSummary   = store.JobKindSummary
+)
+    Job kinds of the first-batch features.
+
+const (
+	PreviewSummary     = "summary"
+	PreviewEarlier     = "earlier"
+	PreviewHistory     = "history"
+	PreviewUserMessage = "user_message"
+)
+    Keys of preview blocks that are not prompt sections.
+
+const (
+	DefaultPartialInterval = 2 * time.Second
+	DefaultPartialBytes    = 8 << 10
+)
+    Defaults of the partial-reply saves (WithPartialFlush).
+
+const DefaultMaxOnce = 4
+    DefaultMaxOnce bounds the synchronous runs (RunOnce) a dispatcher holds at
+    once, so they never fill the queue turns and jobs need.
+
+const DefaultStaleTurnAge = 15 * time.Minute
+    DefaultStaleTurnAge is how long a turn may stay pending before Maintain
+    fails it; longer than the runner dispatcher's DefaultTurnTimeout.
+
+const ExportMaxMessagesPerLine = 500
+    ExportMaxMessagesPerLine caps the messages an export carries for one line:
+    the oldest ones, in seq order (the transcript page cap).
+
+const FeatureSearch = "search"
+    FeatureSearch is the search feature's name.
+
+const FeatureSuggestionProbe = "suggestion_probe"
+    FeatureSuggestionProbe is the probe's name.
+
+const ImportAnalyzeTimeout = 45 * time.Second
+    ImportAnalyzeTimeout bounds the model call of one import analysis (B22),
+    waiting for a run slot included.
+
+const JobKindIbisTag = store.JobKindIbisTag
+    JobKindIbisTag tags a line's newest messages with their argument kind.
+
+const JobKindLeafDraft = "leaf_draft"
+    JobKindLeafDraft is the leaf feature's job: a cheap model drafts a branch's
+    leaf.
+
+const SuggestionKindRebalance = "promote_or_spinoff"
+    SuggestionKindRebalance is the rebalance hint's suggestion.
+
+const TaskExpireSuggestions = "suggestions.expire"
+    TaskExpireSuggestions is the inbox's maintenance task: open suggestions
+    about branches that ended while the inbox was off for their tenant.
+
+const TaskPurgeAsides = "aside.purge"
+    TaskPurgeAsides is the aside feature's maintenance task (in
+    MaintenanceReport.Tasks).
+
+
+VARIABLES
+
+var ErrDispatcherBusy = errors.New("tangent: the dispatcher is busy")
+    ErrDispatcherBusy refuses work beyond WithMaxQueue, WithMaxTenantTurns or
+    WithMaxOnce.
+
+var ErrDispatcherClosed = errors.New("tangent: the dispatcher is shut down")
+    ErrDispatcherClosed refuses work after Shutdown or Close.
+
+
+TYPES
+
+type AcceptedSuggestion struct {
+	Suggestion domain.Suggestion
+	Result     any
+}
+    AcceptedSuggestion is an accepted suggestion and what its action returned.
+
+type AppendedSystemMessage = store.AppendedSystemMessage
+    AppendedSystemMessage is what AppendSystemMessage did; Written is false when
+    SkipRepeat left the message out.
+
+type AttachInput struct {
+	SourceLineID    string
+	AnchorMessageID string
+	Purpose         string
+	Kind            string
+	Status          string
+	Card            *domain.BranchCard
+	ConfirmDeeper   bool
+}
+    AttachInput attaches another conversation of the tenant (SourceLineID,
+    a main line) as a branch of a line (B20), the inverse of a detach.
+    AnchorMessageID empty picks the newest anchorable message of the line dated
+    no later than the source's start (else its newest). Purpose empty is the
+    source's title (else its first question). Kind is investigate (the default)
+    or alternative; Status open (the default) or merged, which needs Card (an
+    empty question is the purpose) and leaves it on the line already delivered.
+
+type AttachedLine = store.AttachedLine
+    AttachedLine is what an attach changed.
+
+type BranchChange struct {
+	Change string            `json:"change"`
+	Branch domain.BranchView `json:"branch"`
+}
+    BranchChange is the data of branch.changed.
+
+type BranchInput struct {
+	AnchorMessageID     string
+	Purpose             string
+	Excerpt             string
+	Kind                string
+	Provider            string
+	Model               string
+	ConfirmDeeper       bool
+	IncludeLater        bool
+	SuggestionMessageID string
+	HostMeta            json.RawMessage
+}
+    BranchInput opens a branch on a finished message of the parent line.
+    Provider and Model default to the parent's. SuggestionMessageID names the
+    assistant message whose [BRANCH-SUGGEST] the operator accepted; purpose and
+    kind must match one of its suggestions. IncludeLater adds what the parent
+    did after the anchor to the pack.
+
+type BranchPreview struct {
+	Pack          domain.BranchPack `json:"pack"`
+	Text          string            `json:"text"`
+	TokenEstimate int               `json:"tokenEstimate"`
+}
+    BranchPreview is the background a new branch would start from, built as
+    CreateBranch builds it, without writing anything. Text is the pack's
+    rendered text (what the model receives); TokenEstimate its size.
+
+type BudgetShare struct {
+	Owner  string `json:"owner"`
+	Tokens int    `json:"tokens"`
+}
+    BudgetShare is what one owner (core, a feature, host, history) took.
+
+type CancelledTurn = store.CancelledTurn
+    CancelledTurn is what CancelTurn did; Cancelled is false when the line had
+    no turn in flight.
+
+type Capability struct {
+	Name    string `json:"name"`
+	Enabled bool   `json:"enabled"`
+	Mode    string `json:"mode,omitempty"`
+}
+    Capability is one built-in feature as a caller sees it. Mode is set only
+    for features that have one beyond on / off (summary, branch_suggest,
+    leaf, rebalance, goal, relations, group, ibis, fold, diverge, memory).
+    "suggestions" is the inbox: enabled while a feature that raises suggestions
+    is on.
+
+type ChapterChange = store.ChapterChange
+    Chapter types, as the store returns them.
+
+type ChaptersChange struct {
+	RootLineID string `json:"rootLineId"`
+}
+    ChaptersChange is the data of chapters.changed.
+
+type ChaptersView = store.ChaptersView
+    Chapter types, as the store returns them.
+
+type CombineInput struct {
+	LineIDs   []string
+	Purpose   string
+	Kind      string
+	Conflicts []domain.Conflict
+}
+    CombineInput combines open sibling branches into one (the group feature):
+    Purpose and Kind (investigate by default) are the new branch's; Conflicts
+    are the ones the operator settled.
+
+type CombinedBranches struct {
+	Created  CreatedBranch       `json:"created"`
+	Combined []domain.BranchView `json:"combined"`
+	// Reparented are the combined branches' open children, now hanging on
+	// the new branch (anchors and depths unchanged), in id order.
+	Reparented []string          `json:"reparented"`
+	Notes      NotesWrite        `json:"notes"`
+	Pack       domain.BranchPack `json:"-"`
+}
+    CombinedBranches is a combine: the new branch (origin merge) with its pack,
+    the branches it took (discarded, mergedIntoLineId set) and the notes
+    keepBoth wrote.
+
+type ComparisonChange struct {
+	RootLineID string            `json:"rootLineId"`
+	Comparison domain.Comparison `json:"comparison"`
+}
+    ComparisonChange is the data of comparison.changed.
+
+type ComparisonList = store.ComparisonList
+    ComparisonList is a line's comparisons.
+
+type CompletedTurn struct {
+	Line       domain.LineView
+	Message    domain.Message
+	RootLineID string
+	SummaryDue bool
+	Jobs       []Job
+	EndedAside *domain.BranchView
+	Notices    []domain.Message
+}
+    CompletedTurn is a finished turn: the line (idle or error) and the reply.
+    SummaryDue reports that a summary is due (the summary feature in suggest
+    mode); Jobs are background jobs the features started (the summary feature
+    in auto mode) for the caller to dispatch. EndedAside is the aside this turn
+    answered and so ended. Notices are the host system messages written after
+    the reply.
+
+type ConvergeInput struct {
+	LineIDs  []string
+	Criteria []string
+}
+    ConvergeInput compares open sibling branches of the line; Criteria are the
+    operator's (the model proposes them when there are none).
+
+type ConvergeStarted struct {
+	Comparison domain.Comparison
+	Job        Job
+}
+    ConvergeStarted is a new comparison (drafting) and the converge job the
+    caller runs (httpapi hands it to its Dispatcher).
+
+type CreatedBranch struct {
+	Line   domain.LineView   `json:"line"`
+	Branch domain.BranchView `json:"branch"`
+	Pack   domain.BranchPack `json:"pack"`
+}
+    CreatedBranch is a new branch: its line, its outline row and its pack.
+
+type CreatedSeeds = store.CreatedSeeds
+    CreatedSeeds is what a batch parked, in the order of its texts.
+
+type DecideInput struct {
+	LineID string
+	Line   string
+}
+    DecideInput chooses a compared branch; Line replaces the decision leaf's
+    line (by default the recommendation's reason when it is the recommended one,
+    else the branch's purpose).
+
+type DecidedComparison = store.DecidedComparison
+    DecidedComparison is what a decision changed (the comparison, the chosen
+    branch and its decision leaf, the branches it discarded and their dead-end
+    leaves).
+
+type DeletedTree = store.DeletedTree
+    DeletedTree is what DeleteTree removed, with the host data of every line and
+    message so the host can clean up what it keeps elsewhere.
+
+type DeltaSink interface {
+	SendDelta(ctx context.Context, d RemoteDelta) error
+}
+    DeltaSink takes the deltas of an Engine built WithDeltaSink. Its error is
+    returned by AppendDelta: a synchronous channel that answers turn_not_pending
+    stops RunTurn's model.
+
+type DeltaTail struct {
+	Deltas    []domain.Delta `json:"deltas"`
+	Seq       int64          `json:"seq"`
+	Truncated bool           `json:"truncated"`
+}
+    DeltaTail is what StreamSince returns: the buffered deltas after the cursor,
+    the newest seq handed out for the line (0 when none is buffered) and whether
+    deltas after the cursor were lost (the buffer was trimmed, evicted or never
+    held them). When Truncated is set, reload the messages.
+
+type DiscardInput struct {
+	Leaf *domain.LeafInput
+}
+    DiscardInput ends a branch without bringing anything back. Leaf (the
+    leaf feature) is written as the branch's leaf in the same transaction;
+    its kind defaults to dead_end. Without the feature it is refused with
+    feature_disabled.
+
+type Dispatcher interface {
+	DispatchTurn(ctx context.Context, t Turn) error
+	DispatchJob(ctx context.Context, j Job) error
+}
+    Dispatcher runs started turns and jobs. httpapi and the reference server
+    hand work to it; a host can plug in its own queue (宿主 writes a
+    宿主任務佇列, in the same transaction via InTx).
+
+type DispatcherOption func(*RunnerDispatcher)
+    DispatcherOption configures NewRunnerDispatcher.
+
+func WithJobTimeout(d time.Duration) DispatcherOption
+    WithJobTimeout bounds one job run.
+
+func WithMaxConcurrent(n int) DispatcherOption
+    WithMaxConcurrent bounds how many runs execute at once; the others wait for
+    a slot (0 = no bound).
+
+func WithMaxOnce(n int) DispatcherOption
+    WithMaxOnce bounds the RunOnce calls held at once, running or waiting for a
+    slot (default 4); more are refused with ErrDispatcherBusy.
+
+func WithMaxQueue(n int) DispatcherOption
+    WithMaxQueue bounds the work a dispatcher holds at once, running or waiting
+    for a slot (default 64); more is refused with ErrDispatcherBusy.
+
+func WithMaxTenantTurns(n int) DispatcherOption
+    WithMaxTenantTurns bounds the turns one tenant has in the dispatcher at once
+    (default 16); more are refused with ErrDispatcherBusy.
+
+func WithTurnTimeout(d time.Duration) DispatcherOption
+    WithTurnTimeout bounds one turn run.
+
+type DivergeInput struct {
+	AnchorMessageID string
+	Count           int
+}
+    DivergeInput asks for Count directions from a finished message of the line.
+
+type DivergeModelsInput struct {
+	AnchorMessageID string
+	Purpose         string
+	Excerpt         string
+	ConfirmDeeper   bool
+	Targets         []DivergeTarget
+}
+    DivergeModelsInput opens one sibling branch per target on the anchor (a
+    finished operator or assistant message of the line), each answered by its
+    target's provider and model. A target without a purpose gets "{Purpose} ·
+    {model}", or the anchor's first 40 characters plus " · {model}" when Purpose
+    is empty too. Excerpt and ConfirmDeeper apply to every branch.
+
+type DivergeTarget = domain.DivergeTarget
+    DivergeTarget is one model a cross-model diverge opens a branch for; Purpose
+    is optional (see DivergeModelsInput).
+
+type DivergedModels struct {
+	ParentLineID string
+	RootLineID   string
+	Branches     []CreatedBranch
+}
+    DivergedModels is what a cross-model diverge opened, in the targets' order.
+
+type DriftAccepted struct {
+	Line   domain.LineView   `json:"line"`
+	Branch domain.BranchView `json:"branch"`
+}
+    DriftAccepted is what accepting a drift suggestion did: the new branch.
+
+type DriftPayload struct {
+	AnchorMessageID string `json:"anchorMessageId"`
+	Kind            string `json:"kind"`
+	Purpose         string `json:"purpose"`
+	Reason          string `json:"reason"`
+	Goal            string `json:"goal"`
+}
+    DriftPayload is the payload of a drift suggestion: where to open the branch
+    (the main-line reply the check ran after), its kind and purpose, why,
+    and the goal it was checked against.
+
+type Embedder interface {
+	Embed(ctx context.Context, texts []string) ([][]float32, error)
+	Dim() int
+}
+    Embedder turns texts into vectors for the memory feature (DESIGN §11): the
+    host's model. Embed returns one vector of Dim() numbers per text, in order.
+    runner/openai.NewEmbedder speaks the OpenAI-compatible /embeddings API;
+    runner/fake.NewEmbedder is deterministic for tests.
+
+type Engine struct {
+	// Has unexported fields.
+}
+    Engine runs conversations with branches over a host's pool.
+
+func New(pool *pgxpool.Pool, opts ...Option) (*Engine, error)
+    New builds an engine over the pool. The schema must be migrated
+    (store.Migrate, and store.MigrateFeatures for a feature with migrations of
+    its own, such as Search). It refuses limits that cannot work, features whose
+    dependencies are missing and features whose migrations were not applied
+    (checked against the database, within 10 seconds).
+
+func (e *Engine) AcceptSuggestion(ctx context.Context, scope Scope, id string, body json.RawMessage, opts ...TxOption) (AcceptedSuggestion, error)
+    AcceptSuggestion runs an open suggestion's action and marks it accepted
+    in the same transaction. body is the kind's choice (for example which
+    of two actions); a refused action leaves the suggestion open. InTx hooks
+    receive the action's result: domain.Suggestion for a kind without one;
+    store.PromotedBranch or store.SpunOff for rebalance.
+
+func (e *Engine) AddMilestone(ctx context.Context, scope Scope, lineID string, in MilestoneInput, opts ...TxOption) (ChapterChange, error)
+    AddMilestone marks a message as the start of a chapter. InTx hooks receive
+    store.ChapterChange.
+
+func (e *Engine) AnalyzeImport(ctx context.Context, scope Scope, in domain.ImportAnalyzeInput, r Runner) (domain.ImportAnalyzePlan, error)
+    AnalyzeImport proposes how an import is organized
+    (domain.ImportAnalyzePlan): which units (rounds or conversations)
+    are one topic, even when other topics came between them, and which
+    topics are chapters, branches or conversations of their own. in is
+    checked first (invalid_input). With a runner the model is asked once
+    (BuildImportAnalyzePrompt, at most ImportAnalyzeTimeout, the engine's
+    default provider and model) and its plan is checked and repaired
+    (ParseImportAnalyzeOutput, Source "model"); without one, or when the call
+    fails, times out or its reply is not a usable plan, the deterministic
+    analyzer answers (Source "heuristic") and the reason is logged without any
+    of the conversation's text. Nothing is written.
+
+func (e *Engine) AppendDelta(ctx context.Context, turnID string, d domain.Delta) error
+    AppendDelta buffers a streamed piece of a pending turn's reply and
+    publishes it as message.delta. The turn is looked up once and remembered.
+    Text is filtered by line: a line that starts with a protocol marker is
+    never streamed, and the start of a line is held until it cannot become
+    one (CompleteTurn flushes the rest). Every DefaultPartialInterval or
+    DefaultPartialBytes of text (WithPartialFlush) the text streamed so far is
+    saved on the pending message with meta.streamSeq.
+
+    An Engine built WithDeltaSink forwards the delta to its sink instead (a
+    worker process); the API process's AppendDelta is where such deltas arrive.
+
+    Runner side only: the bare turn id carries no tenant check, so this must
+    never be reachable by clients (httpapi does not route it).
+
+func (e *Engine) AppendSystemMessage(ctx context.Context, scope Scope, lineID string, n SystemNotice, opts ...TxOption) (AppendedSystemMessage, error)
+    AppendSystemMessage appends a host system message to a line: under the
+    line's lock, after everything the line holds (also while a turn is pending:
+    the notice then follows the pending reply, and that turn's prompt,
+    built already, does not show it). An archived line, an ended branch (or
+    one below an ended branch) and a line that is gone refuse it; blank text
+    is invalid_input. message.created and line.updated are published after the
+    commit; a skipped repeat writes and publishes nothing and its hooks do not
+    run. InTx hooks receive store.AppendedSystemMessage.
+
+func (e *Engine) ApplyNoteChanges(ctx context.Context, scope Scope, lineID string, changes []domain.NoteChange, opts ...TxOption) (NotesWrite, error)
+    ApplyNoteChanges adds or supersedes notes in one transaction. InTx hooks
+    receive store.NotesWrite.
+
+func (e *Engine) ArchiveTree(ctx context.Context, scope Scope, lineID string, archived bool, opts ...TxOption) ([]domain.LineView, error)
+    ArchiveTree archives (or unarchives) a whole conversation; the main line
+    comes first in the result. InTx hooks receive []domain.LineView.
+
+func (e *Engine) AttachLine(ctx context.Context, scope Scope, lineID string, in AttachInput, opts ...TxOption) (AttachedLine, error)
+    AttachLine hangs the source conversation, with its whole tree, on the line:
+    the source keeps its messages (and their seq) and becomes a branch line (its
+    folder, tags and origin capsule go), its branches go one level deeper per
+    the new branch's depth, and its notes, memos, seeds, leaves, chapter cuts,
+    suggestions and groups move to the line's conversation (its goal goes).
+    The branch limits count the source's tree. With a card, the branch is
+    merged at once and, while leaf is on, the card is written as its confirmed
+    leaf. No feature hook runs and no job is started. InTx hooks receive
+    store.AttachedLine.
+
+func (e *Engine) BeginTurn(ctx context.Context, scope Scope, lineID string, in TurnInput, opts ...TxOption) (Turn, error)
+    BeginTurn starts a turn: the TurnGate is asked first (outside the
+    transaction), then the operator's message and a pending reply are stored
+    and the line goes thinking, under the line's lock; the prompt is built
+    after the commit. If the prompt cannot be built the turn is failed at once.
+    InTx hooks receive store.BegunTurn.
+
+func (e *Engine) CancelTurn(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (CancelledTurn, error)
+    CancelTurn ends the line's pending turn, keeping the text streamed so far
+    (complete for a run of this process, else what the delta buffer holds), and
+    stops its run when this process runs it. Only the turn that was pending when
+    the call started is cancelled: if it finished and another began meanwhile,
+    nothing changes. Without a pending turn nothing is written (and the hooks do
+    not run). InTx hooks receive store.CancelledTurn.
+
+func (e *Engine) Capabilities(ctx context.Context, scope Scope) ([]Capability, error)
+    Capabilities lists every built-in feature with whether it is on for the
+    scope and, where it has one, its effective mode.
+
+func (e *Engine) CombineBranches(ctx context.Context, scope Scope, parentLineID string, in CombineInput, opts ...TxOption) (CombinedBranches, error)
+    CombineBranches combines open branches of one parent into a new branch
+    anchored on the newest of their anchors, and their open children are
+    re-hung on it (keeping the message they forked from as their anchor). Its
+    pack is the parent's background at that anchor plus each branch's purpose,
+    leaf and newest messages, and what the operator settled. The old branches
+    are discarded (open suggestions about them expire) in the same transaction.
+    InTx hooks receive store.CombinedBranches.
+
+func (e *Engine) CompleteTurn(ctx context.Context, turnID string, r TurnResult, opts ...TxOption) (CompletedTurn, error)
+    CompleteTurn finishes a pending turn, once: a turn that is no longer pending
+    returns ErrTurnNotPending. The scope is the turn's own (tenant and the
+    actor who began it). A successful reply passes the features' reply filters;
+    OnTurnCompleted hooks (and OnBranchClosed for an aside the answer ended)
+    run in the transaction, AfterCommit hooks after it. Notices that are too
+    many, too long or carry host data that is not a JSON object are refused
+    (invalid_input, too_long) and the turn stays pending.
+
+    Runner side only: the bare turn id carries no tenant check, so this must
+    never be reachable by clients (httpapi does not route it). InTx hooks
+    receive store.CompletedTurn.
+
+func (e *Engine) Converge(ctx context.Context, scope Scope, parentLineID string, in ConvergeInput, opts ...TxOption) (ConvergeStarted, error)
+    Converge compares 2–5 open, non-aside branches of the line (the parent): a
+    drafting comparison and its converge job, which fills the matrix. Refusals:
+    invalid_comparison (count, another parent, an aside, not a branch),
+    branch_closed, archived; criteria over the limits (invalid_input, too_long).
+    InTx hooks receive store.ComparisonWrite.
+
+func (e *Engine) CreateBranch(ctx context.Context, scope Scope, parentLineID string, in BranchInput, opts ...TxOption) (CreatedBranch, error)
+    CreateBranch opens a branch. The pack is built outside the lock from the
+    parent's messages up to the anchor; the transaction re-checks the anchor and
+    the limits. InTx hooks receive store.CreatedBranch.
+
+func (e *Engine) CreateFold(ctx context.Context, scope Scope, lineID string, in FoldInput, opts ...TxOption) (FoldCreated, error)
+    CreateFold folds a stretch of the line: active with the operator's
+    summary, or drafting with a fold_summary job (any mode). Refusals:
+    an end not on the line (message_not_found), a range outside
+    Limits.Fold.MinMessages..MaxMessages or with a pending reply (invalid_fold),
+    an overlap with another fold (fold_overlap), too many folds (fold_limit),
+    a summary over the limit (too_long), archived. InTx hooks receive
+    store.FoldWrite.
+
+func (e *Engine) CreateGroup(ctx context.Context, scope Scope, lineID string, in GroupInput, opts ...TxOption) (GroupCreated, error)
+    CreateGroup makes a group of ended branches of the line's tree and starts
+    its summary; the job goes to the job dispatcher (SetJobDispatcher) and is
+    returned. InTx hooks receive store.GroupWrite.
+
+func (e *Engine) CreateLine(ctx context.Context, scope Scope, in LineInput, opts ...TxOption) (domain.LineView, error)
+    CreateLine starts a new conversation (a main line). InTx hooks receive
+    domain.LineView.
+
+func (e *Engine) CreateMemo(ctx context.Context, scope Scope, lineID string, in MemoInput, opts ...TxOption) (domain.Memo, error)
+    CreateMemo writes a memo. InTx hooks receive domain.Memo.
+
+func (e *Engine) CreateMemory(ctx context.Context, scope Scope, in MemoryCreate, opts ...TxOption) (domain.Memory, error)
+    CreateMemory writes the operator's memory (any mode). InTx hooks receive
+    domain.Memory.
+
+func (e *Engine) CreateRelation(ctx context.Context, scope Scope, lineID string, in RelationInput, opts ...TxOption) (RelationChange, error)
+    CreateRelation draws a relation and publishes link.changed to each
+    conversation it touches. InTx hooks receive store.RelationChange.
+
+func (e *Engine) CreateSeed(ctx context.Context, scope Scope, lineID string, in SeedInput, opts ...TxOption) (domain.Seed, error)
+    CreateSeed parks a thought. InTx hooks receive domain.Seed.
+
+func (e *Engine) CreateSeeds(ctx context.Context, scope Scope, lineID string, in SeedsInput, opts ...TxOption) (CreatedSeeds, error)
+    CreateSeeds parks a batch of thoughts in one transaction, all or none:
+    CreateSeed's refusals apply to each, and the open-seed cap counts the
+    whole batch (seed_limit). One seeds.changed follows. InTx hooks receive
+    store.CreatedSeeds.
+
+func (e *Engine) DecideComparison(ctx context.Context, scope Scope, comparisonID string, in DecideInput, opts ...TxOption) (DecidedComparison, error)
+    DecideComparison decides a ready comparison in one transaction: the chosen
+    branch gets a decision leaf (its matrix column as the body) and stays open;
+    every other compared branch still open under the parent is discarded with
+    a dead-end leaf (WithLeafTexts: "沒選：改走「…」" by default, its column as the
+    body), and open suggestions about them expire. No AfterCommit hook of a
+    discard runs (no leaf draft, relation or group suggestion is started).
+    Refusals: comparison_not_found, comparison_decided, comparison_not_ready,
+    invalid_comparison (not an option), branch_closed, branch_busy,
+    branch_drafting, archived. InTx hooks receive store.DecidedComparison.
+
+func (e *Engine) Decompose(ctx context.Context, scope Scope, lineID string) (domain.DecomposePlan, error)
+    Decompose proposes how to organise a line, without a model and without
+    writing anything (B18): tags its conversation lacks, chapter cuts, detours
+    to extract into branches (ExtractToBranch), open items to park and the
+    tenant's related conversations (sharing a tag or the folder of the line's
+    main line). Any line of the tenant; read-only.
+
+func (e *Engine) DeleteGoal(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (domain.Goal, error)
+    DeleteGoal removes the goal of the line's conversation (goal_not_found
+    without one). InTx hooks receive domain.Goal (the deleted one).
+
+func (e *Engine) DeleteLeaf(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (domain.Leaf, error)
+    DeleteLeaf removes a branch's leaf. InTx hooks receive domain.Leaf (the
+    deleted one).
+
+func (e *Engine) DeleteMemo(ctx context.Context, scope Scope, memoID string, opts ...TxOption) (domain.Memo, error)
+    DeleteMemo removes a memo for good and returns it as it was. InTx hooks
+    receive domain.Memo.
+
+func (e *Engine) DeleteMilestone(ctx context.Context, scope Scope, lineID, milestoneID string, opts ...TxOption) (string, error)
+    DeleteMilestone removes a milestone; it returns the main line's id. InTx
+    hooks receive string (the milestone id).
+
+func (e *Engine) DeleteRelation(ctx context.Context, scope Scope, lineID, relationID string, opts ...TxOption) (RelationChange, error)
+    DeleteRelation removes a relation one of whose ends is in the line's
+    conversation (relation_not_found otherwise). InTx hooks receive
+    store.RelationChange.
+
+func (e *Engine) DeleteTree(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (DeletedTree, error)
+    DeleteTree removes a whole conversation (main line only). Hooks run before
+    the rows go, so they can still read them. The runs of jobs that went with
+    it are stopped (no turn can be pending: a tree that is answering is not
+    deleted). InTx hooks receive store.DeletedTree (before the rows go).
+
+func (e *Engine) DiscardBranch(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (domain.BranchView, error)
+    DiscardBranch ends a branch without bringing anything back. InTx hooks
+    receive domain.BranchView.
+
+func (e *Engine) DiscardBranchWith(ctx context.Context, scope Scope, lineID string, in DiscardInput, opts ...TxOption) (domain.BranchView, error)
+    DiscardBranchWith is DiscardBranch with the input of features (a dead-end
+    leaf).
+
+func (e *Engine) DismissAllSuggestions(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (SuggestionList, error)
+    DismissAllSuggestions dismisses at once every open suggestion of the line's
+    conversation raised by the features that are on (what ListSuggestions
+    lists), as DismissSuggestion dismisses one: the cooldown (or a permanent
+    dismissal) applies to each. It returns the dismissed suggestions, newest
+    first; none is not an error. InTx hooks receive store.SuggestionList.
+
+func (e *Engine) DismissSuggestion(ctx context.Context, scope Scope, id string, opts ...TxOption) (domain.Suggestion, error)
+    DismissSuggestion dismisses an open suggestion: the same one is not raised
+    again for the cooldown (or never, for kinds that say so). InTx hooks receive
+    domain.Suggestion.
+
+func (e *Engine) DissolveGroup(ctx context.Context, scope Scope, groupID string, opts ...TxOption) (domain.Group, error)
+    DissolveGroup ends an active group; its members show their own leaves again.
+    InTx hooks receive domain.Group.
+
+func (e *Engine) DivergeModels(ctx context.Context, scope Scope, lineID string, in DivergeModelsInput, opts ...TxOption) (DivergedModels, error)
+    DivergeModels opens 2–5 sibling branches (kind alternative, origin diverge)
+    on a message at once, one per target model, in one transaction: all of them
+    or none (B14). No job runs; each pack says which model answers the branch
+    and names the siblings. Every refusal of CreateBranch applies (limits,
+    depth, anchor, a closed parent); a model the host's model check refuses is
+    model_not_allowed. Like a diverge job's branches, they run no feature's
+    branch hook inside the transaction; the AfterCommit hooks of a created
+    branch run for each. InTx hooks receive store.DivergedBranches (its Job is
+    the zero value).
+
+func (e *Engine) DropSeed(ctx context.Context, scope Scope, seedID string, opts ...TxOption) (domain.Seed, error)
+    DropSeed ends an open seed without doing anything with it. InTx hooks
+    receive domain.Seed.
+
+func (e *Engine) EditRelation(ctx context.Context, scope Scope, lineID, relationID string, edit RelationEdit, opts ...TxOption) (RelationChange, error)
+    EditRelation changes the label and/or the kind of a relation one of whose
+    ends is in the line's conversation (a nil field keeps the stored value) and
+    publishes link.changed to each conversation it touches. InTx hooks receive
+    store.RelationChange.
+
+func (e *Engine) ExpandSeed(ctx context.Context, scope Scope, seedID string, in ExpandInput, opts ...TxOption) (ExpandedSeed, error)
+    ExpandSeed opens a branch (origin seed) where the seed's anchor is now
+    (or on the main line's newest message when the anchor is gone) and ends
+    the seed in the same transaction. Every refusal of CreateBranch applies;
+    the seed stays open when one does. InTx hooks receive store.ExpandedSeed.
+
+func (e *Engine) ExportTree(ctx context.Context, scope Scope, lineID string) (TreeExport, error)
+    ExportTree reads the whole conversation of any of its lines; read-only
+    callers may ask. Each part is one query whatever the number of lines.
+
+func (e *Engine) ExtractToBranch(ctx context.Context, scope Scope, lineID string, in ExtractInput, opts ...TxOption) (ExtractedBranch, error)
+    ExtractToBranch is MoveToBranch for any stretch of a line, the middle
+    included: the branch hangs on the newest finished message before the range
+    (an operator or assistant message, or a conclusion card), the range moves
+    into it keeping its order, and the line keeps a move marker (or the card)
+    where the range was, so its later prompts read on in order. Branches opened
+    on moved messages go with them one level deeper; a summary that covered them
+    is reset; folds cut by the range are removed and folds inside it move with
+    it; when the line goes on after the range, its chapter keeps its start on
+    the marker. No job is started. InTx hooks receive store.ExtractedBranch.
+
+func (e *Engine) FailStaleJobs(ctx context.Context) ([]JobRecord, error)
+    FailStaleJobs fails every job pending longer than its kind's timeout (the
+    store's defaults, overridden by the features' JobHandlers) and tells the
+    kind's handler (card_draft republishes the branch). On an error it returns
+    the jobs already failed with the error.
+
+func (e *Engine) FailStaleTurns(ctx context.Context, olderThan time.Time) ([]StaleTurn, error)
+    FailStaleTurns fails every turn that has been pending since before olderThan
+    (at most 200 per call). On an error it returns the turns already failed with
+    the error.
+
+func (e *Engine) FeatureConfigured(name string) bool
+    FeatureConfigured reports whether the engine was built with the feature
+    enabled (any mode but off), before any FeaturePolicy narrows it. httpapi
+    mounts a feature's routes only when it is.
+
+func (e *Engine) FinishJob(ctx context.Context, jobID, raw string, runErr error) error
+    FinishJob reports a job's result: raw is the model's output, runErr the
+    failure of the run (logged, never stored). The result goes to the JobHandler
+    of the job's kind. A job that is no longer pending (finished, superseded,
+    timed out) writes nothing and returns job_not_pending / draft_not_pending.
+    A job of a kind no enabled feature handles is failed and feature_disabled
+    returned.
+
+    Runner side only: the bare job id carries no tenant check, so this must
+    never be reachable by clients (httpapi does not route it).
+
+func (e *Engine) GetBranch(ctx context.Context, scope Scope, lineID string) (domain.BranchDetail, error)
+    GetBranch reads one branch: outline row, pack, draft and the parent's tip
+    (the parentTipMessageId a merge names).
+
+func (e *Engine) GetComparison(ctx context.Context, scope Scope, comparisonID string) (domain.Comparison, error)
+    GetComparison reads a comparison.
+
+func (e *Engine) GetGoal(ctx context.Context, scope Scope, lineID string) (*domain.Goal, error)
+    GetGoal reads the goal of the line's conversation; nil when it has none.
+
+func (e *Engine) GetGroup(ctx context.Context, scope Scope, groupID string) (domain.Group, error)
+    GetGroup reads a group.
+
+func (e *Engine) GetLeaf(ctx context.Context, scope Scope, lineID string) (*domain.Leaf, error)
+    GetLeaf reads a branch's leaf; nil when it has none.
+
+func (e *Engine) GetLeafState(ctx context.Context, scope Scope, lineID string) (LeafState, error)
+    GetLeafState reads a branch's leaf with the failure of its newest leaf
+    draft (none while a draft runs, after a successful one, or once the leaf was
+    written after the failure).
+
+func (e *Engine) GetLine(ctx context.Context, scope Scope, lineID string) (domain.LineView, error)
+    GetLine reads one line with its place in the tree.
+
+func (e *Engine) GetMemory(ctx context.Context, scope Scope, memoryID string) (domain.Memory, error)
+    GetMemory reads a memory of the tenant.
+
+func (e *Engine) ImportLine(ctx context.Context, scope Scope, in ImportInput, opts ...TxOption) (ImportedLine, error)
+    ImportLine writes an imported conversation as a new main line with
+    its branches, in one transaction and without calling a model:
+    the input is checked and cleaned first (domain.PlanImport; the title,
+    provider and model like CreateLine's, the title taken from the first
+    operator message when empty), each branch's pack is built from the imported
+    messages up to its anchor like a new branch's, and the branches are open,
+    discarded or merged as asked (origin import). Imported messages carry no
+    usage or model. B19: the source's dates are kept (every line and message
+    is otherwise dated at the import), chapter cuts are written as milestones,
+    and a merged branch leaves its card on the main line right after its anchor,
+    already delivered (with the leaf feature on, the card is also its confirmed
+    leaf). No job is started and no feature hook runs: an import is history,
+    not activity. Events after the commit: line.created for the main line, then
+    for each branch line.created and branch.changed{created}, then leaf.changed
+    for each leaf written and, with the chapters feature on and a cut written,
+    chapters.changed. InTx hooks receive store.ImportedLine.
+
+func (e *Engine) Limits() domain.Limits
+    Limits returns the limits the engine applies, defaults filled in.
+
+func (e *Engine) ListBranches(ctx context.Context, scope Scope, lineID string, includeAside bool) ([]domain.BranchView, error)
+    ListBranches returns the outline of the line's whole tree, oldest first;
+    asides only when asked.
+
+func (e *Engine) ListChapters(ctx context.Context, scope Scope, lineID string) (ChaptersView, error)
+    ListChapters returns the chapters of the line and the conversation's
+    milestones.
+
+func (e *Engine) ListComparisons(ctx context.Context, scope Scope, lineID string) (ComparisonList, error)
+    ListComparisons lists the comparisons of the line's branches, newest first.
+
+func (e *Engine) ListFolds(ctx context.Context, scope Scope, lineID string) (FoldList, error)
+    ListFolds lists the line's folds that were not removed, in seq order.
+
+func (e *Engine) ListGroups(ctx context.Context, scope Scope, lineID string, statuses []string) (GroupList, error)
+    ListGroups lists the groups of the line's tree, newest first; statuses
+    default to active.
+
+func (e *Engine) ListLines(ctx context.Context, scope Scope, q LineQuery) (LinePage, error)
+    ListLines returns one page of the tenant's main lines; q.Tenant is replaced
+    by the scope's.
+
+func (e *Engine) ListLinks(ctx context.Context, scope Scope, lineID string) ([]domain.Link, error)
+    ListLinks lists the links from or to any line of the line's tree, of the
+    kinds whose feature is on (spinoff, relations); feature_disabled while
+    neither is.
+
+func (e *Engine) ListMemories(ctx context.Context, scope Scope, q MemoryQuery) ([]domain.Memory, error)
+    ListMemories lists the tenant's memories (one page: ListMemoriesPage also
+    says where the next one starts).
+
+func (e *Engine) ListMemoriesPage(ctx context.Context, scope Scope, q MemoryQuery) (MemoryPage, error)
+    ListMemoriesPage returns one keyset page of the tenant's memories;
+    an unreadable cursor is invalid_input.
+
+func (e *Engine) ListMemos(ctx context.Context, scope Scope, lineID, nodeLineID string) (MemoList, error)
+    ListMemos lists the memos of the line's conversation; with nodeLineID,
+    only those written on that node.
+
+func (e *Engine) ListMessages(ctx context.Context, scope Scope, lineID string, afterSeq int64, limit int) ([]domain.Message, error)
+    ListMessages returns a transcript page after a seq cursor, oldest first.
+
+func (e *Engine) ListNotes(ctx context.Context, scope Scope, lineID string) (NotesView, error)
+    ListNotes returns the notes page of the line's conversation.
+
+func (e *Engine) ListRelations(ctx context.Context, scope Scope, lineID string) ([]domain.Link, error)
+    ListRelations lists the relations touching the line's conversation, newest
+    first.
+
+func (e *Engine) ListSeeds(ctx context.Context, scope Scope, lineID string, statuses []string) (SeedList, error)
+    ListSeeds lists the seeds of the line's conversation, newest first; statuses
+    default to open.
+
+func (e *Engine) ListSuggestions(ctx context.Context, scope Scope, lineID string, statuses []string) (SuggestionList, error)
+    ListSuggestions lists the suggestions of the line's conversation raised by
+    the features that are on, newest first; statuses default to open.
+
+func (e *Engine) ListTagDrafts(ctx context.Context, scope Scope, lineID string) (TagDrafts, error)
+    ListTagDrafts lists the draft tags of the tree of any of its lines, at most
+    store.TagDraftsMax (Truncated beyond); read-only callers may ask.
+
+func (e *Engine) LoadTurn(ctx context.Context, scope Scope, turnID string) (Turn, error)
+    LoadTurn rebuilds a pending turn by its id, as BeginTurn (or RetryTurn)
+    returned it: a durable queue only needs to keep the id. The prompt is
+    built again from what is stored now: the operator message, the cards and
+    notes revision the turn recorded, the features' context and the host's
+    PromptContributor. The scope's tenant must be the turn's; the returned
+    Turn has the turn's own scope (the actor who began it). A turn that ended,
+    does not exist or belongs to another tenant returns ErrTurnNotPending. A
+    prompt that cannot be built is returned as an error; the turn stays pending
+    (fail it with CompleteTurn, or let Maintain).
+
+func (e *Engine) Maintain(ctx context.Context) (MaintenanceReport, error)
+    Maintain runs the periodic sweeps once: turns pending longer than the
+    stale-turn age (WithStaleTurnAge) fail, jobs past their kind's timeout fail,
+    the features' tasks run (aside: purge expired asides) and expired delta
+    buffers go. The reference server calls it from a loop. Every sweep runs even
+    when an earlier one fails; the errors are joined.
+
+func (e *Engine) MarkRead(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (domain.LineView, error)
+    MarkRead clears the line's unread counter; the lines above a branch
+    are republished too (their unread totals changed). InTx hooks receive
+    domain.LineView.
+
+func (e *Engine) MergeBranch(ctx context.Context, scope Scope, lineID string, in MergeInput, opts ...TxOption) (MergedBranch, error)
+    MergeBranch checks the card (shape first, then every message it cites),
+    renders it and writes it as the parent's newest message while the branch
+    closes. Invalid cards return invalid_card with every problem. InTx hooks
+    receive store.MergedBranch.
+
+func (e *Engine) ModelCatalog() []ModelGroup
+    ModelCatalog returns a copy of the WithModelCatalog groups; empty, never
+    nil, without one.
+
+func (e *Engine) MoveToBranch(ctx context.Context, scope Scope, lineID string, in MoveInput, opts ...TxOption) (MovedBranch, error)
+    MoveToBranch moves the tail of a line into a new branch. The pack is built
+    under the lock, once the anchor (the newest message that stays) is known.
+    Clients must reload the source's and the branch's messages afterwards:
+    moved messages keep their seq. InTx hooks receive store.MovedBranch.
+
+func (e *Engine) NoteSeed(ctx context.Context, scope Scope, seedID, section string, opts ...TxOption) (NotedSeed, error)
+    NoteSeed writes an open seed into the notes (section defaults to
+    to_confirm); it needs the notes feature. InTx hooks receive store.NotedSeed.
+
+func (e *Engine) Observe(ctx context.Context, events ...Event)
+    Observe tells the Engine about events another Engine over the same database
+    published (another process), so what this process holds in memory follows:
+    a reply that is no longer pending ends the turn here (the text its line
+    filter still held is streamed, as CompleteTurn does, then its run in
+    this process is stopped), and deleted lines drop their delta buffers and
+    remembered turns. Data may be the typed value or its JSON (json.RawMessage,
+    or anything that marshals to it). Observe never publishes the events it is
+    given; call it before handing them to this process's own hub, and forward
+    each Engine's own events only.
+
+func (e *Engine) OpenLoops(ctx context.Context, scope Scope, in OpenLoopsInput) (OpenLoopsList, error)
+    OpenLoops lists the open loops asked for.
+
+func (e *Engine) PinMessage(ctx context.Context, scope Scope, messageID string, pinned bool, opts ...TxOption) (domain.Message, error)
+    PinMessage pins (pinned true) or unpins a finished operator, assistant or
+    card message. Pinning is core: it needs no feature (the fisheye context
+    reads it). A message already in that state is returned unchanged and nothing
+    is published; otherwise message.updated follows the commit. InTx hooks
+    receive store.PinnedMessage.
+
+func (e *Engine) PreviewBranch(ctx context.Context, scope Scope, parentLineID string, in BranchInput) (BranchPreview, error)
+    PreviewBranch builds the pack CreateBranch would build for the same
+    input (anchor, kind, excerpt, purpose, includeLater) and writes nothing.
+    The purpose may still be empty. It refuses what CreateBranch would refuse
+    about the input and the anchor; the limits are checked only by CreateBranch.
+
+func (e *Engine) PreviewSpinoff(ctx context.Context, scope Scope, lineID string, in SpinoffInput) (SpinoffPreview, error)
+    PreviewSpinoff builds the capsule Spinoff would store for the same input,
+    and writes nothing. It refuses what Spinoff refuses about the input (the
+    mode, a main line or an ended branch for detach, the message for fresh);
+    the locks' checks (a turn running) are Spinoff's alone.
+
+func (e *Engine) PreviewTurn(ctx context.Context, scope Scope, lineID, content string) (Preview, error)
+    PreviewTurn builds the prompt the line's next turn would send with content
+    as the operator's message, without writing anything.
+
+func (e *Engine) PromoteBranch(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (PromotedBranch, error)
+    PromoteBranch makes a direct branch of the main line the main line. The main
+    line keeps its id; its old tail becomes a discarded "previous main line"
+    branch. Clients must reload the transcripts afterwards. InTx hooks receive
+    store.PromotedBranch.
+
+func (e *Engine) ProposeGoal(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (Job, error)
+    ProposeGoal starts a goal_propose job for the line's conversation (any mode;
+    the operator asked, so an earlier dismissal does not hold the proposal back,
+    and in Auto it replaces the goal). A pending proposal is superseded.
+    It needs a finished exchange on the main line (no_messages). InTx hooks
+    receive store.Job.
+
+func (e *Engine) PurgeExpiredAsides(ctx context.Context) ([]PurgedAside, error)
+    PurgeExpiredAsides deletes the asides that ended more than AsideRetention
+    ago, at most 100 per call (Maintain calls it). It is a sweep over every
+    tenant, so it follows the configuration, not the FeaturePolicy.
+
+func (e *Engine) PutGoal(ctx context.Context, scope Scope, lineID, text string, opts ...TxOption) (domain.Goal, error)
+    PutGoal writes the operator's goal for the line's conversation (source
+    manual) over whatever it had; open goal_propose suggestions of the
+    conversation expire in the same transaction. InTx hooks receive domain.Goal.
+
+func (e *Engine) PutLeaf(ctx context.Context, scope Scope, lineID string, in domain.LeafInput, opts ...TxOption) (domain.Leaf, error)
+    PutLeaf writes the operator's leaf (confirmed) over whatever the branch had;
+    a later draft never replaces it. InTx hooks receive domain.Leaf.
+
+func (e *Engine) RemoveFold(ctx context.Context, scope Scope, foldID string, opts ...TxOption) (domain.Fold, error)
+    RemoveFold takes a fold back: its messages are in the prompt again (a
+    drafting fold's job no longer writes). InTx hooks receive store.FoldWrite.
+
+func (e *Engine) RenameBranch(ctx context.Context, scope Scope, lineID, purpose string, opts ...TxOption) (domain.BranchView, error)
+    RenameBranch changes the purpose of an open branch (its line's title
+    follows) and publishes branch.changed{renamed} and the branch line's
+    line.updated. The pack keeps the purpose it was built with. InTx hooks
+    receive domain.BranchView.
+
+func (e *Engine) RenameFolder(ctx context.Context, scope Scope, from, to string, opts ...TxOption) (RenamedFolder, error)
+    RenameFolder moves every main line of the tenant in folder from (archived
+    ones too) to folder to; an empty to unfiles them (B18). It does not count
+    as activity. Each moved line gets a line.updated event. InTx hooks receive
+    store.RenamedFolder.
+
+func (e *Engine) RenameGroup(ctx context.Context, scope Scope, groupID, title string, opts ...TxOption) (domain.Group, error)
+    RenameGroup changes an active group's title. InTx hooks receive
+    domain.Group.
+
+func (e *Engine) RetryTurn(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (Turn, error)
+    RetryTurn runs the line's last turn again when it failed: the failed reply
+    stays (status error, left out of every prompt's history) and a new pending
+    reply is started for the same operator message, which is not duplicated.
+    It refuses a line with a pending turn (turn_pending) or whose last turn did
+    not fail (nothing_to_retry); the TurnGate is asked first, as for BeginTurn.
+    InTx hooks receive store.BegunTurn.
+
+func (e *Engine) RunTurn(ctx context.Context, t Turn, r Runner) (CompletedTurn, error)
+    RunTurn is the synchronous convenience over the turn protocol: it renders
+    the prompt with Prompt.Chat, runs it (streaming deltas into the buffer and
+    publishing retries), and completes the turn with the result. A turn that
+    is cancelled before or while it runs returns ErrTurnNotPending (its usage,
+    if the runner still reported one, is recorded). A runner that fails or
+    panics fails the turn with a fixed text; the detail is logged. A turn this
+    process already runs is refused.
+
+func (e *Engine) Search(ctx context.Context, scope Scope, in SearchInput) ([]domain.SearchHit, error)
+    Search returns the scope's hits for the query, best first (similarity,
+    then recency), each with a snippet centred on its match.
+
+func (e *Engine) SearchMemories(ctx context.Context, scope Scope, in MemorySearch) ([]domain.RecalledMemory, error)
+    SearchMemories recalls the memories for a text: the offers at a new
+    conversation or branch ("you settled before …").
+
+func (e *Engine) SetJobDispatcher(d Dispatcher)
+    SetJobDispatcher names where jobs go that no caller receives: those the
+    AfterCommit hooks start while a turn is failed inside BeginTurn. Without one
+    they are logged and left to FailStaleJobs.
+
+func (e *Engine) SetMessageTag(ctx context.Context, scope Scope, messageID string, in TagInput, opts ...TxOption) (domain.Message, error)
+    SetMessageTag writes a tag with a status on a finished operator or
+    assistant message: confirmed (empty too) is the operator's, as TagMessage;
+    draft puts it back for review as the model's (B15). It replaces any
+    tag; message.updated follows when it changed. InTx hooks receive
+    store.TaggedMessage.
+
+func (e *Engine) Spinoff(ctx context.Context, scope Scope, lineID string, in SpinoffInput, opts ...TxOption) (SpunOff, error)
+    Spinoff spins the line (detach: the branch; fresh: the line's message) off
+    into a new conversation. InTx hooks receive store.SpunOff.
+
+func (e *Engine) StartDiverge(ctx context.Context, scope Scope, lineID string, in DivergeInput, opts ...TxOption) (Job, error)
+    StartDiverge starts a diverge job: Count (2–5) directions from the anchor,
+    a finished operator or assistant message of the line (anchor_not_found),
+    with room for that many more open branches under it (branch_limit).
+    Its branches are opened when the job finishes. InTx hooks receive store.Job.
+
+func (e *Engine) StartDraft(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (Job, error)
+    StartDraft starts drafting the branch's conclusion card: the branch is
+    marked drafting (it takes no turns until the draft ends) and the card_draft
+    job is returned for the host to run. InTx hooks receive store.DraftClaim.
+
+func (e *Engine) StartLeafDraft(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (Job, error)
+    StartLeafDraft starts a leaf_draft job for a branch (any mode, the operator
+    asked); a pending draft of the branch is superseded. The draft is written
+    when the job finishes, unless the operator's leaf is there. InTx hooks
+    receive store.Job.
+
+func (e *Engine) StartSummary(ctx context.Context, scope Scope, lineID string, opts ...TxOption) (Job, error)
+    StartSummary starts a rolling summary of the line's messages after its
+    summary cursor (up to the first undelivered card); a pending summary of the
+    line is superseded. InTx hooks receive store.Job.
+
+func (e *Engine) StreamSince(ctx context.Context, scope Scope, lineID string, afterSeq int64) (DeltaTail, error)
+    StreamSince returns the buffered deltas of a line after afterSeq (a
+    reconnecting client catches up with it). The buffer is per process and
+    bounded; Truncated says deltas after the cursor are gone and the client must
+    reload the messages.
+
+func (e *Engine) SummarizeGroup(ctx context.Context, scope Scope, groupID string, opts ...TxOption) (Job, error)
+    SummarizeGroup starts a group_summary job for an active group (any mode:
+    the operator asked); a summary started before it no longer writes. InTx
+    hooks receive store.GroupSummaryClaim.
+
+func (e *Engine) SupersedeMemory(ctx context.Context, scope Scope, memoryID string, in domain.MemoryInput, opts ...TxOption) (SupersededMemories, error)
+    SupersedeMemory replaces an active memory by the operator's new one; the
+    kind, importance and validity default to the old one's, the source is the
+    old one's. Nothing is deleted. InTx hooks receive store.SupersededMemories.
+
+func (e *Engine) SupersedeNote(ctx context.Context, scope Scope, lineID, noteID string, in NoteInput, opts ...TxOption) (NotesWrite, error)
+    SupersedeNote replaces a note with a new one; the old one is kept and points
+    at its successor. An empty section keeps the old note's. InTx hooks receive
+    store.NotesWrite.
+
+func (e *Engine) TagMessage(ctx context.Context, scope Scope, messageID, kind string, opts ...TxOption) (domain.Message, error)
+    TagMessage writes the operator's confirmed tag (question, idea, pro,
+    con or decision) on a finished operator or assistant message; it replaces
+    any tag. message.updated follows when it changed. InTx hooks receive
+    store.TaggedMessage.
+
+func (e *Engine) TenantOrganization(ctx context.Context, scope Scope) (domain.TenantOrganization, error)
+    TenantOrganization returns the tenant's folders (active and archived main
+    lines counted apart) and the tags of its unarchived main lines with their
+    counts (B18.1), over every main line rather than one page of ListLines.
+    Read-only.
+
+func (e *Engine) TurnPending(ctx context.Context, scope Scope, turnID string) (bool, error)
+    TurnPending reports whether the turn is still pending for the scope's
+    tenant: false once it was completed, cancelled or failed as stale (and for
+    an unknown id or another tenant's turn). A worker that cannot observe the
+    API process's events asks it to learn about a cancel.
+
+func (e *Engine) UntagMessage(ctx context.Context, scope Scope, messageID string, opts ...TxOption) (domain.Message, error)
+    UntagMessage removes a message's tag (nothing changes without one). InTx
+    hooks receive store.TaggedMessage.
+
+func (e *Engine) UpdateBranchCard(ctx context.Context, scope Scope, lineID string, card domain.BranchCard, opts ...TxOption) (UpdatedCard, error)
+    UpdateBranchCard replaces the conclusion card of a merged branch (B17).
+    The card is checked as a merge checks it (invalid_card with every problem),
+    rendered onto the same card message and marked undelivered, so the next turn
+    of the line that holds it carries the edited card once, in the card notice.
+    The branch's conclusion line follows, and so does its leaf while it is still
+    the one the merge wrote from the card and the leaf feature is on. Nothing
+    else derived from the old card is rewritten (memories, a rolling summary,
+    a group summary, the pack of a branch opened on the card). It publishes
+    message.updated, branch.changed{merged} and, when the leaf followed,
+    leaf.changed. InTx hooks receive store.UpdatedCard.
+
+func (e *Engine) UpdateFold(ctx context.Context, scope Scope, foldID, summary string, opts ...TxOption) (domain.Fold, error)
+    UpdateFold writes the operator's summary on a fold (any status but removed):
+    it becomes active and no longer counts as drafted by a model; a drafting
+    fold's job no longer writes. Refusals: an empty summary (invalid_input),
+    one over the limit (too_long), fold_not_found, archived. InTx hooks receive
+    store.FoldWrite.
+
+func (e *Engine) UpdateLine(ctx context.Context, scope Scope, lineID string, patch LinePatch, opts ...TxOption) (domain.LineView, error)
+    UpdateLine edits the title, provider, model or host data of a line. InTx
+    hooks receive domain.LineView.
+
+func (e *Engine) UpdateMemo(ctx context.Context, scope Scope, memoID, text string, opts ...TxOption) (domain.Memo, error)
+    UpdateMemo replaces a memo's text. InTx hooks receive domain.Memo.
+
+func (e *Engine) UpdateMemory(ctx context.Context, scope Scope, memoryID string, patch MemoryPatch, opts ...TxOption) (domain.Memory, error)
+    UpdateMemory applies a patch to an active memory (memory_superseded for a
+    superseded one). InTx hooks receive domain.Memory.
+
+func (e *Engine) UpdateNote(ctx context.Context, scope Scope, lineID, noteID string, patch NotePatch, opts ...TxOption) (NoteUpdate, error)
+    UpdateNote changes the text, section or status of a note. InTx hooks receive
+    store.NoteUpdate.
+
+func (e *Engine) UpdateRelation(ctx context.Context, scope Scope, lineID, relationID, label string, opts ...TxOption) (RelationChange, error)
+    UpdateRelation changes the label of a relation one of whose ends is in the
+    line's conversation and keeps its kind; see EditRelation. InTx hooks receive
+    store.RelationChange.
+
+type Event struct {
+	Type       string `json:"type"`
+	Tenant     string `json:"tenant"`
+	RootLineID string `json:"rootLineId"`
+	LineID     string `json:"lineId"`
+	// Data is JSON-serialisable; its shape depends on Type (DESIGN §6).
+	Data any `json:"data"`
+}
+    Event is one change, published only after its transaction committed.
+
+type ExpandInput struct {
+	Purpose       string
+	Kind          string
+	ConfirmDeeper bool
+}
+    ExpandInput opens a seed's branch: Purpose defaults to the seed's text (cut
+    to the purpose limit), Kind to investigate.
+
+type ExpandedSeed struct {
+	Seed   domain.Seed
+	Line   domain.LineView
+	Branch domain.BranchView
+	Pack   domain.BranchPack
+}
+    ExpandedSeed is an expanded seed and its new branch.
+
+type ExtractInput struct {
+	FromMessageID string
+	ToMessageID   string
+	Purpose       string
+	Kind          string
+	Provider      string
+	Model         string
+	ConfirmDeeper bool
+	Card          *domain.BranchCard
+	HostMeta      json.RawMessage
+}
+    ExtractInput moves the messages of a line from FromMessageID to ToMessageID
+    (both included, seq order) into a new branch of it (B18). Kind is
+    investigate (the default) or alternative. Card, when set, brings the branch
+    back at once: it is checked like a merge's card and left on the line in the
+    range's place, already delivered.
+
+type ExtractedBranch = store.ExtractedBranch
+    ExtractedBranch is what an extract changed.
+
+type Feature interface {
+	// Name is the feature's stable name (for example "notes").
+	Name() string
+	// Requires names the features it cannot work without.
+	Requires() []string
+	// AI reports whether the feature calls a model (and so has a Mode).
+	AI() bool
+
+	// Has unexported methods.
+}
+    Feature is one built-in optional module. The set is closed: only this
+    package implements it (Notes, Chapters, Aside, Summary, CardDraft,
+    BranchSuggest, Search, Leaf, Parking, Spinoff, Rebalance, Goal,
+    Relations, OpenLoops, Fisheye, Group, Ibis, Fold, Diverge, Memory, Memo,
+    and SuggestionProbe for tests).
+
+func AllFeatures() []Feature
+    AllFeatures is every first-batch feature: notes, chapters, asides and card
+    drafts on, summaries suggested when due, branch suggestions.
+
+func Aside() Feature
+    Aside is the one-question branch (kind aside): answered once, then ended,
+    and purged with its messages after Limits.Branch.AsideRetention. Off:
+    opening an aside (or moving into one) returns feature_disabled and Maintain
+    purges nothing; existing asides are kept.
+
+func BranchSuggest(mode Mode, opts ...FeatureOption) Feature
+    BranchSuggest lets the model propose side branches: the prompt carries
+    the [BRANCH-SUGGEST] rule and the reply's suggestion lines are parsed
+    into meta.suggestions, which the operator can accept (CreateBranch with
+    SuggestionMessageID). Suggest and Auto behave alike (a suggestion is never
+    acted on by itself); Manual carries no rule and parses nothing, but stored
+    suggestions can still be accepted. Off: no rule, no parsing, and accepting a
+    suggestion returns feature_disabled.
+
+func CardDraft(opts ...FeatureOption) Feature
+    CardDraft drafts a branch's conclusion card with a tool-free job;
+    the operator edits and confirms it before merging. It is on or off (DESIGN
+    §12): clients decide when to call StartDraft. Off: StartDraft returns
+    feature_disabled and cards are written by hand.
+
+func Chapters() Feature
+    Chapters are computed when read: idle gaps, the topic cuts summaries record,
+    and milestones the operator sets. On the main line, once the current
+    chapter holds domain.ChapterCutMinMessages finished messages, a turn's
+    prompt also allows a [CHAPTER] line; the title it carries is recorded as a
+    topic cut on that turn's operator message. A main line's first-turn [TOPIC]
+    title names the first chapter the same way. Off: nothing is recorded (the
+    marker lines are still removed from replies) and the chapter calls return
+    feature_disabled; stored cuts are kept.
+
+func Diverge(mode Mode, opts ...FeatureOption) Feature
+    Diverge explores and settles alternatives (DESIGN §12 B10):
+    diverging asks a model for N (2–5) distinct directions from a message,
+    and each becomes a sibling branch hanging on it (kind alternative,
+    origin diverge; its pack names its direction and the others). Converging
+    compares open sibling branches in a criteria × options matrix with scores,
+    reasons and a recommendation (a converge job → a comparison); deciding,
+    in one transaction, gives the chosen branch a decision leaf and discards the
+    other compared branches with a dead-end leaf. Every step is the operator's
+    (any mode; nothing happens by itself). Needs leaf. Off: the calls return
+    feature_disabled; comparisons are kept.
+
+func Fisheye() Feature
+    Fisheye replaces the default history of a prompt with a fisheye view (DESIGN
+    §12 B9): every message of the line and every other branch of the tree gets
+    a score (its head start minus its distance) and a level: full, summary (one
+    condensed line, or covered by the rolling summary), leaf_only (another
+    branch's leaf in the "other branches' conclusions" block) or hidden,
+    within what the shared budget left for the history. Head starts: a pin,
+    a reference from a note or a card, being a card, a confirmed decision tag
+    (while ibis is on); for branches, the leaf's kind. The line's own path (it
+    and its ancestors) is carried by its pack, not by this. PreviewTurn reports
+    every item. No model, on or off; needs leaf. Off: the default history.
+
+func Fold(mode Mode, opts ...FeatureOption) Feature
+    Fold folds a stretch of a line into one summary (DESIGN §12 B10):
+    the messages stay where they are, but every later prompt of the line
+    carries the summary in their place (applied before the HistorySelector,
+    so the fisheye weighs the fold as one entry). The operator folds a range
+    with a summary of their own or asks a model to draft one (a fold_summary
+    job, any mode); PreviewTurn lists the folds it applied. Folds follow their
+    messages when a move or a promotion takes them to another line, and a fold
+    whose ends were split no longer applies. Suggest (Auto alike: a fold changes
+    what the model sees, so nothing is folded by itself) also summarizes,
+    every Limits.Fold.SuggestEvery replies of a line, its oldest closed chapter
+    worth folding (fold_suggest → the inbox; a dismissed chapter is not proposed
+    again). Off: the fold calls return feature_disabled and prompts carry every
+    message; stored folds are kept.
+
+func Goal(mode Mode, opts ...FeatureOption) Feature
+    Goal is the conversation's goal (DESIGN §12 B9): one line per conversation,
+    carried by every prompt of its tree right after the rules (a stable block).
+    The operator writes it, or asks the model to propose one (ProposeGoal, any
+    mode). Suggest and Auto also propose one by themselves after the main line's
+    second reply when there is none, and check every Limits.Goal.DriftEvery
+    main-line replies whether the conversation drifted from it (a drift
+    suggestion: open a branch or an aside there). A proposal waits in the inbox;
+    Auto writes it as the goal instead (never over a goal that is there,
+    unless the operator asked). Manual: the goal and the button only. Off:
+    the goal calls return feature_disabled and prompts carry no goal; a stored
+    goal is kept.
+
+func Group(mode Mode, opts ...FeatureOption) Feature
+    Group circles branches together (DESIGN §12 B9): a group of ended branches
+    gets one shared summary (a group_summary job, started when the group is
+    made or asked again) that stands for their leaves in the fisheye context;
+    open sibling branches can be combined into one new branch (origin merge)
+    that carries their background, the old ones discarded and pointing at it.
+    Either may settle conflicts between the branches' claims (adopt one side, or
+    keep both as a note to confirm). Suggest (Auto alike: nothing is grouped by
+    itself) also asks a cheap model, whenever a branch ends, to propose groups
+    and their conflicts (group_suggest → the inbox). Manual: by hand only. Needs
+    leaf. Off: the group calls return feature_disabled; stored groups are kept.
+
+func Ibis(mode Mode, opts ...FeatureOption) Feature
+    Ibis marks messages with their role in the argument (DESIGN §12 B10,
+    IBIS): question, idea, pro, con or decision. The operator tags any finished
+    operator or assistant message (TagMessage, any mode). Suggest and Auto
+    also ask a cheap model, every Limits.Ibis.Every (3) replies of a line that
+    is not an aside, to tag its newest untagged messages (one ibis_tag job,
+    at most Limits.Ibis.BatchMax after the last finished job): Suggest writes
+    them as drafts the operator confirms by tagging, Auto as confirmed tags.
+    A model never replaces a tag, and the operator's tags are the operator's.
+    Messages and the outline (the anchor's tag) carry tags; with the fisheye
+    on, a confirmed decision is a head start. Off: the tag calls return
+    feature_disabled and no job runs; stored tags stay and still show.
+
+func Leaf(mode Mode, opts ...FeatureOption) Feature
+    Leaf is the closing note of a branch (DESIGN §12 B8): a merge writes a
+    conclusion leaf from its card in the same transaction; a discard may
+    carry a dead-end leaf; the operator writes or confirms one at any time.
+    Suggest and Auto also draft one with a job when a branch is discarded
+    without a leaf and for the previous main line of a promotion (Suggest:
+    a draft for the operator to confirm; Auto: confirmed, marked aiDrafted).
+    Manual drafts only when asked (StartLeafDraft). A leaf never enters a turn
+    prompt. Off: the leaf calls and a discard's leaf return feature_disabled;
+    stored leaves are kept (the outline still shows them).
+
+func Memo() Feature
+    Memo keeps notes on a node that never go to the AI (DESIGN §12.10, B13):
+    it registers no ContextProvider, so a memo is in no prompt, no turn preview
+    and no job. Memos are not private: every reader of a conversation reads its
+    memos. Off: the memo calls return feature_disabled; stored memos are kept.
+
+func Memory(mode Mode, cfg MemoryConfig, opts ...FeatureOption) Feature
+    Memory keeps what a tenant's conversations settled across conversations
+    (DESIGN §12 B10): memories (fact, decision, preference, lesson) with their
+    sources, never deleted, only superseded. Recall ranks them by relevance
+    (the Embedder's cosine similarity) × recency × importance: every turn's
+    prompt carries the best few that fit the budget (unless NoTurnRecall;
+    visible in PreviewTurn only), and SearchMemories serves the offers at a
+    new conversation or branch. Suggest and Auto extract memories with a cheap
+    model after a merge, a confirmed leaf or a decided note (memory_extract:
+    Suggest proposes them in the inbox, Auto writes them), and the maintenance
+    loop looks for near-duplicate memories (memory_consolidate → the inbox:
+    merge them, or a conflict to settle). Manual: the operator's memories
+    and recall only. Needs notes, the vector extension and its migration
+    (store.MigrateFeatures(ctx, pool, "memory")). Off: the calls return
+    feature_disabled and prompts carry no memories; stored memories are kept.
+
+func Notes() Feature
+    Notes is the notes page of a conversation (decided / fact / to_confirm
+    / todo): carried by every turn, written with merges or on its own. Off:
+    the prompt carries no notes, merge noteChanges and the notes calls return
+    feature_disabled; stored notes are kept.
+
+func OpenLoops() Feature
+    OpenLoops lists what conversations left unfinished (DESIGN §12 B9):
+    open branches idle longer than N days (default Limits.OpenLoops.StaleAfter,
+    3 days), notes to confirm (while notes is on), open seeds (while parking is
+    on) and open suggestions (of the features that are on), for the whole tenant
+    or one conversation. Read-only, no model and no table of its own; the items
+    are acted on with the existing calls (discard, notes, seeds, the inbox).
+    Off: OpenLoops returns feature_disabled.
+
+func Parking() Feature
+    Parking keeps thoughts for later (DESIGN §12 B8): a seed costs no tokens
+    (no branch, no model call, never in a prompt). A seed is expanded into a
+    branch (origin seed), written into the notes (needs notes) or dropped;
+    each ends it for good. Off: the seed calls return feature_disabled; stored
+    seeds are kept.
+
+func Rebalance(mode Mode, opts ...FeatureOption) Feature
+    Rebalance hints when a branch has taken over the conversation (DESIGN
+    §12 B8): after a turn of an open branch whose replies since the fork
+    reach Limits.Rebalance (at least MinBranchTurns and ShareFactor times
+    the parent's, or the tree's last RecentTurns replies all its), it raises
+    a promote_or_spinoff suggestion about the branch. Accepting promotes
+    it (top-level branches only) or spins it off (detach; needs spinoff);
+    dismissing ("keep as is") is final for that branch. Suggest and Auto behave
+    alike (nothing changes without the operator); Manual raises nothing.
+    Needs leaf (the previous main line of a promotion gets a leaf).
+
+func Relations(mode Mode, opts ...FeatureOption) Feature
+    Relations draws labelled lines between two places (a line, or a message
+    on it) of the tenant's conversations, in one tree or across two (DESIGN
+    §12 B9); they are links of kind relation, listed by /links too. Suggest
+    (and Auto, which behaves alike: a relation is drawn only when the operator
+    accepts it) asks a cheap model, when a branch is merged or discarded, which
+    other branches of the tree it relates to, and raises each as a relation
+    suggestion. Manual: drawn by hand only. Off: the relation calls return
+    feature_disabled; stored relations are kept.
+
+func Search() Feature
+    Search finds text across a tenant's conversations: main-line titles,
+    branch purposes and finished operator and assistant messages. It needs the
+    pg_trgm extension and its own migration: run store.MigrateFeatures(ctx,
+    pool, "search") before New (New refuses otherwise). Off: Search returns
+    feature_disabled.
+
+func Spinoff() Feature
+    Spinoff makes a part of a conversation a new one (DESIGN §12 B8): detach
+    turns an open branch, with everything below it, into a main line of its own;
+    fresh starts a new main line from any finished message. The new main line
+    starts every prompt with its origin capsule (the branch's pack, or the
+    path to the message, and the branch's leaf while leaf is on); the source
+    line keeps a marker and both are linked. Off: Spinoff and ListLinks return
+    feature_disabled; spun-off lines keep their capsule.
+
+func SuggestionProbe() Feature
+    SuggestionProbe is for tests, smoke runs and e2e only, never a product
+    feature: it is not in AllFeatures nor the catalog, and /capabilities
+    does not list it (it only turns the suggestion inbox on). After a turn
+    whose reply contains ProbeDirective it raises a "probe" suggestion about
+    the turn's line (ProbeDirectivePermanent: a "probe_permanent" one, whose
+    dismissal is final). Accepting one does nothing besides accepting it; its
+    result is {"accepted": true}. The fake runner echoes the operator's message,
+    so sending a directive raises one.
+
+func Summary(mode Mode, opts ...FeatureOption) Feature
+    Summary is the rolling summary of a line: it stands for the history
+    it covers in every prompt and in the packs of new branches. Manual:
+    only StartSummary; Suggest: CompletedTurn.SummaryDue once the unsummarized
+    history passes the trigger; Auto: the summary job is started then and
+    returned in CompletedTurn.Jobs. Off: prompts and packs carry no summary
+    (history is cut at HistoryScan) and StartSummary returns feature_disabled;
+    stored summaries are kept.
+
+type FeatureOption func(*featureConfig)
+    FeatureOption configures one AI feature.
+
+func JobModel(provider, model string) FeatureOption
+    JobModel names the provider and model the feature's jobs ask for (for
+    example a cheap model); empty means the conversation's own.
+
+type FeaturePolicy interface {
+	Mode(ctx context.Context, scope Scope, feature string) Mode
+}
+    FeaturePolicy narrows the configured features per tenant or conversation.
+    It can only narrow: the effective mode is the lower of the configured one
+    and the policy's, so a feature that was not configured stays off.
+
+type FisheyeReport struct {
+	Items  []domain.FisheyeItem `json:"items"`
+	Tokens int                  `json:"tokens"`
+	Budget int                  `json:"budget"`
+}
+    FisheyeReport is what the fisheye chose for a prompt: every item with its
+    level and score, the tokens they take and the history budget they had.
+
+type FoldAccepted struct {
+	Fold domain.Fold `json:"fold"`
+}
+    FoldAccepted is what accepting a fold suggestion did: the new fold.
+
+type FoldChange struct {
+	LineID     string      `json:"lineId"`
+	RootLineID string      `json:"rootLineId"`
+	Fold       domain.Fold `json:"fold"`
+}
+    FoldChange is the data of fold.changed.
+
+type FoldCreated struct {
+	Fold domain.Fold
+	Job  *Job
+}
+    FoldCreated is a new fold and, for a draft, the fold_summary job the caller
+    runs (httpapi hands it to its Dispatcher).
+
+type FoldInput struct {
+	FromMessageID string
+	ToMessageID   string
+	Summary       string
+}
+    FoldInput folds the messages of a line from one message to another (either
+    order); an empty Summary asks a model to draft it.
+
+type FoldList = store.FoldList
+    FoldList is a line's folds.
+
+type FoldSuggestion struct {
+	FromMessageID  string `json:"fromMessageId"`
+	ToMessageID    string `json:"toMessageId"`
+	FromSeq        int64  `json:"fromSeq"`
+	ToSeq          int64  `json:"toSeq"`
+	Title          string `json:"title"`
+	Summary        string `json:"summary"`
+	MessageCount   int    `json:"messageCount"`
+	TokensOriginal int    `json:"tokensOriginal"`
+	TokensSummary  int    `json:"tokensSummary"`
+	JobID          string `json:"jobId"`
+}
+    FoldSuggestion is the payload of a fold suggestion: the chapter's range
+    and title, the drafted summary, the token counts and the job that wrote the
+    summary.
+
+type GoalAccepted struct {
+	Goal domain.Goal `json:"goal"`
+}
+    GoalAccepted is what accepting a goal_propose suggestion did.
+
+type GoalChange struct {
+	RootLineID string       `json:"rootLineId"`
+	Goal       *domain.Goal `json:"goal"`
+}
+    GoalChange is the data of goal.changed; Goal is nil once it was deleted.
+
+type GoalProposal struct {
+	Text string `json:"text"`
+}
+    GoalProposal is the payload of a goal_propose suggestion.
+
+type GroupAccepted struct {
+	Action   string            `json:"action"`
+	Group    *domain.Group     `json:"group,omitempty"`
+	Job      *JobStarted       `json:"job,omitempty"`
+	Combined *CombinedBranches `json:"combined,omitempty"`
+	Notes    *NotesWrite       `json:"notes,omitempty"`
+}
+    GroupAccepted is what accepting a group suggestion did: the group (and its
+    summary job) or the combine, and the notes keepBoth wrote.
+
+type GroupChange struct {
+	RootLineID string       `json:"rootLineId"`
+	Group      domain.Group `json:"group"`
+}
+    GroupChange is the data of group.changed.
+
+type GroupCreated struct {
+	Group domain.Group
+	Job   *Job
+	Notes NotesWrite
+}
+    GroupCreated is a new group, the summary job started for it (nil when it
+    could not be started; SummarizeGroup again) and the notes keepBoth wrote.
+
+type GroupInput struct {
+	MemberLineIDs []string
+	Title         string
+	Conflicts     []domain.Conflict
+}
+    GroupInput makes a group of ended branches; Conflicts are the ones the
+    operator settled (keepBoth needs notes).
+
+type GroupList = store.GroupList
+    GroupList is a tree's groups.
+
+type GroupSuggestion struct {
+	Title     string                `json:"title"`
+	Members   []GroupSuggestionLine `json:"members"`
+	Conflicts []domain.Conflict     `json:"conflicts"`
+}
+    GroupSuggestion is the payload of a group suggestion: its title, members
+    (ended or open) and the conflicts between their claims (ids c1, c2…).
+
+type GroupSuggestionLine struct {
+	LineID  string `json:"lineId"`
+	Purpose string `json:"purpose"`
+	Ended   bool   `json:"ended"`
+	Leaf    string `json:"leaf"`
+}
+    GroupSuggestionLine is a proposed member.
+
+type ImportInput = domain.ImportInput
+    ImportInput is a conversation written elsewhere: its main line, the messages
+    in order and first-level branches hanging on them (B18).
+
+type ImportedLine = store.ImportedLine
+    ImportedLine is what an import wrote.
+
+type Job struct {
+	ID       string
+	Kind     string
+	Feature  string
+	Scope    Scope
+	LineID   string
+	Prompt   domain.Prompt
+	Provider string
+	Model    string
+}
+    Job is one single-shot model call the host runs (a card draft, a rolling
+    summary, a feature's job) and reports with FinishJob. Its prompt carries no
+    tools. Provider and Model are a hint; empty means the runner's default.
+
+func (j Job) Request() RunRequest
+    Request is the job's runner request: one call, no streaming.
+
+type JobFailed struct {
+	JobID      string          `json:"jobId"`
+	Kind       string          `json:"kind"`
+	LineID     string          `json:"lineId"`
+	RootLineID string          `json:"rootLineId"`
+	Error      domain.JobError `json:"error"`
+}
+    JobFailed is the data of job.failed: a feature's background job that failed
+    (its run failed, its output was unusable, or it timed out) and has no other
+    channel to say so. Error.Code is run_failed, unusable, timed_out or failed.
+
+type JobRecord = store.Job
+    JobRecord is a job as stored.
+
+type JobStarted struct {
+	JobID string `json:"jobId"`
+	Kind  string `json:"kind"`
+}
+    JobStarted names a started job (its result arrives by events).
+
+type LeafChange struct {
+	LineID     string                 `json:"lineId"`
+	RootLineID string                 `json:"rootLineId"`
+	Leaf       *domain.Leaf           `json:"leaf"`
+	DraftError *domain.LeafDraftError `json:"draftError,omitempty"`
+}
+    LeafChange is the data of leaf.changed; Leaf is nil once it was deleted (or
+    while the branch has none). DraftError is set when a leaf draft just failed
+    (Leaf is then the branch's current leaf).
+
+type LeafState struct {
+	Leaf       *domain.Leaf           `json:"leaf"`
+	DraftError *domain.LeafDraftError `json:"draftError,omitempty"`
+}
+    LeafState is a branch's leaf and, when the branch's newest leaf draft failed
+    after the leaf was last written, why.
+
+type LineInput struct {
+	ID       string
+	Title    string
+	Provider string
+	Model    string
+	HostMeta json.RawMessage
+	Folder   string
+	Tags     []string
+}
+    LineInput is a new main line. ID may be chosen by the host (宿主 uses
+    its session id); empty means a random id. Folder and Tags organise it in the
+    list (B18; normalised, domain.NormalizeFolder and domain.NormalizeTags).
+
+type LinePage = store.LinePage
+    LinePage is one page of main lines, newest activity first.
+
+type LinePatch = store.LinePatch
+    LinePatch edits a line; nil fields stay as they are.
+
+type LineQuery = store.ListLinesInput
+    LineQuery selects one page of main lines.
+
+type LinesDeleted struct {
+	RootLineID string   `json:"rootLineId"`
+	LineIDs    []string `json:"lineIds"`
+}
+    LinesDeleted is the data of line.deleted.
+
+type LinkChange struct {
+	RootLineID string      `json:"rootLineId"`
+	Link       domain.Link `json:"link"`
+	Deleted    bool        `json:"deleted,omitempty"`
+}
+    LinkChange is the data of link.changed: a link that touches the tree.
+    Deleted is set when the link (a relation) was removed.
+
+type MaintenanceReport struct {
+	StaleTurns     int            `json:"staleTurns"`
+	StaleJobs      int            `json:"staleJobs"`
+	DroppedBuffers int            `json:"droppedBuffers"`
+	Tasks          map[string]int `json:"tasks"`
+}
+    MaintenanceReport counts what one Maintain call did. Tasks counts what each
+    feature task did, by task name (for example TaskPurgeAsides).
+
+type MemoChange struct {
+	RootLineID string `json:"rootLineId"`
+	MemoID     string `json:"memoId"`
+	Change     string `json:"change"`
+}
+    MemoChange is the data of memo.changed.
+
+type MemoInput struct {
+	NodeLineID string
+	Text       string
+}
+    MemoInput writes a memo on NodeLineID (the path's line when empty), a line
+    of the same conversation.
+
+type MemoList = store.MemoList
+    MemoList is a conversation's memos, oldest first.
+
+type MemoryAccepted struct {
+	Memory     domain.Memory   `json:"memory"`
+	Superseded []domain.Memory `json:"superseded"`
+}
+    MemoryAccepted is what accepting a memory or consolidation suggestion wrote:
+    the new memory and the ones it superseded.
+
+type MemoryChange struct {
+	Memory     domain.Memory   `json:"memory"`
+	Superseded []domain.Memory `json:"superseded"`
+}
+    MemoryChange is the data of memory.changed: the memory written and the ones
+    it superseded.
+
+type MemoryConfig struct {
+	Embedder     Embedder
+	NoTurnRecall bool
+}
+    MemoryConfig configures the memory feature. Embedder is required (New
+    refuses without one). NoTurnRecall leaves the recalled memories out of every
+    turn's prompt (search and the offers at a new conversation or branch still
+    work).
+
+type MemoryConsolidation struct {
+	Action     string   `json:"action"`
+	MemoryIDs  []string `json:"memoryIds"`
+	Texts      []string `json:"texts"`
+	Kind       string   `json:"kind"`
+	Text       string   `json:"text"`
+	Importance int      `json:"importance"`
+	Reason     string   `json:"reason"`
+	JobID      string   `json:"jobId"`
+}
+    MemoryConsolidation is the payload of a consolidation suggestion:
+    the two memories (with their texts when proposed), merge or conflict,
+    and the statement that supersedes both.
+
+type MemoryCreate struct {
+	Memory       domain.MemoryInput
+	SourceLineID string
+}
+    MemoryCreate is the operator's memory; SourceLineID optionally names the
+    conversation line it came from (its purpose or title is the label).
+
+type MemoryPage = store.MemoryPage
+    MemoryPage is one page of memories, newest first; NextCursor is "" on the
+    last page.
+
+type MemoryPatch = store.MemoryPatch
+    MemoryPatch changes a memory's kind, importance or validity; its text
+    changes only by superseding it.
+
+type MemoryProposal struct {
+	Action         string              `json:"action"`
+	Kind           string              `json:"kind"`
+	Text           string              `json:"text"`
+	Importance     int                 `json:"importance"`
+	TargetMemoryID string              `json:"targetMemoryId,omitempty"`
+	Source         domain.MemorySource `json:"source"`
+	JobID          string              `json:"jobId"`
+}
+    MemoryProposal is the payload of a memory suggestion: an addition, or an
+    update that supersedes TargetMemoryID; Source is where it came from.
+
+type MemoryQuery struct {
+	Kind     string
+	Statuses []string
+	Limit    int
+	Cursor   string
+}
+    MemoryQuery lists memories: of a kind ("" for all) and statuses (default
+    active), newest first, at most Limit; Cursor is the NextCursor of the
+    previous page.
+
+type MemorySearch struct {
+	Query string
+	Limit int
+}
+    MemorySearch ranks the tenant's memories for a text (a new conversation's
+    first message, a new branch's purpose); Limit defaults to Limits.Memory.TopK
+    and is at most SearchMax.
+
+type MergeInput struct {
+	Card               domain.BranchCard
+	ParentTipMessageID string
+	ConfirmParentMoved bool
+	NoteChanges        []domain.NoteChange
+}
+    MergeInput brings a branch back with a confirmed conclusion card.
+    ParentTipMessageID is the newest parent message the operator saw
+    (BranchDetail.ParentTipMessageID); ConfirmParentMoved accepts that the
+    parent moved on since. NoteChanges (notes feature) are written in the same
+    transaction; without the feature they are refused with feature_disabled.
+
+type MergedBranch = store.MergedBranch
+    MergedBranch is what a merge changed.
+
+type MilestoneInput struct {
+	MessageID string
+	Title     string
+}
+    MilestoneInput marks a message of the conversation as a chapter start.
+
+type Mode int
+    Mode is how an AI feature runs. Features without AI are on (ModeAuto) or
+    off.
+
+const (
+	// ModeOff: the feature does nothing.
+	ModeOff Mode = iota
+	// ModeManual: only when the operator asks.
+	ModeManual
+	// ModeSuggest: the AI proposes, the operator confirms.
+	ModeSuggest
+	// ModeAuto: the AI does it.
+	ModeAuto
+)
+func (m Mode) String() string
+    String names the mode as the API shows it.
+
+type ModelGroup struct {
+	Provider string   `json:"provider"`
+	Models   []string `json:"models"`
+}
+    ModelGroup is one provider and the models a host lets conversations pick
+    (GET /capabilities lists them).
+
+type MoveInput struct {
+	Count         int
+	Purpose       string
+	Kind          string
+	Provider      string
+	Model         string
+	ConfirmDeeper bool
+	HostMeta      json.RawMessage
+}
+    MoveInput moves the last Count messages of a line into a new branch of it.
+    Kind defaults to investigate.
+
+type MovedBranch = store.MovedBranch
+    MovedBranch is what a move changed.
+
+type NoteInput struct {
+	Section string
+	Text    string
+}
+    NoteInput is the replacement of a superseded note.
+
+type NotePatch = store.NotePatch
+    Notes types, as the store returns them.
+
+type NoteUpdate = store.NoteUpdate
+    Notes types, as the store returns them.
+
+type NotedSeed = store.NotedSeed
+    NotedSeed is a seed written into the notes.
+
+type NotesChange struct {
+	RootLineID string `json:"rootLineId"`
+	Revision   int    `json:"revision"`
+}
+    NotesChange is the data of notes.changed.
+
+type NotesView = store.NotesView
+    Notes types, as the store returns them.
+
+type NotesWrite = store.NotesWrite
+    Notes types, as the store returns them.
+
+type OnceRunner interface {
+	RunOnce(ctx context.Context, req RunRequest) (RunResult, error)
+}
+    OnceRunner runs one request synchronously, outside the turn and job protocol
+    (RunnerDispatcher.RunOnce); httpapi uses it, when the API's Dispatcher is
+    one, for the import analysis.
+
+type OpenBranch = store.OpenBranch
+    Open-loop item types, as the store returns them.
+
+type OpenLoopsInput struct {
+	LineID    string
+	StaleDays int
+}
+    OpenLoopsInput asks for the open loops of the tenant, or of the conversation
+    of LineID (any of its lines). StaleDays (1..365, 0 for the default) is how
+    many idle days make an open branch stale.
+
+type OpenLoopsList struct {
+	store.OpenLoops
+	StaleDays int `json:"staleDays"`
+}
+    OpenLoopsList is the listing: the kinds whose feature is off are nil.
+    StaleDays is the idle threshold that was applied.
+
+type OpenNote = store.OpenNote
+    Open-loop item types, as the store returns them.
+
+type OpenSeed = store.OpenSeed
+    Open-loop item types, as the store returns them.
+
+type OpenSuggestion = store.OpenSuggestion
+    Open-loop item types, as the store returns them.
+
+type Option func(*config)
+    Option configures an Engine.
+
+func WithClock(now func() time.Time) Option
+    WithClock replaces the engine's and the store's clock (tests).
+
+func WithDefaultModel(provider, model string) Option
+    WithDefaultModel fills the provider and model of a new main line that names
+    neither (the model alone when the line names this provider).
+
+func WithDeltaSink(s DeltaSink) Option
+    WithDeltaSink makes AppendDelta (and RunTurn's streaming) forward every
+    valid delta of a pending turn to the sink instead of buffering it, filtering
+    it, saving partials or publishing message.delta here: the Engine of a worker
+    process whose deltas the API process numbers.
+
+func WithExtraMarkers(markers ...string) Option
+    WithExtraMarkers names the host's protocol markers; they are removed from
+    every block the library renders into a prompt.
+
+func WithFeaturePolicy(p FeaturePolicy) Option
+    WithFeaturePolicy narrows the enabled features at run time.
+
+func WithFeatures(features ...Feature) Option
+    WithFeatures enables features, in the order their extension points run.
+
+func WithLeafTexts(texts domain.LeafTexts) Option
+    WithLeafTexts sets the templates of the leaves the library writes
+    itself (default domain.DefaultLeafTexts, Traditional Chinese;
+    domain.EnglishLeafTexts for English): a decision's dead ends.
+
+func WithLimits(l domain.Limits) Option
+    WithLimits replaces the limits; fields left at zero take their defaults.
+
+func WithLogger(l *slog.Logger) Option
+    WithLogger is where the engine logs what it cannot return (a failed publish,
+    a write-back after a crashed run).
+
+func WithModelCatalog(groups ...ModelGroup) Option
+    WithModelCatalog names the providers and models clients may offer.
+    Blank names are dropped and repeated models kept once; a provider may have
+    no models listed (any model, as the host's model check decides). It does not
+    enforce anything: WithModelCheck does.
+
+func WithModelCheck(allow func(provider, model string) bool) Option
+    WithModelCheck restricts the provider/model pairs callers may choose for a
+    line or a branch; a refused pair is model_not_allowed. Without it every pair
+    is allowed (the runner decides).
+
+func WithNoteSourceLabels(labels domain.NoteSourceLabels) Option
+    WithNoteSourceLabels sets the templates of the source label a note is
+    written with (default domain.DefaultNoteSourceLabels, Traditional Chinese;
+    domain.EnglishNoteSourceLabels for English).
+
+func WithPartialFlush(interval time.Duration, bytes int) Option
+    WithPartialFlush sets how often a streaming turn saves its text so far on
+    the pending message: after interval, or once bytes of new text streamed,
+    whichever comes first (checked as deltas arrive).
+
+func WithPricing(prices map[string]Price) Option
+    WithPricing names the price of each model (keyed by model name). With a
+    price, PreviewTurn estimates the prompt's cost and RunTurn prices usage that
+    the runner reported without a cost.
+
+func WithPromptContributor(p PromptContributor) Option
+    WithPromptContributor adds the host's sections to every turn prompt.
+
+func WithPublisher(p Publisher) Option
+    WithPublisher receives every event after its commit.
+
+func WithStaleTurnAge(d time.Duration) Option
+    WithStaleTurnAge sets how long a turn may stay pending before Maintain fails
+    it.
+
+func WithTurnGate(g TurnGate) Option
+    WithTurnGate is asked before every turn starts.
+
+type Preview struct {
+	Prompt      domain.Prompt  `json:"prompt"`
+	Blocks      []PreviewBlock `json:"blocks"`
+	TotalTokens int            `json:"totalTokens"`
+	Provider    string         `json:"provider"`
+	Model       string         `json:"model"`
+	// EstimatedCostUSD is the prompt's input cost when the model has a price
+	// (WithPricing); the reply's output is not included.
+	EstimatedCostUSD *float64 `json:"estimatedCostUsd,omitempty"`
+	// Budget is how the prompt's shared token budget was spent.
+	Budget PromptBudget `json:"budget"`
+	// Fisheye is what the fisheye context chose (nil while it is off).
+	Fisheye *FisheyeReport `json:"fisheye,omitempty"`
+	// Folds are the folds whose summaries stood for their messages (absent
+	// without any).
+	Folds []domain.AppliedFold `json:"folds,omitempty"`
+	// Memories are the memories the prompt recalled (absent without any;
+	// DESIGN §12: a turn's recalled memories show only here).
+	Memories []domain.RecalledMemory `json:"memories,omitempty"`
+}
+    Preview is the prompt the next turn of a line would send, block by block,
+    in the order Prompt.Chat sends them (sections, summary, trailing sections,
+    condensed history, history, the operator's message).
+
+type PreviewBlock struct {
+	Key     string `json:"key"`
+	Role    string `json:"role,omitempty"`
+	Content string `json:"content"`
+	Tokens  int    `json:"tokens"`
+}
+    PreviewBlock is one rendered block of a prompt with its token estimate.
+    Key is the section key, or one of the Preview* keys; Role is set on a
+    history block.
+
+type Price struct {
+	Input      float64 `json:"input"`
+	Output     float64 `json:"output"`
+	CacheRead  float64 `json:"cacheRead,omitempty"`
+	CacheWrite float64 `json:"cacheWrite,omitempty"`
+}
+    Price is what a model costs, in USD per million tokens. A cache rate left at
+    zero charges those tokens at the Input rate.
+
+func (p Price) Cost(u domain.Usage) float64
+    Cost is the price of a usage: uncached input, cache reads and writes,
+    and output, each at its rate.
+
+type PromotedBranch = store.PromotedBranch
+    PromotedBranch is what a promotion changed.
+
+type PromptBudget struct {
+	Total   int           `json:"total"`
+	Shares  []BudgetShare `json:"shares"`
+	History int           `json:"history"`
+	Used    int           `json:"used"`
+}
+    PromptBudget is how a prompt's budget was shared: Total is the budget,
+    Shares what each owner took in order (the history last), History what the
+    history was granted and Used the sum of the shares.
+
+type PromptContributor interface {
+	Contribute(ctx context.Context, scope Scope, line domain.LineView) ([]domain.PromptSection, error)
+}
+    PromptContributor adds the host's sections to a turn prompt (宿主:
+    plan and blackboard blocks).
+
+type Publisher interface {
+	Publish(ctx context.Context, ev Event)
+}
+    Publisher receives events after their commit.
+
+func Publishers(publishers ...Publisher) Publisher
+    Publishers fans every event out to each publisher in order. One that panics
+    does not keep the event from the others; the first panic is raised again
+    once all were called, so the engine logs it as it logs any publisher's
+    panic. Nil publishers are skipped.
+
+type PurgedAside = store.PurgedAside
+    PurgedAside is one expired aside deleted with everything below it.
+
+type RebalancePayload struct {
+	Reason string `json:"reason"`
+	// ParentIsMain says the branch hangs on the main line; ParentTitle is
+	// the title of the line it hangs on.
+	ParentIsMain bool   `json:"parentIsMain"`
+	ParentTitle  string `json:"parentTitle"`
+	domain.RebalanceSignals
+	// Actions are what accepting may do now (promote: a branch of the main
+	// line; spinoff: while spinoff is on).
+	Actions []string `json:"actions"`
+}
+    RebalancePayload is the payload of a promote_or_spinoff suggestion.
+
+type RebalanceResult struct {
+	Action string `json:"action"`
+	// Promote: the promoted branch, the previous main line and the main line.
+	Branch           *domain.BranchView `json:"branch,omitempty"`
+	PreviousMainLine *domain.BranchView `json:"previousMainLine,omitempty"`
+	// Both: the main line after the change (promote: the same id; spinoff:
+	// the new one).
+	Line domain.LineView `json:"line"`
+	// Spinoff: the link to the new conversation.
+	Link *domain.Link `json:"link,omitempty"`
+}
+    RebalanceResult is what accepting a rebalance suggestion did.
+
+type RelationAccepted struct {
+	Link domain.Link `json:"link"`
+}
+    RelationAccepted is what accepting a relation suggestion did.
+
+type RelationChange = store.RelationChange
+    Relation types, as the store takes and returns them.
+
+type RelationEdit = store.RelationEdit
+    Relation types, as the store takes and returns them.
+
+type RelationEnd = store.RelationEnd
+    Relation types, as the store takes and returns them.
+
+type RelationInput struct {
+	From         RelationEnd
+	To           RelationEnd
+	Label        string
+	RelationKind string
+}
+    RelationInput relates two places: From (its line defaults to the line the
+    call is made on, whose conversation it must be in) and To (any conversation
+    of the tenant), with an optional one-line label and an optional kind
+    (domain.RelationKinds; empty is related).
+
+type RelationPayload struct {
+	FromLineID   string `json:"fromLineId"`
+	ToLineID     string `json:"toLineId"`
+	FromTitle    string `json:"fromTitle"`
+	ToTitle      string `json:"toTitle"`
+	Label        string `json:"label"`
+	RelationKind string `json:"relationKind,omitempty"`
+}
+    RelationPayload is the payload of a relation suggestion: from the branch
+    that ended to another, with the branches' purposes, the label and the kind
+    (B15; a suggestion raised before it has none and is related).
+
+type RemoteDelta struct {
+	TurnID     string       `json:"turnId"`
+	Tenant     string       `json:"tenant"`
+	LineID     string       `json:"lineId"`
+	RootLineID string       `json:"rootLineId"`
+	Delta      domain.Delta `json:"delta"`
+}
+    RemoteDelta is one streamed piece of a turn on its way to the API process:
+    hand Delta to that process's AppendDelta(ctx, TurnID, Delta). Tenant,
+    LineID and RootLineID say where the turn lives, for routing.
+
+type RenamedFolder = store.RenamedFolder
+    RenamedFolder is what a folder rename changed.
+
+type Retry struct {
+	Attempt     int
+	MaxAttempts int
+	NextRetryAt time.Time
+}
+    Retry describes an automatic retry the runner is about to make.
+
+type RunRequest struct {
+	Provider string
+	Model    string
+	// System is the whole system prompt; SystemBlocks is the same text in
+	// parts (joined with a blank line they equal System), so a runner can put
+	// a prompt-cache breakpoint after the stable part. Either may be empty.
+	System       string
+	SystemBlocks []SystemBlock
+	Messages     []domain.ChatMessage
+	MaxTokens    int
+	// OnDelta receives streamed pieces; may be nil.
+	OnDelta func(domain.Delta)
+	// OnRetry is told before the runner retries a 429 / 5xx; may be nil.
+	OnRetry func(Retry)
+}
+    RunRequest is one call: a system string and chat messages.
+
+func ChatRequest(p domain.Prompt, provider, model string) RunRequest
+    ChatRequest renders a prompt for a chat runner the way RunTurn and the
+    runner dispatcher do: System is the whole system prompt, SystemBlocks the
+    same text as its stable part (rules, pack, notes, host sections not marked
+    Trailing) and its volatile part, so runner/anthropic can put its cache
+    breakpoint between. A custom Dispatcher or worker uses it (or Turn.Request /
+    Job.Request) instead of rebuilding the request.
+
+type RunResult struct {
+	Content    string
+	Usage      domain.Usage
+	StopReason string
+	// Model is the model that actually ran (the runner's default when the
+	// request named none); empty when the runner does not say.
+	Model string
+}
+    RunResult is a finished call.
+
+type Runner interface {
+	Run(ctx context.Context, req RunRequest) (RunResult, error)
+}
+    Runner runs one model call. Implementations live in runner/ (B4); the
+    library never decides how a call runs.
+
+type RunnerDispatcher struct {
+	// Has unexported fields.
+}
+    RunnerDispatcher runs each turn and job on its own goroutine with a Runner,
+    under a timeout and an optional concurrency bound, and always writes the
+    outcome back: a runner error, panic or timeout fails the turn or job. A run
+    outlives the context it was dispatched with; only Shutdown or Close stops
+    it. Jobs a completed turn started (CompletedTurn.Jobs) are dispatched too.
+
+func NewRunnerDispatcher(e *Engine, r Runner, opts ...DispatcherOption) *RunnerDispatcher
+    NewRunnerDispatcher runs work in this process with r.
+
+func (d *RunnerDispatcher) Close() error
+    Close stops taking work, cancels every run and waits for the write-backs.
+
+func (d *RunnerDispatcher) DispatchJob(ctx context.Context, j Job) error
+    DispatchJob starts running the job and returns at once.
+
+func (d *RunnerDispatcher) DispatchTurn(ctx context.Context, t Turn) error
+    DispatchTurn starts running the turn and returns at once.
+
+func (d *RunnerDispatcher) InFlight() int
+    InFlight is how many turns and jobs the dispatcher holds: running or waiting
+    for a slot.
+
+func (d *RunnerDispatcher) RunOnce(ctx context.Context, req RunRequest) (RunResult, error)
+    RunOnce runs one request now and returns its result, nothing stored
+    (B22's import analysis): it counts against WithMaxQueue and WithMaxOnce
+    (ErrDispatcherBusy beyond either) and waits for a WithMaxConcurrent slot
+    like any run; Shutdown waits for it and Close cancels it. A runner panic is
+    an error.
+
+func (d *RunnerDispatcher) Shutdown(ctx context.Context) error
+    Shutdown stops taking work and waits for the runs to finish. When ctx ends
+    first, the runs are cancelled (they write their failure back) and Shutdown
+    waits for those write-backs, returning ctx's error.
+
+func (d *RunnerDispatcher) Wait()
+    Wait blocks until every dispatched run has written its outcome back (tests).
+    Use Shutdown to stop.
+
+type RunnerError struct {
+	Public string
+	Err    error
+}
+    RunnerError is how a Runner says what the operator may see about a failure:
+    Public is stored on the turn and published; Err is only logged. Any other
+    runner error is stored as a fixed text.
+
+func (e *RunnerError) Error() string
+
+func (e *RunnerError) Unwrap() error
+
+type RunnerFunc func(ctx context.Context, req RunRequest) (RunResult, error)
+    RunnerFunc adapts a function to Runner.
+
+func (f RunnerFunc) Run(ctx context.Context, req RunRequest) (RunResult, error)
+    Run calls f.
+
+type Scope struct {
+	Tenant string
+	Actor  string
+}
+    Scope is who a call is for. Tenant is required; Actor is written into
+    created_by.
+
+type SearchInput struct {
+	Query    string
+	Limit    int
+	Archived bool
+	Root     string
+}
+    SearchInput is one search: Query is a case-insensitive substring of 2 to 200
+    characters; Limit defaults to 20 and is at most 50; Archived searches the
+    archived conversations instead of the active ones. Root limits the search
+    to one conversation (its main line's id; line_not_found for anything else),
+    archived or not (Archived is ignored).
+
+type SeedInput struct {
+	Text            string
+	AnchorMessageID string
+}
+    SeedInput parks a thought on a line; AnchorMessageID is optional (the line's
+    newest chat message otherwise).
+
+type SeedList = store.SeedList
+    SeedList is a conversation's seeds.
+
+type SeedsChange struct {
+	RootLineID string `json:"rootLineId"`
+}
+    SeedsChange is the data of seeds.changed.
+
+type SeedsInput struct {
+	Texts           []string
+	AnchorMessageID string
+}
+    SeedsInput parks several thoughts on a line at once (1 to
+    domain.SeedBatchMax; an outline or a to-do list); AnchorMessageID is
+    SeedInput's, shared by all of them.
+
+type SpinoffInput struct {
+	Mode        string
+	AtMessageID string
+	Title       string
+	CopyNotes   bool
+}
+    SpinoffInput is one spinoff. Mode is detach or fresh; AtMessageID (fresh)
+    is the message of the line to start from. Title defaults to the branch's
+    purpose (detach) or the line's title (fresh). CopyNotes copies the
+    conversation's active notes into the new one, each pointing at its original.
+
+type SpinoffPreview struct {
+	Mode        string
+	Capsule     domain.OriginCapsule
+	NotesToCopy int
+}
+    SpinoffPreview is the capsule a spinoff would start the new conversation
+    with, and how many notes CopyNotes would copy (0 without it).
+
+type SpunOff = store.SpunOff
+    SpunOff is what a spinoff changed.
+
+type StaleTurn = store.StaleTurn
+    StaleTurn is one pending turn FailStaleTurns ended.
+
+type SuggestionChange struct {
+	RootLineID string            `json:"rootLineId"`
+	Suggestion domain.Suggestion `json:"suggestion"`
+}
+    SuggestionChange is the data of suggestion.changed.
+
+type SuggestionList = store.SuggestionList
+    SuggestionList is a conversation's inbox.
+
+type SummaryDueChange struct {
+	LineID     string `json:"lineId"`
+	RootLineID string `json:"rootLineId"`
+}
+    SummaryDueChange is the data of summary.due: the line's unsummarized
+    history passed the trigger (summary in suggest mode); POST /compact (or
+    StartSummary) starts one.
+
+type SupersededMemories = store.SupersededMemories
+    SupersededMemories is a supersede: the new memory and the ones it replaced.
+
+type SystemBlock struct {
+	Text   string
+	Stable bool
+}
+    SystemBlock is one part of the system prompt. Stable parts (rules, pack,
+    notes, host sections) come first and change rarely; the volatile part
+    (summary, card notices, condensed history) changes from turn to turn.
+
+type SystemNotice = store.SystemNotice
+    SystemNotice is one host system message: its text (cleaned with
+    domain.CleanSystemText, then at most Limits.Text.MessageMaxRunes), the
+    host's JSON object kept as the message's host_meta (shown to every reader of
+    the line like any message's hostMeta), and SkipRepeat, which leaves it out
+    when the line's newest host system message among its last 30 has the same
+    text.
+
+type TagDrafts = store.TagDrafts
+    Tag types, as the store takes and returns them.
+
+type TagInput = store.TagInput
+    Tag types, as the store takes and returns them.
+
+type TreeExport struct {
+	RootLineID     string                      `json:"rootLineId"`
+	ExportedAt     time.Time                   `json:"exportedAt"`
+	Truncated      bool                        `json:"truncated"`
+	RootLine       domain.LineView             `json:"rootLine"`
+	Branches       []domain.BranchView         `json:"branches"`
+	MessagesByLine map[string][]domain.Message `json:"messagesByLine"`
+	Notes          []domain.Note               `json:"notes"`
+	Memos          []domain.Memo               `json:"memos"`
+	Chapters       []domain.Chapter            `json:"chapters"`
+	Goal           *domain.Goal                `json:"goal"`
+	Comparisons    []domain.Comparison         `json:"comparisons"`
+	Links          []domain.Link               `json:"links"`
+	FoldsByLine    map[string][]domain.Fold    `json:"foldsByLine"`
+}
+    TreeExport is a whole conversation at once (B14): the main line, every
+    branch (asides included, oldest first), each line's messages and the parts
+    of the features on for the scope. A part whose feature is off is empty ([],
+    null for Goal, {} for FoldsByLine), never feature_disabled. Truncated
+    reports a part that was cut: a line with more than ExportMaxMessagesPerLine
+    messages, an outline at store.OutlineCap branches or more than
+    store.TreeComparisonCap comparisons. The parts are read one after another,
+    not in one snapshot.
+
+type Turn struct {
+	ID          string
+	Scope       Scope
+	LineID      string
+	RootLineID  string
+	UserMessage domain.Message
+	Pending     domain.Message
+	Prompt      domain.Prompt
+	Provider    string
+	Model       string
+}
+    Turn is a started turn: the operator's message, the pending assistant
+    message (its id is the turn id) and the prompt to run.
+
+func (t Turn) Request() RunRequest
+    Request is the turn's runner request (ChatRequest of its prompt, provider
+    and model), without callbacks.
+
+type TurnGate interface {
+	AllowTurn(ctx context.Context, scope Scope, line domain.LineView) error
+}
+    TurnGate is an advisory check before a turn starts (宿主: is the
+    daemon online). It runs before the transaction; an error refuses the turn.
+
+type TurnInput struct {
+	Content  string
+	HostMeta json.RawMessage
+}
+    TurnInput is the operator's message that starts a turn.
+
+type TurnResult struct {
+	Content    string
+	Error      string
+	Usage      *domain.Usage
+	DurationMs int64
+	Provider   string
+	Model      string
+	Notices    []SystemNotice
+}
+    TurnResult is what running a turn produced. A non-empty Error fails the
+    turn; it is stored and published, so it must be a text meant for the
+    operator, never a raw upstream error. Provider and Model, when set,
+    name what actually ran. Notices are host system messages written right after
+    the reply, in order, in the same transaction (a failed reply gets them too;
+    blank ones are left out, at most 16).
+
+type TurnRetrying struct {
+	TurnID      string    `json:"turnId"`
+	Attempt     int       `json:"attempt"`
+	MaxAttempts int       `json:"maxAttempts"`
+	NextRetryAt time.Time `json:"nextRetryAt"`
+}
+    TurnRetrying is the data of turn.retrying: the runner hit a 429 / 5xx and
+    tries again at NextRetryAt.
+
+type TxHook = store.TxHook
+    TxHook runs inside a write's transaction before the commit; an error rolls
+    the whole write back. See store.TxHook.
+
+type TxOption func(*txOptions)
+    TxOption adds to a write's transaction.
+
+func InTx(h TxHook) TxOption
+    InTx runs h inside the write's transaction, after the library's own writes
+    (DeleteTree: before the rows go) and before the commit.
+
+type UpdatedCard = store.UpdatedCard
+    UpdatedCard is what a card edit changed.
+

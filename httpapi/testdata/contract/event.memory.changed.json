@@ -1,0 +1,29 @@
+{
+  "data": {
+    "memory": {
+      "aiDrafted": true,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "importance": 7,
+      "kind": "fact",
+      "source": {
+        "label": "Disks",
+        "leafLineId": "00000000-0000-4000-8000-000000000002",
+        "lineId": "00000000-0000-4000-8000-000000000003",
+        "messageId": "00000000-0000-4000-8000-000000000004",
+        "noteId": ""
+      },
+      "status": "active",
+      "supersededBy": "",
+      "text": "Remembered: Disks (fake runner)",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "validUntil": null
+    },
+    "superseded": []
+  },
+  "lineId": "",
+  "rootLineId": "",
+  "tenant": "tenant-a",
+  "type": "memory.changed"
+}

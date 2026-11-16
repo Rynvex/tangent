@@ -1,0 +1,35 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/suggestions",
+  "response": {
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "suggestions": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": null,
+        "feature": "memory",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "memory",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "payload": {
+          "action": "add",
+          "importance": 6,
+          "jobId": "00000000-0000-4000-8000-000000000003",
+          "kind": "fact",
+          "source": {
+            "label": "Disks",
+            "leafLineId": "00000000-0000-4000-8000-000000000004",
+            "lineId": "00000000-0000-4000-8000-000000000001",
+            "messageId": "00000000-0000-4000-8000-000000000005",
+            "noteId": ""
+          },
+          "text": "Remembered: Disks (fake runner)"
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "targetKey": "memory:00000000-0000-4000-8000-000000000003:0"
+      }
+    ]
+  },
+  "status": 200
+}

@@ -1,0 +1,189 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/messages?limit=100",
+  "response": {
+    "messages": [
+      {
+        "content": "Plan the route [fake:suggest]",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {},
+        "pinned": false,
+        "role": "user",
+        "seq": 42,
+        "status": "done"
+      },
+      {
+        "content": "Plan the route.",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000003",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "actor": "tester",
+          "durationMs": 42,
+          "model": "fake-1",
+          "provider": "fake",
+          "usage": {
+            "cacheReadTokens": 1000,
+            "cacheWriteTokens": 100,
+            "costUsd": 0.00136,
+            "inputTokens": 1200,
+            "outputTokens": 80
+          }
+        },
+        "pinned": false,
+        "role": "assistant",
+        "seq": 43,
+        "status": "done"
+      },
+      {
+        "content": "Anything else? [fake:suggest]",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000004",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {},
+        "pinned": false,
+        "role": "user",
+        "seq": 44,
+        "status": "done"
+      },
+      {
+        "content": "Fake reply to: Anything else? [fake:suggest]",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000005",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "actor": "tester",
+          "durationMs": 42,
+          "model": "fake-1",
+          "provider": "fake",
+          "suggestions": [
+            {
+              "kind": "investigate",
+              "purpose": "Look into the trade-offs"
+            }
+          ],
+          "usage": {
+            "costUsd": 0.000215,
+            "inputTokens": 155,
+            "outputTokens": 30
+          }
+        },
+        "pinned": false,
+        "role": "assistant",
+        "seq": 45,
+        "status": "done"
+      },
+      {
+        "content": "### Branch conclusion card\n\nBranch purpose: Budget\n\n**Question**\n\u003e What did this branch settle?\n\n**Conclusion**\n\u003e The branch reached a conclusion (fake runner).\n\n**Still unresolved**\n- Confirm with a real model\n",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000006",
+        "kind": "branch_card",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "branchLineId": "00000000-0000-4000-8000-000000000007",
+          "card": {
+            "conclusion": "The branch reached a conclusion (fake runner).",
+            "evidence": [],
+            "excerpts": [],
+            "impact": "",
+            "needsDecision": [],
+            "openItems": [
+              "Confirm with a real model"
+            ],
+            "question": "What did this branch settle?"
+          },
+          "delivered": true
+        },
+        "pinned": false,
+        "role": "system",
+        "seq": 50,
+        "status": "done"
+      },
+      {
+        "content": "Thanks, noted.",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000008",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {},
+        "pinned": false,
+        "role": "user",
+        "seq": 51,
+        "status": "done"
+      },
+      {
+        "content": "Fake reply to: Thanks, noted.",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000009",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "actor": "tester",
+          "deliversCards": [
+            "00000000-0000-4000-8000-000000000006"
+          ],
+          "durationMs": 42,
+          "model": "fake-1",
+          "notesRevision": 1,
+          "provider": "fake",
+          "usage": {
+            "costUsd": 0.000554,
+            "inputTokens": 538,
+            "outputTokens": 8
+          }
+        },
+        "pinned": false,
+        "role": "assistant",
+        "seq": 52,
+        "status": "done"
+      },
+      {
+        "content": "This one fails",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000010",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {},
+        "pinned": false,
+        "role": "user",
+        "seq": 53,
+        "status": "done"
+      },
+      {
+        "content": "Turn failed: the model run failed",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000011",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "actor": "tester",
+          "durationMs": 42,
+          "error": "the model run failed",
+          "model": "fake-1",
+          "notesRevision": 1,
+          "provider": "fake"
+        },
+        "pinned": false,
+        "role": "assistant",
+        "seq": 54,
+        "status": "error"
+      }
+    ]
+  },
+  "status": 200
+}

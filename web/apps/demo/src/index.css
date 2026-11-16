@@ -1,0 +1,14 @@
+@import "tailwindcss";
+@import "@tangent/react/styles.css";
+
+/* Tailwind scans the demo by default; the shared packages hold class names too. */
+@source "../../../packages/react/src";
+
+/* Tokens exist only inside TangentRoot, which fills the page; the page itself only needs its height. */
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branches/move",
+  "request": {
+    "count": 2,
+    "purpose": "Pick the week"
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "archived": false,
+      "cardMessageId": "",
+      "closedAt": null,
+      "conclusionLine": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": null,
+      "lineId": "00000000-0000-4000-8000-000000000003",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "move",
+      "parentLineId": "00000000-0000-4000-8000-000000000001",
+      "provider": "fake",
+      "purpose": "Pick the week",
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "status": "open",
+      "unread": 0
+    },
+    "line": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 0,
+        "open": 0,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+        "depth": 1,
+        "kind": "investigate",
+        "origin": "move",
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "purpose": "Pick the week",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open"
+      },
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000003",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 0,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": null,
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "Pick the week",
+      "unread": 0,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0,
+        "inputTokens": 0,
+        "outputTokens": 0
+      }
+    },
+    "marker": {
+      "content": "2 message(s) moved to a branch: Pick the week",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000004",
+      "kind": "branch_marker",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "meta": {
+        "branchLineId": "00000000-0000-4000-8000-000000000003"
+      },
+      "pinned": false,
+      "role": "system",
+      "seq": 24,
+      "status": "done"
+    },
+    "movedMessageIds": [
+      "00000000-0000-4000-8000-000000000005",
+      "00000000-0000-4000-8000-000000000006"
+    ],
+    "reparented": [],
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "sourceLineId": "00000000-0000-4000-8000-000000000001",
+    "summaryReset": false
+  },
+  "status": 201
+}

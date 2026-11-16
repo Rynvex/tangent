@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<meta name="design_doc_mode" content="canvas">
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&family=Geist:wght@400;500;600&display=swap">
+<style>body { margin: 0; -webkit-font-smoothing: antialiased; } a { color: var(--tg-primary-text); } a:hover { color: var(--tg-primary-hover); }</style>
+</helmet>
+<div data-theme="light" style="min-height:100vh;padding:56px 64px 140px;background:var(--tg-surface-sunken);color:var(--tg-foreground);font-family:var(--tg-font-sans);font-size:var(--tg-text-base);line-height:1.5;display:flex;flex-direction:column;gap:80px">
+
+<header style="max-width:1080px;display:flex;flex-direction:column;gap:14px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">Tangent・設計稿・專注模式・對應 4_FOCUS_MODE.md（2026-10-24）</div>
+  <h1 style="margin:0;font-size:34px;line-height:1.25;font-weight:600;color:var(--tg-foreground-strong)">專注模式：對話與地圖並排，在地圖上整理節點、寫筆記</h1>
+  <p style="margin:0;font-size:var(--tg-text-md);color:var(--tg-muted);text-wrap:pretty">§9 的 14 個狀態每一項都有畫面，淺色、深色各一；420 寬另加宿主主題。分割畫面有 1440、1280、1024 三種寬度，分頁畫面有 420、375 兩種。沿用 --tg-* token 與現有元件，不改風格。地圖延用樹狀圖原型的自動排版（由左到右的邏輯樹），只是放進分割畫面。</p>
+  <div style="display:flex;flex-wrap:wrap;gap:16px;align-items:center;font-size:var(--tg-text-sm)">
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="padding:1px 6px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:10px">階段二</span>只在階段二出現（備忘、結束的支線改名、記成備忘）。這是設計標示，不是介面的一部分</span>
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="height:18px;display:inline-flex;align-items:center;padding:0 7px;border-radius:999px;background:var(--tg-primary);color:var(--tg-primary-foreground);font-size:10px;font-weight:600">你在這裡</span>對話目前所在的線</span>
+    <span style="display:inline-flex;align-items:center;gap:6px"><span style="width:28px;height:16px;border:2px solid var(--tg-primary);border-radius:4px;background:var(--tg-primary-soft);box-shadow:0 0 0 3px var(--tg-primary-soft)"></span>地圖上選取的節點（面板正在看它）</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><span style="font-size:var(--tg-text-sm);font-weight:500">畫面主題</span><div role="radiogroup" aria-label="畫面主題" style="display:flex;gap:2px;padding:2px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius);background:var(--tg-surface)"><sc-for list="{{ modes }}" as="m" hint-placeholder-count="3"><button role="radio" aria-checked="{{ m.on }}" onClick="{{ m.pick }}" style="height:28px;flex:none;white-space:nowrap;padding:0 12px;border:0;border-radius:var(--tg-radius-sm);background:{{ m.bg }};color:{{ m.fg }};font:inherit;font-size:var(--tg-text-sm);cursor:pointer">{{ m.label }}</button></sc-for></div><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">每個畫面都有淺色和深色；選「並排」會同時顯示兩種。下方一次顯示一節，選「全部」會一次載入所有畫面，比較慢。</span></div>
+  <nav style="display:flex;flex-wrap:wrap;gap:6px">
+    <sc-for list="{{ toc }}" as="t" hint-placeholder-count="14"><button onClick="{{ t.pick }}" aria-pressed="{{ t.on }}" style="padding:3px 10px;border:1px solid {{ t.border }};border-radius:999px;background:{{ t.bg }};color:{{ t.fg }};font:inherit;font-size:var(--tg-text-xs);white-space:nowrap;cursor:pointer">{{ t.label }}</button></sc-for>
+  </nav>
+</header>
+
+<sc-if value="{{ vis.s1 }}" hint-placeholder-val="{{ false }}"><section id="s1" data-screen-label="S1 剛進入" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-1</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S1 剛進入：跟隨開、沒選節點、面板不顯示</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S1・1440・{{ th.label }}・視窗 ≥ 1440 預設 50:50；&lt; 1440 預設 45:55</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;max-width:1500px">
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">改了什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>對話清單和側欄收起，頂列的側欄切換鈕不顯示；「專注」鈕亮起（--tg-primary-soft），再按一次就離開。</li><li>左邊是對話，內容和現在完全一樣；右邊是地圖，中間是分隔線（50:50）。</li><li>地圖工具列由左到右：縮放與符合畫面、跟隨（預設開）、聚焦子樹、圖層、大綱／地圖。</li><li>「你在這裡」改成節點上方的實心小標籤，加上到主線的路徑用 2.5px 主色連線。</li></ul></div>
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">為什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>「你在這裡」和「選取」在專注模式會同時出現在不同節點上。現在的 2px 邊框只能表達一種，所以「你在這裡」改用標籤加路徑，選取用底色加外光暈，一眼就分得出兩者。</li><li>跟隨的開關要看得到，因為它會自動移動地圖；做成可以切換的按鈕，比藏在選單裡好懂。</li></ul></div>
+  </div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s2 }}" hint-placeholder-val="{{ false }}"><section id="s2" data-screen-label="S2 選了進行中的支線" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-2</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S2 選了進行中的支線：面板完整，標題可以改</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S2・1440・{{ th.label }}・滑過標題</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" sel="uplink" title-hover="true" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;max-width:1500px">
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">改了什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>單擊節點就是選取：面板浮在地圖右側（寬 320、shadow-overlay），對話不動、也不被擠。</li><li>面板的區塊依序是：標頭、位置、筆記、關聯、動作、統計。沒有內容的區塊整塊不出現，這條沒有收尾和結論卡，所以不顯示那兩區。</li><li>標頭右上角是「到這條 ↵」和關閉。標題滑過時出現鉛筆和底色，點兩下或按 F2 就能改。</li><li>地圖會平移到讓選取的節點和它的上一層都在面板左邊看得到。</li></ul></div>
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">為什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>筆記放在動作前面，因為它是這次新增的主要用途。結構動作（帶回、升為主線）不常用，但後果大，所以放在下方。</li><li>「升為主線」在這條是停用的，並附上原因（只有直接開在主線上的支線能升），而不是直接隱藏，這樣使用者才知道為什麼不能用。</li></ul></div>
+  </div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s3 }}" hint-placeholder-val="{{ false }}"><section id="s3" data-screen-label="S3 已結束的支線" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-3</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S3 已結束的支線：收尾、結論、改名（階段二）</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S3a・1440・{{ th.label }}・階段二：改名中</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" sel="size" title-edit="true" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S3b・1280・{{ th.label }}・只有階段一</span><dc-import name="FocusScreen" w="1280" h="800" theme="{{ th.t }}" sel="size" phase="1" hint-size="1280px,800px"></dc-import></div></sc-for></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;max-width:1500px">
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">改了什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>多了收尾（可以改）和結論卡摘要（前 3 行）。結論卡用 --tg-card 底色加鎖頭，旁邊寫「結論卡是歷史紀錄，要修正請寫紀要或備忘」，只能「到結論卡」，沒有編輯控制項。</li><li>階段二：標題可以改，編輯時多一行說明「改名後，主線之後的回合裡，這張結論卡的來源會用新名字。」</li><li>只有階段一時：標題沒有鉛筆，看起來就是一般文字；筆記區沒有「紀要｜備忘」分段控制，直接寫「紀要（給 AI）」。版面高度跟著內容走，不會留下空白。</li><li>已結束的支線只剩「獨立成新對話」一個動作。</li></ul></div>
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">為什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>§2 規定結論卡不能改，所以用鎖頭與說明把「不能改」和「要怎麼修正」放在同一個地方。</li><li>階段一不顯示「下一版才能改名」的提示，理由見下面〈待設計確認〉第 4 點。</li></ul></div>
+  </div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s4 }}" hint-placeholder-val="{{ false }}"><section id="s4" data-screen-label="S4 主線與順口問" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-4</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S4 選了主線；選了順口問</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S4a・1280・{{ th.label }}・主線</span><dc-import name="FocusScreen" w="1280" h="800" theme="{{ th.t }}" sel="root" hint-size="1280px,800px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S4b・1280・{{ th.label }}・順口問</span><dc-import name="FocusScreen" w="1280" h="800" theme="{{ th.t }}" sel="egress" hint-size="1280px,800px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li><b>主線</b>：標頭只寫「主線」，沒有狀態、位置、收尾、結論；標題就是對話標題（可以改）；動作只有「開支線…」。</li><li><b>順口問</b>：只有標頭、位置、「3 天後清除」、筆記，動作是「記進紀要」「停車」。標題不能改：順口問 7 天後就清除，不值得改名。順口問有目的，紀要的出處寫「順口問・{目的}」。</li><li>選了順口問時，就算大綱沒開「顯示順口問」，地圖也會把它畫出來，否則面板會對應到一個看不到的節點。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s5 }}" hint-placeholder-val="{{ false }}"><section id="s5" data-screen-label="S5 筆記" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-5</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S5 筆記：紀要 3 條、備忘空、紀要滿了、備忘編輯中、刪除後復原、筆記的選單</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S5a・1440・{{ th.label }}・紀要側 3 條</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" sel="uplink" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <sc-for list="{{ themes }}" as="th" hint-placeholder-count="2">
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S5b–S5f・節點面板・{{ th.label }}</span>
+      <div style="display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start">
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">S5b 備忘側・空<span style="margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:10px">階段二</span></span><dc-import name="FocusScreen" only="panel" h="620" theme="{{ th.t }}" sel="uplink" notes-tab="memo" notes-state="emptyMemo" hint-size="320px,620px"></dc-import></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">S5c 紀要滿了</span><dc-import name="FocusScreen" only="panel" h="620" theme="{{ th.t }}" sel="uplink" notes-state="full" hint-size="320px,620px"></dc-import></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">S5d 備忘編輯中<span style="margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:10px">階段二</span></span><dc-import name="FocusScreen" only="panel" h="620" theme="{{ th.t }}" sel="uplink" notes-tab="memo" notes-state="editing" hint-size="320px,620px"></dc-import></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">S5e 刪除後 5 秒內可復原<span style="margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:10px">階段二</span></span><dc-import name="FocusScreen" only="panel" h="620" theme="{{ th.t }}" sel="uplink" notes-tab="memo" notes-state="undo" hint-size="320px,620px"></dc-import></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">S5f 紀要的選單</span><dc-import name="FocusScreen" only="panel" h="620" theme="{{ th.t }}" sel="uplink" notes-state="menu" hint-size="320px,620px"></dc-import></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">S5g 備忘的選單<span style="margin-left:6px;padding:1px 6px;border-radius:3px;background:var(--tg-foreground-strong);color:var(--tg-background);font-family:var(--tg-font-mono);font-size:10px">階段二</span></span><dc-import name="FocusScreen" only="panel" h="620" theme="{{ th.t }}" sel="uplink" notes-tab="memo" notes-state="menu" hint-size="320px,620px"></dc-import></div>
+      </div>
+    </div>
+  </sc-for>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;max-width:1500px">
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">改了什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>分段控制的兩邊都寫出「給 AI／不給 AI」，並帶數字。紀要側用 Eye 圖示，備忘側用 EyeOff 圖示。</li><li>紀要側頂端兩行：「這頁每一輪都會給 AI・約 1.1k / 2k token」和「掛在這個節點只是標出處，AI 看到的是整頁紀要。」底部是「看全部紀要（18）→」。</li><li>紀要條目左邊有「完成」勾選框（同 1_CURRENT_UI §4.11.2）。勾選後文字劃掉、底色變淡，並寫上完成時間；選單裡也有「標成完成」。備忘沒有完成。</li><li>紀要滿了：「新增」按鈕 45% 不透明、aria-disabled，下方寫原因與解法。</li><li>刪除備忘後，條目劃掉並淡化，下方出現深色提示列「已刪除一則備忘。復原」並倒數。</li><li>選單裡，「帶進這一輪」「從這裡繼續談」放最上面；紀要有「到來源」「取代…」，備忘有「轉成紀要…」「刪除」。</li></ul></div>
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">為什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>「給不給 AI」是兩種筆記最大的差別，所以直接寫在分段控制的名稱裡，不必另外解釋。</li><li><b>文案修正</b>：規格的備忘空狀態寫「寫下只給自己看的想法」，這和 §2「備忘不是私人的」衝突。我改成「還沒有備忘。寫下不給 AI 的想法；看得到這段對話的人都看得到。」</li><li>復原用面板內的提示列，不用全域 toast，因為焦點和視線都在面板上。</li></ul></div>
+  </div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s6 }}" hint-placeholder-val="{{ false }}"><section id="s6" data-screen-label="S6 帶進這一輪" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-6</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S6 「帶進這一輪」之後的輸入框</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S6・1440・{{ th.label }}</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" sel="uplink" prefill="true" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>文字照規格的格式加在輸入框開頭：「關於「爸媽家的上傳速度夠不夠」的筆記：…」，後面空一行，游標放在空行上，焦點移到輸入框（--tg-ring）。</li><li>輸入框下方一行小字：「已帶進這一輪，還沒送出。送出前預覽的「你的訊息」看得到它。」下一次輸入就消失。</li><li>輸入框掛在<b>目前所在的線</b>（B2 那條），不是筆記所在的節點，所以加上前綴，讓 AI 和人都知道這段文字是從哪裡來的。面板維持打開。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s7 }}" hint-placeholder-val="{{ false }}"><section id="s7" data-screen-label="S7 跟隨暫停" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-7</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S7 跟隨暫停（使用者平移過）</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S7・1024・{{ th.label }}</span><dc-import name="FocusScreen" w="1024" h="768" theme="{{ th.t }}" follow-paused="true" hint-size="1024px,768px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>「跟隨」換成警告色的提示：「已暫停・回到這裡」。按了就跳回「你在這裡」並恢復跟隨。提示用 role="status"，只在剛暫停時讀出一次。</li><li>1024 寬時地圖區只有 512px（小於 640），工具列改成只有圖示，文字放進 aria-label，「大綱／地圖」切換也收起來。</li><li>用警告色而不是灰色，是因為這時地圖不會再自己動，使用者需要知道它停了。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s8 }}" hint-placeholder-val="{{ false }}"><section id="s8" data-screen-label="S8 聚焦子樹" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-8</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S8 聚焦子樹：子樹全亮、其他淡化；你在聚焦範圍外</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S8a・1440・{{ th.label }}・聚焦「改用雲端備份」</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" focus="b2" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S8b・1440・{{ th.label }}・聚焦「RAID」，你在範圍外</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" focus="raid" outside="true" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>開啟後，工具列的按鈕變成實心的「聚焦：{title} ×」。下方加一條說明列「只影響地圖顯示，不影響 AI。」，聚焦期間一直顯示。</li><li>範圍外的節點淡到 30%、連線淡到 20%，但仍然可以點；aria 名稱加上「（在聚焦範圍外）」，不只靠淡化表達。</li><li>範圍外時，說明列前面多一段：警告色圓點加「你在聚焦範圍外」，以及「改聚焦這裡」按鈕。</li><li>「你在這裡」的節點落在範圍外時，內容照樣淡到 30%、外框改成灰色，但<b>「你在這裡」標籤維持全亮</b>，使用者才找得到自己在哪裡。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s9 }}" hint-placeholder-val="{{ false }}"><section id="s9" data-screen-label="S9 回覆中與新節點" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-9</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S9 回覆中的節點、新出現的節點</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S9・1280・{{ th.label }}</span><dc-import name="FocusScreen" w="1280" h="800" theme="{{ th.t }}" streaming="uplink" new-node="true" hint-size="1280px,800px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li><b>回覆中</b>：節點第二行改成「回覆中」，前面加上 Loader2 圖示，用 --tg-status-thinking 色。只在 motion-safe 時轉動；減少動態時圖示靜止，文字照樣顯示。</li><li><b>新節點</b>（「第二台 NAS 放哪個房間」）：600ms 淡入，圖上畫的是淡入到一半的樣子；右上角有 --tg-highlight 的「新」標籤，這次瀏覽期間保留。減少動態時直接出現，只靠「新」標籤提示。</li><li>不用虛線表示新節點，因為虛線在 Tangent 只代表「還沒被你確認」。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s10 }}" hint-placeholder-val="{{ false }}"><section id="s10" data-screen-label="S10 唯讀" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-10</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S10 唯讀</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S10・1440・{{ th.label }}</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" sel="uplink" readonly="true" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>狀態列只放在對話欄上方，不跨到地圖。輸入框換成「檢視權限・不能送出」，支線條沒有動作按鈕。</li><li>面板照常顯示，頂端多一行「你只有檢視權限。」標題沒有鉛筆，筆記沒有「⋯」和「新增」，動作區整塊不出現。「到這條」保留，因為看別條線不需要寫入權限。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s11 }}" hint-placeholder-val="{{ false }}"><section id="s11" data-screen-label="S11 只開核心" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-11</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S11 只開核心（?features=core）</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S11a・1440・{{ th.label }}・notes 也關</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" sel="uplink" core="true" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S11b・面板・{{ th.label }}・核心＋notes</span><dc-import name="FocusScreen" only="panel" h="560" theme="{{ th.t }}" sel="uplink" core="true" core-notes="true" hint-size="320px,560px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>沒有收尾、關聯、群組、論證類型，頂列也沒有目標膠囊。面板只剩標頭、位置、動作、統計，高度跟著內容縮短，下面直接是地圖，不留空框。</li><li>notes 開著時，只顯示「紀要（給 AI）」標題，沒有分段控制。地圖節點上的筆記標記跟著 notes 開關。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s12 }}" hint-placeholder-val="{{ false }}"><section id="s12" data-screen-label="S12 錯誤" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-12</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S12 地圖載入失敗；面板存檔失敗</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S12a・1024・{{ th.label }}・地圖載入失敗</span><dc-import name="FocusScreen" w="1024" h="768" theme="{{ th.t }}" map-error="true" hint-size="1024px,768px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:24px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S12b・面板・{{ th.label }}・改標題失敗</span><dc-import name="FocusScreen" only="panel" h="560" theme="{{ th.t }}" sel="uplink" save-error="true" hint-size="320px,560px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>地圖區顯示「無法載入地圖。」、「再試一次」與「對話照常可用。」，工具列 45% 不透明；對話欄完全不受影響。</li><li>存檔失敗：輸入框維持編輯狀態，<b>保留使用者打的字</b>，可以直接按「再儲存一次」；節點和地圖上的標題維持原本的。邊框改成 --tg-destructive，下方用 role="alert" 顯示「沒有存成：連線中斷。標題還是原本的，可以再按一次儲存。」</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s13 }}" hint-placeholder-val="{{ false }}"><section id="s13" data-screen-label="S13 寬度" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-13</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S13 寬度：420、375 分頁（1440、1280、1024 的分割見上面各節）</h2>
+  <sc-for list="{{ themes3 }}" as="th" hint-placeholder-count="3">
+    <div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">420・{{ th.label }}・對話</span><dc-import name="FocusScreen" w="420" h="800" theme="{{ th.t }}" tab="chat" streaming="uplink" hint-size="420px,800px"></dc-import></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">420・{{ th.label }}・地圖＋面板</span><dc-import name="FocusScreen" w="420" h="800" theme="{{ th.t }}" tab="map" sel="uplink" hint-size="420px,800px"></dc-import></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">375・{{ th.label }}・地圖</span><dc-import name="FocusScreen" w="375" h="760" theme="{{ th.t }}" tab="map" hint-size="375px,760px"></dc-import></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">375・{{ th.label }}・地圖＋面板</span><dc-import name="FocusScreen" w="375" h="760" theme="{{ th.t }}" tab="map" sel="uplink" hint-size="375px,760px"></dc-import></div>
+    </div>
+  </sc-for>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>頂列下方是「對話｜地圖」分段控制（44px）。在對話側時，如果別條線正在回覆，「地圖」旁邊會出現 --tg-status-thinking 圓點加「回覆中」。</li><li>地圖側：工具列只有圖示，按鈕 44px；沒有拉關聯，也沒有大綱／地圖切換。</li><li>節點面板是底部抽屜，高 66%，背後有遮罩，是模態、有焦點陷阱。抽屜最上方是拖曳把手。「到這條」會切回對話側。</li><li>375 寬時，頂列的「專注」鈕只剩圖示，路徑中間收成「…」，token 只顯示數字，設定移進「⋯」（同體檢 #3 的做法）。</li><li>420 用宿主主題：嵌入時沒有分割畫面，一律用分頁。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s14 }}" hint-placeholder-val="{{ false }}"><section id="s14" data-screen-label="S14 分隔線兩端" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">§9-14</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S14 分隔線拖到兩端；地圖區 &lt; 640 時面板改到底部</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S14a・1440・{{ th.label }}・對話最窄</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" split="chatMin" sel="uplink" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S14b・1440・{{ th.label }}・地圖最窄，面板在底部</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" split="mapMin" sel="uplink" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S14c・1024・{{ th.label }}・50:50，面板在底部，分隔線 focus</span><dc-import name="FocusScreen" w="1024" h="768" theme="{{ th.t }}" sel="uplink" div-focus="true" hint-size="1024px,768px"></dc-import></div></sc-for></div>
+  <div style="padding:18px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>分隔線可拖曳的範圍是 9px，畫面上只有 1px 線加中間的握把。拖曳中或 focus 時，線和握把變成主色。</li><li>拖到底時，握把下方出現「對話已到最窄 420px」或「地圖已到最窄 360px」，放開後 1 秒消失。這段文字也會更新到 aria-valuetext。</li><li>地圖區不到 640 時，面板從地圖區底部升起（高 60%），只蓋地圖，不蓋對話。</li></ul></div>
+</section></sc-if>
+
+<sc-if value="{{ vis.s15 }}" hint-placeholder-val="{{ false }}"><section id="s15" data-screen-label="S15 呈現方式" style="display:flex;flex-direction:column;gap:22px">
+  <div style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">協調者回覆 2</div>
+  <h2 style="margin:-14px 0 0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">S15 地圖的兩種呈現方式：分層樹（預設）＋收尾分組</h2>
+  <div style="display:flex;flex-wrap:wrap;gap:40px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S15a・1440・{{ th.label }}・收尾分組，選了已帶回的支線</span><dc-import name="FocusScreen" w="1440" h="900" theme="{{ th.t }}" shape="group" sel="size" hint-size="1440px,900px"></dc-import></div></sc-for></div>
+  <div style="display:flex;flex-wrap:wrap;gap:28px"><sc-for list="{{ themes }}" as="th" hint-placeholder-count="2"><div style="display:flex;flex-direction:column;gap:8px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">S15b・375・{{ th.label }}・收尾分組</span><dc-import name="FocusScreen" w="375" h="760" theme="{{ th.t }}" tab="map" shape="group" hint-size="375px,760px"></dc-import></div></sc-for></div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:20px;max-width:1500px">
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">改了什麼</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>地圖工具列多一顆「呈現方式」下拉選單，只有兩個選項：分層樹（預設）、收尾分組。地圖區小於 640 時只顯示圖示。</li><li>收尾分組依收尾分欄：結論、決定、答案、待續、死路、還沒有收尾；沒有項目的欄不顯示。這個版面沒有連線，每張卡片的第二行改寫「來自哪條線」。</li><li>選取、面板、筆記標記、聚焦子樹、唯讀，在兩種方式下都一樣。聚焦子樹在收尾分組裡同樣是把範圍外淡到 30%。</li><li>這個樹狀圖取代現有的「地圖全幅」。專注模式裡的「收合對話」就是全幅。入口沿用專注模式（頂列、命令面板、⌘⇧F），另外在待處理的「回顧」加上「在專注模式打開」。</li></ul></div>
+    <div style="padding:18px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)"><h3 style="margin:0 0 8px;font-size:var(--tg-text-md);font-weight:600">為什麼第二種選收尾分組</h3><ul style="margin:0;padding-left:1.2em;display:flex;flex-direction:column;gap:5px;text-wrap:pretty"><li>專注模式是為了回顧與整理。分層樹回答「這件事怎麼拆開的」，收尾分組回答「我已經得出了什麼、哪些是死路、哪些還沒收尾」，兩者互補。心智圖、組織圖和分層樹是同一棵樹換方向，資訊重複。</li><li>收尾分組直接把剪枝的對象排在一起：「還沒有收尾」和「待續」兩欄就是要處理的清單，「死路」一欄可以檢查有沒有該圈成群組的。</li><li>它不需要新資料，只用現有的 leaf；排版也最簡單（固定欄寬、依序往下排），延遲載入的大小影響最小。</li><li>時間軸要加日期才有意義，而且排版和分層樹衝突的地方最多，先留在原型。</li></ul></div>
+  </div>
+  <div style="padding:16px 20px;max-width:1080px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface);text-wrap:pretty"><b>小地圖：</b>這次不做，也不出建議稿。目前範例最多 28 條支線，「符合畫面」加上自動收起第二層以下、「+N」、聚焦子樹，已經能在一個畫面內找到位置。之後如果真實資料常超過 60 條支線，或使用者回報在大樹裡迷路，再評估。</div>
+</section></sc-if>
+
+<sc-if value="{{ vis.components }}" hint-placeholder-val="{{ false }}"><section id="components" data-screen-label="新元件狀態表" style="display:flex;flex-direction:column;gap:20px;max-width:1560px">
+  <h2 style="margin:0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">新元件狀態表（格式同 components.md）</h2>
+  <div style="overflow:auto;border:1px solid var(--tg-border-strong);border-radius:var(--tg-radius);background:var(--tg-surface)">
+    <table style="width:100%;border-collapse:collapse;font-size:var(--tg-text-sm);line-height:1.55">
+      <thead><tr style="background:var(--tg-surface-sunken);text-align:left"><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">元件</th><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">程式名稱</th><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">歸屬</th><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">尺寸</th><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">間距</th><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">狀態</th><th style="padding:8px 12px;border-bottom:1px solid var(--tg-border-strong)">畫面</th></tr></thead>
+      <tbody><sc-for list="{{ comps }}" as="r" hint-placeholder-count="10"><tr style="vertical-align:top"><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border);font-weight:500">{{ r.name }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border);font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ r.code }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border)">{{ r.owner }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border)">{{ r.size }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border)">{{ r.gap }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border);text-wrap:pretty">{{ r.states }}</td><td style="padding:8px 12px;border-bottom:1px solid var(--tg-border)">{{ r.screen }}</td></tr></sc-for></tbody>
+    </table>
+  </div>
+  <h3 style="margin:8px 0 0;font-size:var(--tg-text-lg);font-weight:600">每個元件的狀態</h3>
+  <div style="overflow:auto;border:1px solid var(--tg-border-strong);border-radius:var(--tg-radius);background:var(--tg-surface)">
+    <table style="width:100%;min-width:1300px;border-collapse:collapse;font-size:var(--tg-text-sm);line-height:1.55">
+      <thead><tr style="background:var(--tg-surface-sunken);text-align:left"><sc-for list="{{ stHead }}" as="c" hint-placeholder-count="8"><th style="padding:8px 10px;border-bottom:1px solid var(--tg-border-strong);white-space:nowrap">{{ c }}</th></sc-for></tr></thead>
+      <tbody><sc-for list="{{ stRows }}" as="r" hint-placeholder-count="8"><tr style="vertical-align:top"><td style="padding:8px 10px;border-bottom:1px solid var(--tg-border);font-weight:500;white-space:nowrap">{{ r.name }}</td><sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="7"><td style="padding:8px 10px;border-bottom:1px solid var(--tg-border);text-wrap:pretty">{{ c }}</td></sc-for></tr></sc-for></tbody>
+    </table>
+  </div>
+  <p style="margin:0;font-size:var(--tg-text-sm);color:var(--tg-muted)">通用規則沿用 components.md：focus 一律 2px --tg-ring、offset 2；停用 45% 不透明加 aria-disabled；觸控（pointer: coarse）控制項 44px。</p>
+</section></sc-if>
+
+<sc-if value="{{ vis.decide }}" hint-placeholder-val="{{ false }}"><section id="decide" data-screen-label="待設計確認" style="display:flex;flex-direction:column;gap:18px;max-width:1180px">
+  <h2 style="margin:0;font-size:26px;font-weight:600;color:var(--tg-foreground-strong)">【待設計確認】的結論（協調者 2026-10-24 已全部採用）</h2>
+  <sc-for list="{{ decide }}" as="d" hint-placeholder-count="5">
+    <div style="display:grid;grid-template-columns:150px 1fr;gap:16px;padding:16px 20px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)">
+      <div style="display:flex;flex-direction:column;gap:4px"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ d.ref }}</span><span style="font-weight:600">{{ d.q }}</span></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><span><b>結論：</b>{{ d.a }}</span><span style="color:var(--tg-muted);text-wrap:pretty"><b style="color:var(--tg-foreground)">理由：</b>{{ d.why }}</span></div>
+    </div>
+  </sc-for>
+</section></sc-if>
+
+<sc-if value="{{ vis.rules }}" hint-placeholder-val="{{ false }}"><section id="rules" data-screen-label="§2 檢查與用語" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(420px,1fr));gap:20px;max-width:1500px">
+  <div style="display:flex;flex-direction:column;gap:10px;padding:20px 22px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)">
+    <h2 style="margin:0;font-size:var(--tg-text-xl);font-weight:600">§2 不變前提的檢查</h2>
+    <sc-for list="{{ rules }}" as="r" hint-placeholder-count="6"><div style="display:flex;gap:10px;align-items:flex-start"><span aria-hidden="true" style="width:15px;height:15px;flex:none;margin-top:3px;background:var(--tg-success);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/check.svg) center/contain no-repeat"></span><span style="text-wrap:pretty"><b>{{ r.k }}</b>：{{ r.v }}</span></div></sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;padding:20px 22px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-lg);background:var(--tg-surface)">
+    <h2 style="margin:0 0 4px;font-size:var(--tg-text-xl);font-weight:600">新用語（zh-TW／en）</h2>
+    <sc-for list="{{ i18n }}" as="r" hint-placeholder-count="12"><div style="display:grid;grid-template-columns:190px 1fr 1fr;gap:10px;font-size:var(--tg-text-sm)"><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ r.k }}</span><span>{{ r.zh }}</span><span style="color:var(--tg-muted)">{{ r.en }}</span></div></sc-for>
+  </div>
+</section></sc-if>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;themeMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;淺色&quot;,&quot;深色&quot;,&quot;並排&quot;],&quot;default&quot;:&quot;淺色&quot;,&quot;tsType&quot;:&quot;string&quot;}}">
+class Component extends DCLogic {
+  state = { mode: null, sec: null };
+  renderVals() {
+    const sec = this.state.sec || 's1';
+    const toc = [['all', '全部（比較慢）'], ['#s1', 'S1 剛進入'], ['#s2', 'S2 進行中的支線'], ['#s3', 'S3 已結束'], ['#s4', 'S4 主線／順口問'], ['#s5', 'S5 筆記'], ['#s6', 'S6 帶進這一輪'], ['#s7', 'S7 跟隨暫停'], ['#s8', 'S8 聚焦子樹'], ['#s9', 'S9 回覆中／新節點'], ['#s10', 'S10 唯讀'], ['#s11', 'S11 只開核心'], ['#s12', 'S12 錯誤'], ['#s13', 'S13 420／375'], ['#s14', 'S14 分隔線兩端'], ['#s15', 'S15 呈現方式'], ['tail', '元件狀態表・待設計確認・§2・用語']].map(([href, label]) => { const id = href.replace('#', ''); const on = id === sec; return { label, on, pick: () => { this.setState({ sec: id }); window.scrollTo(0, 0); }, bg: on ? 'var(--tg-primary-soft)' : 'var(--tg-surface)', fg: on ? 'var(--tg-primary-text)' : 'var(--tg-foreground)', border: on ? 'var(--tg-primary)' : 'var(--tg-border-strong)' }; });
+    const ids = ['s1','s2','s3','s4','s5','s6','s7','s8','s9','s10','s11','s12','s13','s14','s15','components','decide','rules'];
+    const vis = Object.fromEntries(ids.map(i => [i, sec === 'all' || sec === i || ['components','decide','rules'].includes(i) && sec === 'tail']));
+    const mode = this.state?.mode || this.props.themeMode || '淺色';
+    const L = { t: 'light', label: '淺色' }, D = { t: 'dark', label: '深色' }, H = { t: 'host', label: '宿主' };
+    const themes = mode === '深色' ? [D] : mode === '並排' ? [L, D] : [L];
+    const themes3 = mode === '深色' ? [D, H] : mode === '並排' ? [L, D, H] : [L, H];
+    const modes = ['淺色', '深色', '並排'].map(m => ({ label: m, on: m === mode, bg: m === mode ? 'var(--tg-primary-soft)' : 'transparent', fg: m === mode ? 'var(--tg-primary-text)' : 'var(--tg-muted)', pick: () => this.setState({ mode: m }) }));
+    const comps = [
+      { name: '專注切換鈕', code: 'FocusToggle', owner: 'demo', size: 'h32（觸控 44）；375 只有圖示', gap: 'x10・gap 6', states: '關、開（aria-pressed、--tg-primary-soft）；tooltip「進入／離開專注模式（⌘⇧F）」', screen: 'S1 S13' },
+      { name: '分割畫面', code: 'FocusSplit', owner: 'demo', size: '≥1024 非嵌入；對話最窄 420、地圖最窄 360', gap: '—', states: '50:50、拖曳中、到兩端；記住比例（localStorage）', screen: 'S1 S14' },
+      { name: '分隔線', code: 'FocusSplitter', owner: 'demo', size: '可點 9px・線 1px・握把 6×36', gap: '—', states: '一般、hover（col-resize＋握把變色）、拖曳中、focus、到兩端（提示）、雙擊回 50:50', screen: 'S14' },
+      { name: '對話／地圖分頁', code: 'FocusTabs', owner: 'demo', size: 'h44 分段控制，全寬', gap: 'p 4/10', states: '對話、地圖；另一側回覆中（圓點）；未讀數', screen: 'S13' },
+      { name: '地圖工具列', code: 'MapToolbar', owner: '套件', size: 'min h48；按鈕 28（觸控 44）', gap: 'gap 6・p 6/10', states: '一般、窄（< 640 只有圖示）、地圖失敗（45%）', screen: 'S1 S7' },
+      { name: '跟隨', code: 'MapFollowToggle', owner: '套件', size: 'h28', gap: 'x9', states: '開（--tg-primary-soft）、關、暫停（警告色＋「回到這裡」）', screen: 'S1 S7' },
+      { name: '聚焦子樹', code: 'MapFocusSubtree', owner: '套件', size: 'h28；開啟時 max-w 220', gap: 'x9', states: '關、開（實心主色＋「聚焦：{title} ×」）、範圍外提示列', screen: 'S8' },
+      { name: '地圖節點（專注）', code: 'MapNode（selectedLineId／focusRootId）', owner: '套件', size: '188×60', gap: 'p 6/10', states: '一般、你在這裡（標籤＋路徑）、選取（底色＋光暈）、回覆中、新、聚焦範圍外（30%）、未帶回（灰）；和群組多選的勾選分開', screen: 'S1–S9' },
+      { name: '節點面板', code: 'NodePanel', owner: '套件', size: 'w320 浮動；地圖 < 640：底部 60%；分頁：抽屜 66%', gap: 'p 12/16・區塊間 14', states: '關、開（不搶焦點，aria-live 讀標題）、主線、進行中、已結束、順口問、唯讀、存檔中、存檔失敗', screen: 'S2–S6 S10–S12' },
+      { name: '面板標題', code: 'NodePanelTitle', owner: '套件', size: 'text-lg', gap: '—', states: '一般、hover（鉛筆＋底色）、編輯中（Enter／Esc、字數）、空白（「目的是必填。」）、失敗、不可改（沒有鉛筆）', screen: 'S2 S3 S12' },
+      { name: '筆記區', code: 'NodeNotes', owner: '套件', size: '分段控制 h28（觸控 44）', gap: 'gap 8', states: '紀要、備忘（階段二）、只有一種（沒有分段控制）、空、滿了、編輯中、刪除後復原', screen: 'S5' },
+      { name: '筆記條目＋選單', code: 'NoteItem・NoteMenu', owner: '套件', size: '條目 p 8/10；選單 w210・列 h32（觸控 44）', gap: 'p4', states: '一般、hover、選單開、完成（只有紀要有：勾選框 16px，觸控時可點範圍 44；勾選後文字劃掉、底色 --tg-surface-sunken、寫上完成時間；選單也有「標成完成」）、已取代（劃掉）、已刪除（劃掉＋復原）、已轉成紀要（標記）', screen: 'S5 S6' },
+      { name: '地圖上的筆記標記', code: 'NoteBadge', owner: '套件', size: 'h16・r full；縮放 < 75% 只有圓點', gap: 'x5・gap 3', states: '有數字、只有圓點、0（不渲染）、圖層「筆記」關（不渲染）', screen: 'S1 S5' },
+    ];
+    const stHead = ['元件', 'hover', 'focus', '停用', '錯誤', '空的', '唯讀', '減少動態'];
+    const r = (name, ...cells) => ({ name, cells });
+    const stRows = [
+      r('FocusSplitter', '握把與線變主色，游標 col-resize', '2px ring 內框；←→ 每次 5%，Home／End 到兩端', '分頁畫面不渲染', '—', '—', '照常可拖（純版面）', '沒有過場'),
+      r('FocusTabs', 'ghost 底 --tg-accent', 'ring；←→ 切換分頁', '—', '—', '—', '照常', '切換不做滑動'),
+      r('MapFollowToggle', '底 --tg-accent', 'ring', '地圖失敗時 45%', '—', '—', '照常', '跟隨直接跳到位置，不做 200ms 平移'),
+      r('MapFocusSubtree', '底 --tg-accent', 'ring；× 可以單獨 focus', '沒有選取也沒有「你在這裡」時停用並附原因', '—', '—', '照常', '淡化直接切換，不做過場'),
+      r('MapNode', '外框加粗 0.5px', 'ring；Enter 進入、Space 選取', '—', '—', '—', '照常可選', '新節點不淡入，只有「新」標籤'),
+      r('NodePanel', '—', 'F6 進入；Esc 先關編輯再關面板', '回覆中時「結束並帶回」停用＋原因', '讀不到支線清單時不顯示；存檔失敗見 S12', '沒有內容的區塊整塊不出現', '頂端「你只有檢視權限。」，編輯控制換成純文字', '浮出不滑動'),
+      r('NodeNotes', '條目底 --tg-surface-raised；勾選框底 --tg-accent', 'ring；N 在選取的節點新增；勾選框可 focus，Space 切換完成', '滿了時「新增」aria-disabled＋原因', '新增、修改或完成失敗：條目下方 role=alert，文字與勾選狀態保留', '紀要「這個節點還沒有紀要。」；備忘見 S5b', '沒有「⋯」與「新增」；勾選框只顯示狀態，aria-disabled', '復原列不滑入；勾選沒有動畫'),
+      r('NoteBadge', '—', '不可 focus（數字在節點的 aria 裡）', '—', '—', '0 不渲染', '照常', '—'),
+    ];
+    const decide = [
+      { ref: '§4.1', q: '手機上要不要有地圖', a: '要。< 1024 一律用「對話｜地圖」分頁，375 也提供（見 S13）。', why: '專注模式的價值在整理；手機上沒有地圖的話，這個模式就只剩一般對話。分頁一次只顯示一邊，不會擠；拉關聯和多選這些需要精細操作的功能先不給，只留平移、縮放和面板。' },
+      { ref: '§6.1', q: '滑到分岔點時地圖要不要標示子節點', a: '要做，但只在「跟隨」開著時做。標示改成 --tg-highlight 的實線光暈，不用虛線外框；用 IntersectionObserver 看分岔點那則訊息有沒有進入畫面，節流 150ms。', why: '虛線在 Tangent 只代表「還沒被你確認」（1_CURRENT_UI §2.1），拿來表示「對應到這裡」會混淆。--tg-highlight 已經用在分岔點預覽，意思一致。用 IntersectionObserver，就不必在每次捲動時重算。' },
+      { ref: '§6.3', q: '聚焦和魚眼同時開時分不分得出', a: '分得出。聚焦範圍內的節點照常顯示魚眼的外框透明度；範圍外的節點整個淡到 30%，魚眼不再疊加，圖例加一行「聚焦範圍外一律 30%」。', why: '兩者動的地方不同（聚焦是整個節點，魚眼只有外框），只在範圍外會互相干擾。範圍外統一用一個值，就不會出現「淡上加淡」讀不出來的情況。' },
+      { ref: '§7.2', q: '階段一要不要先隱藏「結束的支線等下一版才能改名」的提示', a: '隱藏。階段一不顯示鉛筆，也不顯示提示；按 F2 時用 status 讀出一次「結束的支線目前不能改名。」。', why: '介面不該預告還沒做的功能，否則看起來像壞掉了。不顯示鉛筆，就不會讓人以為可以改；F2 的回應則讓鍵盤使用者知道按鍵有作用。' },
+      { ref: '§10', q: '⌘⇧F 會不會被瀏覽器搶走', a: '由協調者在真的瀏覽器上手動測試；有衝突就改用 ⌘\\。不論用哪個鍵，命令面板裡一定要有「進入／離開專注模式」。', why: '快捷鍵衝突要用實機測才算數。命令面板是一定能用的退路，頂列按鈕的 tooltip 也會顯示實際綁定的按鍵。' },
+    ];
+    decide.push({ ref: '新發現・協調者已決定', q: '1280 寬時面板跑到底部', a: '視窗寬小於 1440 時，預設比例 45:55；門檻 640 不變。1280 寬時地圖區 704px，面板浮在旁邊（S3b、S4、S9 已更新）。1024 寬時地圖區仍小於 640，面板照樣在底部（S7、S12a、S14c）。', why: '筆電最常見的就是 1280 寬，面板浮在旁邊時，對話、地圖、面板三者都看得到。' });
+    const rules = [
+      { k: '訊息與結論卡不能編輯', v: '面板的結論卡只有「到結論卡」與鎖頭說明；對話欄完全不變，沒有新的編輯入口。' },
+      { k: '紀要是整頁', v: '紀要側一直顯示「掛在這個節點只是標出處，AI 看到的是整頁紀要。」與 token 用量，並提供「看全部紀要」。' },
+      { k: '備忘不給 AI', v: '分段控制寫「不給 AI」；備忘側頂端寫「不會給 AI。看得到這段對話的人都看得到。」只有「帶進這一輪」會把它放進輸入框。' },
+      { k: '備忘不叫「私人」', v: '所有文案都沒有「私人」「只有我看得到」；規格的空狀態文案「只給自己看」已經改掉（見 S5）。' },
+      { k: '不能拖曳節點', v: '地圖只能平移與縮放；結構改變只出現在面板的現有動作（帶回、不帶回、升為主線、獨立）。' },
+      { k: '地圖自動排版', v: '沿用由左到右的分層樹，節點 188×60、欄距 236、列距 78。' },
+    ];
+    const i18n = [
+      { k: 'focus.toggle', zh: '專注', en: 'Focus' },
+      { k: 'focus.enter／leave', zh: '進入專注模式／離開專注模式', en: 'Enter focus mode / Leave focus mode' },
+      { k: 'focus.tabChat／tabMap', zh: '對話／地圖', en: 'Chat / Map' },
+      { k: 'focus.splitter', zh: '調整對話與地圖的寬度', en: 'Resize chat and map' },
+      { k: 'focus.chatMin／mapMin', zh: '對話已到最窄 {px}px／地圖已到最窄 {px}px', en: 'Chat at minimum width ({px}px) / Map at minimum width ({px}px)' },
+      { k: 'map.follow', zh: '跟隨', en: 'Follow' },
+      { k: 'map.followPaused', zh: '已暫停跟隨・回到這裡', en: 'Following paused · Back to here' },
+      { k: 'map.focusSubtree', zh: '聚焦子樹／聚焦：{title}', en: 'Focus subtree / Focus: {title}' },
+      { k: 'map.focusNote', zh: '只影響地圖顯示，不影響 AI。', en: 'Only changes the map, not what the AI sees.' },
+      { k: 'map.outsideFocus', zh: '你在聚焦範圍外・改聚焦這裡', en: "You're outside the focus · Focus here" },
+      { k: 'panel.goHere', zh: '到這條', en: 'Go to this line' },
+      { k: 'panel.cardLocked', zh: '結論卡是歷史紀錄，要修正請寫紀要或備忘。', en: 'Conclusion cards are a record. To correct one, write a note or memo.' },
+      { k: 'notes.tabNotes／tabMemo', zh: '紀要（給 AI）／備忘（不給 AI）', en: 'Notes (sent to AI) / Memos (not sent)' },
+      { k: 'notes.scopeHint', zh: '掛在這個節點只是標出處，AI 看到的是整頁紀要。', en: 'Attaching here only marks the source; the AI sees the whole notes page.' },
+      { k: 'memo.head', zh: '不會給 AI。看得到這段對話的人都看得到。', en: "Not sent to the AI. Anyone who can see this conversation can see it." },
+      { k: 'memo.empty', zh: '還沒有備忘。寫下不給 AI 的想法；看得到這段對話的人都看得到。', en: "No memos yet. Write thoughts the AI won't see; anyone with this conversation can read them." },
+      { k: 'note.bringIn', zh: '帶進這一輪', en: 'Bring into this turn' },
+      { k: 'note.bringInDone', zh: '已帶進這一輪，還沒送出。', en: 'Added to this turn. Not sent yet.' },
+      { k: 'note.continue', zh: '從這裡繼續談…', en: 'Continue from here…' },
+      { k: 'memo.toNote', zh: '轉成紀要…', en: 'Turn into a note…' },
+      { k: 'memo.deleted', zh: '已刪除一則備忘。', en: 'Memo deleted.' },
+      { k: 'map.shape', zh: '呈現方式', en: 'Layout' },
+      { k: 'map.shape.tree', zh: '分層樹', en: 'Tree' },
+      { k: 'map.shape.byEnding', zh: '收尾分組', en: 'By ending' },
+      { k: 'map.byEnding.none', zh: '還沒有收尾', en: 'No ending yet' },
+      { k: 'map.byEnding.from', zh: '來自{source}', en: 'From {source}' },
+      { k: 'map.collapseChat', zh: '收合對話／展開對話', en: 'Collapse chat / Expand chat' },
+      { k: 'review.openInFocus', zh: '在專注模式打開', en: 'Open in focus mode' },
+      { k: 'map.expandAll', zh: '全部展開', en: 'Expand all' },
+      { k: 'map.collapsedCount', zh: '展開 {n} 條子支線（其中 {m} 項待整理）', en: 'Expand {n} branches ({m} to tidy)' },
+      { k: 'prune.toggle', zh: '整理', en: 'Tidy up' },
+      { k: 'prune.title', zh: '整理：還沒收尾的事', en: 'Tidy up: loose ends' },
+      { k: 'prune.stale', zh: '開太久的支線', en: 'Branches left open too long' },
+      { k: 'prune.asideSoon', zh: '快清除的順口問', en: 'Asides about to be cleared' },
+      { k: 'prune.done', zh: '都處理完了。', en: 'All tidied up.' },
+      { k: 'prune.idle', zh: '{days} 天沒動', en: 'Idle for {days} days' },
+      { k: 'prune.letClear', zh: '讓它清除', en: 'Let it clear' },
+      { k: 'tree.search', zh: '找節點的主題…', en: 'Find a topic…' },
+      { k: 'tree.filterAll／Open／Done', zh: '全部／進行中／已結束', en: 'All / Open / Ended' },
+      { k: 'tree.multi', zh: '已選 {n} 條', en: '{n} selected' },
+      { k: 'tree.kbdHint', zh: '方向鍵往那個方向移動・Space 多選・Delete 不帶回・0 符合畫面', en: 'Arrows move in that direction · Space selects · Delete ends without bringing back · 0 fits' },
+      { k: 'panel.saveFailed', zh: '沒有存成：{reason}。標題還是原本的，可以再按一次儲存。', en: "Couldn't save: {reason}. The title hasn't changed. Press Save to try again." },
+      { k: 'panel.saveAgain', zh: '再儲存一次', en: 'Save again' },
+      { k: 'note.markDone／markUndone', zh: '標成完成／標成未完成', en: 'Mark done / Mark not done' },
+      { k: 'note.doneAt', zh: '已完成・{time}', en: 'Done · {time}' },
+      { k: 'map.backToMain', zh: '主線在畫面外，平移到主線', en: 'Main line is off-screen. Pan to it' },
+    ];
+    return { vis, modes, toc, themes, themes3, comps, stHead, stRows, decide, rules, i18n };
+  }
+}
+</script>
+</body>
+</html>

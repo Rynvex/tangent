@@ -1,0 +1,17 @@
+{
+  "method": "GET",
+  "path": "/api/imports?limit=20",
+  "response": {
+    "imports": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "id": "00000000-0000-4000-8000-000000000001",
+        "label": "conversations.json",
+        "lineCount": 2,
+        "standaloneCount": 2
+      }
+    ],
+    "nextCursor": ""
+  },
+  "status": 200
+}

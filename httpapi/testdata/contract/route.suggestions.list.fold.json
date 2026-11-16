@@ -1,0 +1,33 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/suggestions",
+  "response": {
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "suggestions": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": null,
+        "feature": "fold",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "fold",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "payload": {
+          "fromMessageId": "00000000-0000-4000-8000-000000000003",
+          "fromSeq": 1,
+          "jobId": "00000000-0000-4000-8000-000000000004",
+          "messageCount": 4,
+          "summary": "This stretch of the conversation is folded (fake runner).",
+          "title": "2026-01-01 00:00",
+          "toMessageId": "00000000-0000-4000-8000-000000000005",
+          "toSeq": 4,
+          "tokensOriginal": 47,
+          "tokensSummary": 15
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "targetKey": "fold:00000000-0000-4000-8000-000000000003:00000000-0000-4000-8000-000000000005"
+      }
+    ]
+  },
+  "status": 200
+}

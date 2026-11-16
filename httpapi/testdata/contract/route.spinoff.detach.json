@@ -1,0 +1,124 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/spinoff",
+  "request": {
+    "mode": "detach",
+    "title": "Day trips from Kyoto"
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "archived": false,
+      "cardMessageId": "",
+      "closedAt": null,
+      "conclusionLine": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": null,
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "button",
+      "parentLineId": "00000000-0000-4000-8000-000000000003",
+      "provider": "fake",
+      "purpose": "Day trips",
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "status": "open",
+      "unread": 1
+    },
+    "line": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 0,
+        "open": 0,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": null,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 0,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": {
+        "available": true,
+        "lineId": "00000000-0000-4000-8000-000000000003",
+        "messageId": "00000000-0000-4000-8000-000000000002",
+        "title": "Trip to Kyoto"
+      },
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "Day trips from Kyoto",
+      "unread": 1,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0.000419,
+        "inputTokens": 405,
+        "outputTokens": 7
+      }
+    },
+    "link": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromLineId": "00000000-0000-4000-8000-000000000003",
+      "fromMessageId": "00000000-0000-4000-8000-000000000002",
+      "fromTitle": "Trip to Kyoto",
+      "id": "00000000-0000-4000-8000-000000000004",
+      "kind": "spinoff",
+      "label": "Day trips from Kyoto",
+      "toLineId": "00000000-0000-4000-8000-000000000001",
+      "toMessageId": "",
+      "toTitle": "Day trips from Kyoto"
+    },
+    "marker": {
+      "content": "Spun off into a new conversation: Day trips from Kyoto",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000005",
+      "kind": "branch_marker",
+      "lineId": "00000000-0000-4000-8000-000000000003",
+      "meta": {
+        "spunOffTo": {
+          "available": true,
+          "lineId": "00000000-0000-4000-8000-000000000001",
+          "messageId": "00000000-0000-4000-8000-000000000002",
+          "title": "Day trips from Kyoto"
+        }
+      },
+      "pinned": false,
+      "role": "system",
+      "seq": 30,
+      "status": "done"
+    },
+    "mode": "detach",
+    "moved": [],
+    "rootLineId": "00000000-0000-4000-8000-000000000003",
+    "sourceLineId": "00000000-0000-4000-8000-000000000003"
+  },
+  "status": 201
+}

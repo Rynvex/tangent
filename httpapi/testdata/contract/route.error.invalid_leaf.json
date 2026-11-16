@@ -1,0 +1,23 @@
+{
+  "method": "PUT",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/leaf",
+  "request": {
+    "kind": "maybe",
+    "line": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  },
+  "response": {
+    "code": "invalid_leaf",
+    "error": "the leaf is not acceptable: kind must be conclusion, decision, answer, dead_end or to_continue",
+    "problems": [
+      {
+        "field": "kind",
+        "message": "must be conclusion, decision, answer, dead_end or to_continue"
+      },
+      {
+        "field": "line",
+        "message": "is longer than 200 characters"
+      }
+    ]
+  },
+  "status": 422
+}

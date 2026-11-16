@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/groups",
+  "request": {
+    "memberLineIds": [
+      "00000000-0000-4000-8000-000000000002"
+    ],
+    "title": "One"
+  },
+  "response": {
+    "code": "invalid_group",
+    "error": "a group has 2 to 12 branches"
+  },
+  "status": 422
+}

@@ -1,0 +1,100 @@
+## Conversation title
+> 週末雜問
+
+## Units (12, oldest first)
+
+### U1 (2 messages)
+Question:
+> 家裡的 NAS 要怎麼設定每天自動備份照片?
+Answer, first sentence:
+> 可以在 NAS 的備份套件裡建立排程任務，每天凌晨把手機相簿資料夾同步到 NAS。
+Answer key terms:
+> 備份套件裡建, 每天凌晨, 手機相簿資料
+
+### U2 (2 messages)
+Question:
+> Python 的 asyncio 跟 threading 差在哪?
+Answer, first sentence:
+> asyncio 是單執行緒的協程模型，適合大量 I/O 等待；threading 則是多執行緒。
+Answer key terms:
+> 單執行緒, 多執行緒, 協程模型, 適合大量, 等待
+
+### U3 (2 messages)
+Question:
+> NAS 備份的照片要不要再丟一份到雲端?
+Answer, first sentence:
+> 建議遵守 3-2-1 原則：三份資料、兩種媒介、一份異地，雲端就是異地那份。
+Answer key terms:
+> 份異地, 建議遵守, 原則, 三份資料, 兩種媒介
+
+### U4 (2 messages)
+Question:
+> 手沖咖啡的水溫要幾度比較好?
+Answer, first sentence:
+> 淺焙豆大約 92 到 94 度，深焙豆可以降到 85 到 88 度。
+Answer key terms:
+> 淺焙豆大約, 深焙豆, 降到
+
+### U5 (2 messages)
+Question:
+> asyncio 的 gather 跟 create_task 要怎麼選?
+Answer, first sentence:
+> 要等一批協程全部完成就用 gather；要先排程之後再等就用 create_task。
+Answer key terms:
+> 要等, 批協程全部完, 要先排程之後
+
+### U6 (2 messages)
+Question:
+> NAS 備份排程跑到一半斷電怎麼辦?
+Answer, first sentence:
+> 加一台 UPS，並開啟 NAS 的斷電安全關機功能，備份任務下次會續傳。
+Answer key terms:
+> ups, 開啟, 斷電安全關機, 備份任務下次
+
+### U7 (2 messages)
+Question:
+> NAS 硬碟要組 RAID 1 還是 RAID 5?
+Answer, first sentence:
+> 兩顆硬碟只能 RAID 1；三顆以上可以考慮 RAID 5，但重建時間較長。
+Answer key terms:
+> 兩顆硬碟只能, 三顆, 考慮, 重建時間較長
+
+### U8 (2 messages)
+Question:
+> 去日本旅遊需要辦簽證嗎?
+Answer, first sentence:
+> 持台灣護照短期觀光 90 天內免簽，入境時填好 Visit Japan Web 即可。
+Answer key terms:
+> visit, japan, web, 持台灣護照短, 天內免簽, 入境時填好
+
+### U9 (2 messages)
+Question:
+> NAS 的備份版本要保留幾份?
+Answer, first sentence:
+> 照片類可以保留 30 天的每日版本，再加上每月一份長期版本。
+Answer key terms:
+> 照片類, 每日版本, 加上每月, 份長期版本
+
+### U10 (2 messages)
+Question:
+> asyncio 裡面呼叫 requests 會卡住嗎?
+Answer, first sentence:
+> 會，requests 是同步阻塞的，要改用 aiohttp 或用 to_thread 包起來。
+Answer key terms:
+> aiohttp, to_thread, 同步阻塞, 要改用, 包起來
+
+### U11 (2 messages)
+Question:
+> 那如果一定要用 requests 呢?
+Answer, first sentence:
+> 用 asyncio.to_thread(requests.get, url) 丟到執行緒池，就不會卡住事件迴圈。
+Answer key terms:
+> asyncio, to_thread, url, 丟到執行緒池, 會卡住事件迴
+
+### U12 (2 messages)
+Question:
+> 最後 NAS 備份完成要怎麼驗證檔案沒壞?
+Answer, first sentence:
+> 可以開啟 NAS 的資料清理（scrubbing）並定期抽查還原幾張照片。
+Answer key terms:
+> scrubbing, 開啟, 資料清理, 定期抽查, 原幾張照片

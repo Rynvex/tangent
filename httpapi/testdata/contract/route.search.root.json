@@ -1,0 +1,64 @@
+{
+  "method": "GET",
+  "path": "/api/search?q=queue\u0026root=00000000-0000-4000-8000-000000000001",
+  "response": {
+    "hits": [
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "highlights": [
+          {
+            "end": 11,
+            "start": 6
+          }
+        ],
+        "kind": "title",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "purpose": "",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "rootTitle": "Event queue",
+        "score": 0.7273,
+        "snippet": "Event queue"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "highlights": [
+          {
+            "end": 46,
+            "start": 41
+          }
+        ],
+        "kind": "message",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000002",
+        "purpose": "",
+        "role": "user",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "rootTitle": "Event queue",
+        "score": 0.5532,
+        "seq": 62,
+        "snippet": "Ring buffer or linked list for the event queue?"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "highlights": [
+          {
+            "end": 61,
+            "start": 56
+          }
+        ],
+        "kind": "message",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000003",
+        "purpose": "",
+        "role": "assistant",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "rootTitle": "Event queue",
+        "score": 0.5403,
+        "seq": 63,
+        "snippet": "Fake reply to: Ring buffer or linked list for the event queue?"
+      }
+    ],
+    "query": "queue"
+  },
+  "status": 200
+}

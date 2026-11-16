@@ -1,0 +1,64 @@
+{
+  "method": "GET",
+  "path": "/api/search?q=kyoto\u0026limit=10",
+  "response": {
+    "hits": [
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "highlights": [
+          {
+            "end": 13,
+            "start": 8
+          }
+        ],
+        "kind": "title",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "purpose": "",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "rootTitle": "Trip to Kyoto",
+        "score": 0.6923,
+        "snippet": "Trip to Kyoto"
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "highlights": [
+          {
+            "end": 5,
+            "start": 0
+          }
+        ],
+        "kind": "message",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000002",
+        "purpose": "",
+        "role": "assistant",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "rootTitle": "Trip to Kyoto",
+        "score": 0.5962,
+        "seq": 2,
+        "snippet": "Kyoto in autumn is lovely."
+      },
+      {
+        "at": "2026-01-01T00:00:00Z",
+        "highlights": [
+          {
+            "end": 25,
+            "start": 20
+          }
+        ],
+        "kind": "message",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000003",
+        "purpose": "",
+        "role": "user",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "rootTitle": "Trip to Kyoto",
+        "score": 0.5962,
+        "seq": 1,
+        "snippet": "When should I go to Kyoto?"
+      }
+    ],
+    "query": "kyoto"
+  },
+  "status": 200
+}

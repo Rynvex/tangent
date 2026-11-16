@@ -1,0 +1,23 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/links",
+  "response": {
+    "links": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "fromLineId": "00000000-0000-4000-8000-000000000002",
+        "fromMessageId": "00000000-0000-4000-8000-000000000003",
+        "fromTitle": "Trip to Kyoto",
+        "id": "00000000-0000-4000-8000-000000000004",
+        "kind": "relation",
+        "label": "Same trip, another city",
+        "relationKind": "related",
+        "toLineId": "00000000-0000-4000-8000-000000000001",
+        "toMessageId": "",
+        "toTitle": "Osaka side trip"
+      }
+    ]
+  },
+  "status": 200
+}

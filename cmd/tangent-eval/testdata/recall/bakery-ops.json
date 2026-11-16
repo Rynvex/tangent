@@ -1,0 +1,29 @@
+{
+  "name": "bakery-ops",
+  "memories": [
+    {"key": "oven-old", "kind": "decision", "text": "Bake sourdough loaves on a single cast-iron stone in the convection oven", "importance": 6},
+    {"key": "oven", "kind": "decision", "text": "Bake sourdough loaves in the two-deck steam oven at 245 C for crisp crust", "importance": 8, "supersedes": "oven-old"},
+    {"key": "flour", "kind": "preference", "text": "Use stone-milled organic rye flour for the country boule; avoid bleached pastry flour", "importance": 6},
+    {"key": "delivery", "kind": "fact", "text": "Local flour mill deliveries arrive every Tuesday morning at 07:30", "importance": 7},
+    {"key": "starter", "kind": "lesson", "text": "Never skip feeding the levain starter before a holiday weekend: an unfed starter stalls Monday dough", "importance": 7},
+    {"key": "packaging", "kind": "decision", "text": "Wrap sliced brioche in wax paper bags instead of sealed plastic sleeves", "importance": 6},
+    {"key": "coldroom", "kind": "fact", "text": "Walk-in fermentation retarder stays set to 4 C overnight for slow dough proofing", "importance": 5},
+    {"key": "generator", "kind": "fact", "text": "The backup battery inverter powers the pastry chillers for 30 minutes during an outage", "importance": 5},
+    {"key": "receipt", "kind": "preference", "text": "客戶訂單備註一律用繁體中文紀錄，品項代號保留英文", "importance": 8},
+    {"key": "tea", "kind": "decision", "text": "店內供應的冷萃紅茶改用台東蜜香紅茶葉，不再使用調味茶包", "importance": 6},
+    {"key": "mixer", "kind": "lesson", "text": "Batch size matters more than mixer speed: overloading the spiral mixer heats the dough too fast", "importance": 6},
+    {"key": "menu", "kind": "decision", "text": "Seasonal tart menu rotates on the first Saturday of each month, with lemon curd as the permanent fallback", "importance": 5}
+  ],
+  "queries": [
+    {"query": "How should sourdough loaves be baked in the oven?", "expect": ["oven"]},
+    {"query": "Which flour should the country boule use?", "expect": ["flour"]},
+    {"query": "When do local flour mill deliveries arrive?", "expect": ["delivery"]},
+    {"query": "Can I skip feeding the levain starter before the weekend?", "expect": ["starter"]},
+    {"query": "Should sliced brioche go into sealed plastic sleeves or paper bags?", "expect": ["packaging"]},
+    {"query": "What temperature is the walk-in fermentation retarder set to?", "expect": ["coldroom"]},
+    {"query": "How long does the backup inverter power the pastry chillers during an outage?", "expect": ["generator"]},
+    {"query": "店內冷萃紅茶要用哪種茶葉？", "expect": ["tea"]},
+    {"query": "Is higher spiral mixer speed better for dough temperature?", "expect": ["mixer"]},
+    {"query": "When does the seasonal tart menu rotate?", "expect": ["menu"]}
+  ]
+}

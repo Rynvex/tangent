@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/memories/00000000-0000-4000-8000-000000000001/supersede",
+  "request": {
+    "text": "again"
+  },
+  "response": {
+    "code": "memory_superseded",
+    "error": "the memory was superseded already"
+  },
+  "status": 409
+}

@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/converge",
+  "request": {
+    "lineIds": [
+      "00000000-0000-4000-8000-000000000002"
+    ]
+  },
+  "response": {
+    "code": "invalid_comparison",
+    "error": "a comparison has 2 to 5 branches"
+  },
+  "status": 422
+}

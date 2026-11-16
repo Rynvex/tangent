@@ -1,0 +1,38 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/suggestions?status=all",
+  "response": {
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "suggestions": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": "2026-01-01T00:00:00Z",
+        "feature": "suggestion_probe",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "probe",
+        "lineId": "00000000-0000-4000-8000-000000000003",
+        "payload": {
+          "reason": "the reply asked for a probe suggestion"
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "dismissed",
+        "targetKey": "line:00000000-0000-4000-8000-000000000003"
+      },
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": "2026-01-01T00:00:00Z",
+        "feature": "suggestion_probe",
+        "id": "00000000-0000-4000-8000-000000000004",
+        "kind": "probe",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "payload": {
+          "reason": "the reply asked for a probe suggestion"
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "accepted",
+        "targetKey": "line:00000000-0000-4000-8000-000000000001"
+      }
+    ]
+  },
+  "status": 200
+}

@@ -1,0 +1,22 @@
+{
+  "data": {
+    "link": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromLineId": "00000000-0000-4000-8000-000000000001",
+      "fromMessageId": "00000000-0000-4000-8000-000000000002",
+      "fromTitle": "Trip to Kyoto",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "kind": "spinoff",
+      "label": "Kyoto, the short version",
+      "toLineId": "00000000-0000-4000-8000-000000000004",
+      "toMessageId": "",
+      "toTitle": "Kyoto, the short version"
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000001",
+  "rootLineId": "00000000-0000-4000-8000-000000000001",
+  "tenant": "tenant-a",
+  "type": "link.changed"
+}

@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/relations",
+  "request": {
+    "fromMessageId": "00000000-0000-4000-8000-000000000002",
+    "label": "Same trip, another city",
+    "toLineId": "00000000-0000-4000-8000-000000000003"
+  },
+  "response": {
+    "code": "relation_exists",
+    "error": "these two places are related already"
+  },
+  "status": 409
+}

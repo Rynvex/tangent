@@ -1,0 +1,9 @@
+{
+  "method": "DELETE",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/goal",
+  "response": {
+    "code": "goal_not_found",
+    "error": "this conversation has no goal"
+  },
+  "status": 404
+}

@@ -1,0 +1,96 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/comparisons",
+  "response": {
+    "comparisons": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "criteria": [],
+        "decidedAt": null,
+        "decidedBy": "",
+        "decidedLineId": "",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "lineIds": [
+          "00000000-0000-4000-8000-000000000003",
+          "00000000-0000-4000-8000-000000000004"
+        ],
+        "matrix": null,
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "failed",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "criteria": [
+          "Safety",
+          "Speed"
+        ],
+        "decidedAt": null,
+        "decidedBy": "",
+        "decidedLineId": "",
+        "id": "00000000-0000-4000-8000-000000000005",
+        "lineIds": [
+          "00000000-0000-4000-8000-000000000006",
+          "00000000-0000-4000-8000-000000000003"
+        ],
+        "matrix": {
+          "criteria": [
+            "Safety",
+            "Speed"
+          ],
+          "options": [
+            {
+              "label": "Direction 1 (fake runner)",
+              "lineId": "00000000-0000-4000-8000-000000000006"
+            },
+            {
+              "label": "Direction 2 (fake runner)",
+              "lineId": "00000000-0000-4000-8000-000000000003"
+            }
+          ],
+          "recommendation": {
+            "lineId": "00000000-0000-4000-8000-000000000006",
+            "reason": "The first option fits best (fake runner)."
+          },
+          "scores": [
+            [
+              {
+                "score": 5,
+                "why": "Scored by the fake runner."
+              },
+              {
+                "score": 4,
+                "why": "Scored by the fake runner."
+              }
+            ],
+            [
+              {
+                "score": 5,
+                "why": "Scored by the fake runner."
+              },
+              {
+                "score": 4,
+                "why": "Scored by the fake runner."
+              }
+            ]
+          ]
+        },
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "ready",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "limits": {
+      "maxCriteria": 6,
+      "maxOptions": 5,
+      "minOptions": 2
+    },
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 200
+}

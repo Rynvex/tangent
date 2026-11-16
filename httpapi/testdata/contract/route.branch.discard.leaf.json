@@ -1,0 +1,42 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branch/discard",
+  "request": {
+    "leaf": {
+      "line": "Too expensive for this trip"
+    }
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "archived": false,
+      "cardMessageId": "",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": {
+        "kind": "dead_end",
+        "line": "Too expensive for this trip",
+        "status": "confirmed"
+      },
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "button",
+      "parentLineId": "00000000-0000-4000-8000-000000000003",
+      "provider": "fake",
+      "purpose": "Check ryokan prices",
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "status": "discarded",
+      "unread": 1
+    }
+  },
+  "status": 200
+}

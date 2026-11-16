@@ -1,0 +1,18 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branch/merge",
+  "request": {
+    "card": {
+      "conclusion": "c",
+      "question": "q"
+    },
+    "parentTipMessageId": "00000000-0000-4000-8000-000000000002"
+  },
+  "response": {
+    "code": "parent_moved",
+    "error": "the conversation moved on since the draft: 2 new message(s), 0 of them branch card(s)",
+    "movedCards": 0,
+    "movedMessages": 2
+  },
+  "status": 409
+}

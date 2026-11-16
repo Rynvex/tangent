@@ -1,0 +1,12 @@
+{
+  "method": "PATCH",
+  "path": "/api/memories/00000000-0000-4000-8000-000000000001",
+  "request": {
+    "importance": 1
+  },
+  "response": {
+    "code": "memory_not_found",
+    "error": "memory not found"
+  },
+  "status": 404
+}

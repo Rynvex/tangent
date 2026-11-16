@@ -1,0 +1,56 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/seeds",
+  "response": {
+    "limits": {
+      "maxOpen": 100,
+      "maxRunes": 500
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "seeds": [
+      {
+        "anchorLineId": "00000000-0000-4000-8000-000000000001",
+        "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "expandedLineId": "",
+        "id": "00000000-0000-4000-8000-000000000003",
+        "noteId": "",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceLabel": "主線 #8",
+        "status": "open",
+        "text": "Maybe Osaka too",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "anchorLineId": "00000000-0000-4000-8000-000000000001",
+        "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "expandedLineId": "",
+        "id": "00000000-0000-4000-8000-000000000004",
+        "noteId": "",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceLabel": "主線 #8",
+        "status": "open",
+        "text": "Check the visa rules",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "anchorLineId": "00000000-0000-4000-8000-000000000001",
+        "anchorMessageId": "00000000-0000-4000-8000-000000000005",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "expandedLineId": "",
+        "id": "00000000-0000-4000-8000-000000000006",
+        "noteId": "",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceLabel": "主線 #2",
+        "status": "open",
+        "text": "Is a rail pass worth it?",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ]
+  },
+  "status": 200
+}

@@ -1,0 +1,27 @@
+{
+  "name": "tangent-web",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "packageManager": "pnpm@9.15.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "pnpm --filter @tangent/demo dev",
+    "typecheck": "pnpm -r --if-present typecheck",
+    "test": "pnpm -r --if-present test",
+    "build": "pnpm -r --if-present build",
+    "e2e": "pnpm --filter @tangent/e2e e2e"
+  },
+  "devDependencies": {
+    "typescript": "catalog:"
+  },
+  "pnpm": {
+    "neverBuiltDependencies": [
+      "@ibm/plex-sans",
+      "@ibm/plex-mono",
+      "@ibm/plex-sans-tc"
+    ]
+  }
+}

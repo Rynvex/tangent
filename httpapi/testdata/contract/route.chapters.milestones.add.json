@@ -1,0 +1,20 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/chapters/milestones",
+  "request": {
+    "messageId": "00000000-0000-4000-8000-000000000002",
+    "title": "Planning"
+  },
+  "response": {
+    "milestone": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "kind": "milestone",
+      "messageId": "00000000-0000-4000-8000-000000000002",
+      "title": "Planning"
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 201
+}

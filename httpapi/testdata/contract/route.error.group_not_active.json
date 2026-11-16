@@ -1,0 +1,9 @@
+{
+  "method": "POST",
+  "path": "/api/groups/00000000-0000-4000-8000-000000000001/dissolve",
+  "response": {
+    "code": "group_not_active",
+    "error": "this group was dissolved"
+  },
+  "status": 409
+}

@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&family=Geist:wght@400;500;600&display=swap">
+<style>
+html, body { height: 100%; margin: 0; -webkit-font-smoothing: antialiased; }
+button, input, textarea { font: inherit; color: inherit; }
+[data-mm] :focus-visible { outline: 2px solid var(--tg-ring); outline-offset: 2px; }
+a { color: var(--tg-primary-text); } a:hover { color: var(--tg-primary-hover); }
+</style>
+</helmet>
+<div ref="{{ rootRef }}" data-mm="" data-theme="{{ theme }}" data-screen-label="樹狀圖回顧" style="height:100vh;display:flex;flex-direction:column;background:var(--tg-background);color:var(--tg-foreground);font-family:var(--tg-font-sans);font-size:var(--tg-text-base);line-height:1.5;overflow:hidden">
+
+  <header style="flex:none;min-height:52px;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid var(--tg-border)">
+    <button onClick="{{ goBack }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;gap:6px;padding:0 10px;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);cursor:pointer" style-hover="background:var(--tg-accent)"><span aria-hidden="true" style="width:15px;height:15px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/arrow-left.svg) center/contain no-repeat"></span>回對話</button>
+    <div style="display:flex;flex-direction:column;line-height:1.25;min-width:0;margin-right:8px">
+      <span style="font-weight:600;color:var(--tg-foreground-strong)">樹狀圖</span>
+      <span style="font-size:var(--tg-text-xs);color:var(--tg-muted);white-space:nowrap">{{ dsName }}・{{ countText }}</span>
+    </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);color:var(--tg-muted)">範例
+      <select value="{{ dsKey }}" onChange="{{ onSample }}" aria-label="範例對話" style="height:var(--tg-control-height);max-width:190px;padding:0 8px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);color:var(--tg-foreground);font-size:var(--tg-text-sm)">
+        <sc-for list="{{ samples }}" as="o" hint-placeholder-count="5"><option value="{{ o.key }}">{{ o.label }}</option></sc-for>
+      </select>
+    </label>
+    <label style="flex:1 1 120px;min-width:100px;max-width:260px;height:var(--tg-control-height);display:flex;align-items:center;gap:8px;padding:0 10px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius);background:var(--tg-surface)">
+      <span aria-hidden="true" style="width:14px;height:14px;flex:none;background:var(--tg-subtle);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/search.svg) center/contain no-repeat"></span>
+      <input value="{{ query }}" onChange="{{ onQuery }}" aria-label="找節點" placeholder="找節點的主題…" style="flex:1;min-width:0;border:0;outline:0;background:transparent;font-size:var(--tg-text-sm)">
+    </label>
+    <div role="radiogroup" aria-label="顯示" style="display:flex;gap:2px;padding:2px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius)">
+      <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3">
+        <button role="radio" aria-checked="{{ f.on }}" onClick="{{ f.pick }}" style="height:calc(var(--tg-control-height) - 6px);padding:0 10px;border:0;border-radius:var(--tg-radius-sm);background:{{ f.bg }};color:{{ f.fg }};font-size:var(--tg-text-sm);font-weight:{{ f.fw }};cursor:pointer;white-space:nowrap">{{ f.label }}</button>
+      </sc-for>
+    </div>
+    <button aria-pressed="{{ showAsides }}" onClick="{{ toggleAsides }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;gap:6px;padding:0 10px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:{{ asideBg }};color:var(--tg-foreground);font-size:var(--tg-text-sm);cursor:pointer;white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:var(--tg-muted);mask:url(https://unpkg.com/lucide-static@0.460.0/icons/message-circle-question.svg) center/contain no-repeat"></span>順口問（{{ asideCount }}）</button>
+    <span style="flex:1"></span>
+    <button aria-pressed="{{ prune }}" onClick="{{ togglePrune }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;gap:6px;padding:0 12px;border:1px solid {{ pruneBorder }};border-radius:var(--tg-radius-sm);background:{{ pruneBg }};color:{{ pruneFg }};font-size:var(--tg-text-sm);font-weight:500;cursor:pointer;white-space:nowrap"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/scissors.svg) center/contain no-repeat"></span>整理<span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ pruneCount }}</span></button>
+  </header>
+
+  <div style="flex:1;min-height:0;display:flex;position:relative">
+    <div ref="{{ canvasRef }}" role="tree" aria-label="對話的樹狀圖" onPointerDown="{{ onDown }}" onPointerMove="{{ onMove }}" onPointerUp="{{ onUp }}" onKeyDown="{{ onKey }}" style="flex:1;min-width:0;position:relative;overflow:hidden;cursor:{{ cursor }};touch-action:none;background-color:var(--tg-background);background-image:radial-gradient(var(--tg-border) 1px, transparent 1px);background-size:24px 24px;background-position:{{ dotPos }}">
+      <div style="position:absolute;left:0;top:0;transform-origin:0 0;transform:{{ worldTf }}">
+        <svg aria-hidden="true" width="1" height="1" style="position:absolute;left:0;top:0;overflow:visible">
+          <sc-for list="{{ edges }}" as="e" hint-placeholder-count="10">
+            <path d="{{ e.d }}" fill="{{ e.fill }}" stroke="{{ e.color }}" stroke-width="{{ e.w }}" stroke-linecap="round" opacity="{{ e.op }}" style="transition:d var(--tg-duration-normal) var(--tg-ease-out),opacity var(--tg-duration-fast)"></path>
+          </sc-for>
+        </svg>
+        <sc-for list="{{ ticks }}" as="t" hint-placeholder-count="0"><span aria-hidden="true" style="position:absolute;left:{{ t.left }}px;top:{{ t.top }}px;width:60px;text-align:center;font-family:var(--tg-font-mono);font-size:11px;color:var(--tg-muted)">{{ t.text }}</span></sc-for>
+        <sc-for list="{{ heads }}" as="h" hint-placeholder-count="0"><div style="position:absolute;left:{{ h.left }}px;top:{{ h.top }}px;width:228px;display:flex;align-items:center;gap:6px;padding-bottom:8px;border-bottom:2px solid {{ h.color }};font-size:var(--tg-text-sm);font-weight:600;color:var(--tg-foreground-strong)"><span aria-hidden="true" style="width:14px;height:14px;background:{{ h.color }};mask:url({{ h.icon }}) center/contain no-repeat"></span>{{ h.name }}<span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);font-weight:400;color:var(--tg-muted)">{{ h.n }}</span></div></sc-for>
+        <sc-for list="{{ nodes }}" as="n" hint-placeholder-count="10">
+          <div id="{{ n.domId }}" data-node="{{ n.id }}" role="treeitem" aria-level="{{ n.level }}" aria-selected="{{ n.isSel }}" aria-expanded="{{ n.ariaExp }}" aria-label="{{ n.aria }}" tabIndex="{{ n.tab }}" onClick="{{ n.onClick }}" onFocus="{{ n.onFocus }}" title="{{ n.title }}" style="position:absolute;left:{{ n.left }}px;top:{{ n.top }}px;width:{{ n.w }}px;height:{{ n.h }}px;box-sizing:border-box;display:flex;flex-direction:column;gap:3px;padding:{{ n.pad }};border:{{ n.border }};border-radius:var(--tg-radius);background:{{ n.bg }};box-shadow:{{ n.shadow }};opacity:{{ n.op }};cursor:pointer;transition:left var(--tg-duration-normal) var(--tg-ease-out),top var(--tg-duration-normal) var(--tg-ease-out),opacity var(--tg-duration-fast)">
+            <sc-if value="{{ n.isRoot }}">
+              <span style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);color:var(--tg-muted)"><span aria-hidden="true" style="width:13px;height:13px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/list.svg) center/contain no-repeat"></span>{{ n.rootMeta }}</span>
+              <span style="font-size:var(--tg-text-md);font-weight:600;line-height:1.3;color:var(--tg-foreground-strong)">{{ n.title }}</span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:var(--tg-text-xs);color:var(--tg-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span aria-hidden="true" style="width:12px;height:12px;flex:none;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/target.svg) center/contain no-repeat"></span>{{ n.goalText }}</span>
+            </sc-if>
+            <sc-if value="{{ n.notRoot }}">
+              <span style="display:flex;align-items:flex-start;gap:6px"><span aria-hidden="true" style="width:13px;height:13px;flex:none;margin-top:3px;background:{{ n.statusColor }};mask:url({{ n.kindIcon }}) center/contain no-repeat"></span><span style="flex:1;min-width:0;font-size:var(--tg-text-sm);font-weight:500;line-height:1.38;color:{{ n.titleColor }};display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;text-wrap:pretty">{{ n.title }}</span></span>
+              <span style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--tg-muted);white-space:nowrap"><span style="width:6px;height:6px;flex:none;border-radius:50%;background:{{ n.statusColor }}"></span>{{ n.meta }}</span>
+              <span style="display:flex;align-items:center;gap:5px;min-width:0;font-size:11px;color:{{ n.leafFg }};white-space:nowrap"><span aria-hidden="true" style="width:11px;height:11px;flex:none;background:{{ n.leafColor }};mask:url({{ n.leafIcon }}) center/contain no-repeat"></span><span style="overflow:hidden;text-overflow:ellipsis">{{ n.leafText }}</span></span>
+            </sc-if>
+            <sc-if value="{{ n.hasGroup }}"><span style="position:absolute;left:8px;top:-11px;height:20px;display:inline-flex;align-items:center;padding:0 7px;border:1px solid var(--tg-border-strong);border-radius:999px;background:var(--tg-surface-raised);font-size:11px;color:var(--tg-muted);white-space:nowrap">群組・{{ n.group }}</span></sc-if>
+            <sc-if value="{{ n.isMulti }}"><span aria-hidden="true" style="position:absolute;right:-7px;top:-7px;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:var(--tg-primary);color:var(--tg-primary-foreground)"><span style="width:11px;height:11px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/check.svg) center/contain no-repeat"></span></span></sc-if>
+            <sc-if value="{{ n.hasKnob }}"><button onClick="{{ n.onKnob }}" tabIndex="-1" aria-label="{{ n.knobAria }}" style="position:absolute;top:{{ n.knobT }};bottom:{{ n.knobB }};left:{{ n.knobL }};right:{{ n.knobR }};transform:{{ n.knobTf }};min-width:22px;height:22px;padding:0 5px;border:1px solid var(--tg-border-input);border-radius:999px;background:var(--tg-surface-raised);color:{{ n.knobColor }};font-family:var(--tg-font-mono);font-size:11px;line-height:1;white-space:nowrap;cursor:pointer" style-hover="background:var(--tg-accent)">{{ n.knobText }}</button></sc-if>
+            <sc-if value="{{ n.hasChip }}"><span style="position:absolute;left:0;top:calc(100% + 6px);max-width:100%;height:22px;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:1px {{ n.chipLine }} {{ n.chipBorder }};border-radius:999px;background:{{ n.chipBg }};color:var(--tg-foreground);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis"><span aria-hidden="true" style="width:11px;height:11px;flex:none;background:{{ n.chipColor }};mask:url({{ n.chipIcon }}) center/contain no-repeat"></span>{{ n.chipText }}</span></sc-if>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="position:absolute;left:12px;top:12px;right:12px;display:flex;flex-direction:column;align-items:flex-start;gap:6px;pointer-events:none">
+        <div role="radiogroup" aria-label="呈現方式" style="pointer-events:auto;max-width:100%;display:flex;flex-wrap:wrap;gap:2px;padding:3px;border:1px solid var(--tg-border-strong);border-radius:var(--tg-radius);background:var(--tg-surface-raised);box-shadow:var(--tg-shadow)">
+          <sc-for list="{{ shapes }}" as="v" hint-placeholder-count="5">
+            <button role="radio" aria-checked="{{ v.on }}" onClick="{{ v.pick }}" style="height:var(--tg-control-height);flex:none;display:inline-flex;align-items:center;gap:5px;padding:0 8px;border:0;border-radius:var(--tg-radius-sm);background:{{ v.bg }};color:{{ v.fg }};font-size:var(--tg-text-xs);font-weight:500;white-space:nowrap;cursor:pointer"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url({{ v.icon }}) center/contain no-repeat"></span>{{ v.label }}</button>
+          </sc-for>
+        </div>
+        <span style="max-width:min(460px,100%);padding:2px 8px;border-radius:var(--tg-radius-sm);background:var(--tg-background);font-size:var(--tg-text-xs);color:var(--tg-muted);text-wrap:pretty">{{ shapeDesc }}</span>
+      </div>
+      <div style="position:absolute;left:12px;bottom:12px;display:flex;align-items:center;gap:2px;padding:2px;border:1px solid var(--tg-border-strong);border-radius:var(--tg-radius);background:var(--tg-surface-raised);box-shadow:var(--tg-shadow)">
+        <button onClick="{{ zoomOut }}" aria-label="縮小" style="width:var(--tg-hit-target);height:var(--tg-hit-target);display:grid;place-items:center;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);cursor:pointer" style-hover="background:var(--tg-accent)"><span aria-hidden="true" style="width:15px;height:15px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/zoom-out.svg) center/contain no-repeat"></span></button>
+        <span style="min-width:44px;text-align:center;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ zoomPct }}</span>
+        <button onClick="{{ zoomIn }}" aria-label="放大" style="width:var(--tg-hit-target);height:var(--tg-hit-target);display:grid;place-items:center;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);cursor:pointer" style-hover="background:var(--tg-accent)"><span aria-hidden="true" style="width:15px;height:15px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/zoom-in.svg) center/contain no-repeat"></span></button>
+        <button onClick="{{ fit }}" aria-label="符合畫面" title="符合畫面（0）" style="width:var(--tg-hit-target);height:var(--tg-hit-target);display:grid;place-items:center;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);cursor:pointer" style-hover="background:var(--tg-accent)"><span aria-hidden="true" style="width:15px;height:15px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/scan.svg) center/contain no-repeat"></span></button>
+        <button onClick="{{ expandAll }}" title="全部展開" style="height:var(--tg-hit-target);padding:0 8px;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);font-size:var(--tg-text-xs);cursor:pointer;white-space:nowrap" style-hover="background:var(--tg-accent)">全部展開</button>
+      </div>
+      <sc-if value="{{ showKbd }}"><div class="tg-kbd-hint" style="position:absolute;right:12px;bottom:14px;font-size:var(--tg-text-xs);color:var(--tg-subtle)">方向鍵往那個方向移動・Space 多選・Delete 不帶回・0 符合畫面</div></sc-if>
+
+      <sc-if value="{{ hasMulti }}">
+        <div role="toolbar" aria-label="多選的動作" style="position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;padding:6px 6px 6px 14px;border-radius:var(--tg-radius-lg);background:var(--tg-foreground-strong);color:var(--tg-background);box-shadow:var(--tg-shadow-overlay);white-space:nowrap">
+          <span style="font-size:var(--tg-text-sm);margin-right:6px">已選 {{ multiCount }} 條</span>
+          <button onClick="{{ batchDiscard }}" aria-disabled="{{ batchDiscardOff }}" title="{{ batchDiscardWhy }}" style="height:var(--tg-control-height);padding:0 12px;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:inherit;opacity:{{ batchDiscardOp }};font-size:var(--tg-text-sm);cursor:pointer">不帶回…</button>
+          <button onClick="{{ batchGroup }}" aria-disabled="{{ batchGroupOff }}" title="{{ batchGroupWhy }}" style="height:var(--tg-control-height);padding:0 12px;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:inherit;opacity:{{ batchGroupOp }};font-size:var(--tg-text-sm);cursor:pointer">建立群組</button>
+          <button onClick="{{ clearMulti }}" aria-label="清除選取" style="width:var(--tg-control-height);height:var(--tg-control-height);display:grid;place-items:center;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:inherit;cursor:pointer"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat"></span></button>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ hasToast }}">
+        <div role="status" style="position:absolute;left:50%;top:96px;transform:translateX(-50%);display:flex;align-items:center;gap:12px;padding:8px 8px 8px 14px;border-radius:var(--tg-radius);background:var(--tg-foreground-strong);color:var(--tg-background);box-shadow:var(--tg-shadow-overlay);font-size:var(--tg-text-sm);max-width:calc(100% - 32px)">
+          <span style="text-wrap:pretty">{{ toastText }}</span>
+          <sc-if value="{{ toastUndo }}"><button onClick="{{ undo }}" style="height:28px;padding:0 10px;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:inherit;font-weight:600;text-decoration:underline;cursor:pointer;white-space:nowrap">復原</button></sc-if>
+        </div>
+      </sc-if>
+    </div>
+
+    <sc-if value="{{ showScrim }}"><div onClick="{{ closeSheet }}" style="position:absolute;inset:0;z-index:4;background:var(--tg-scrim)"></div></sc-if>
+    <sc-if value="{{ panelShow }}">
+    <aside aria-label="{{ panelLabel }}" style="{{ panelStyle }}">
+      <sc-if value="{{ isNarrow }}"><div style="flex:none;display:flex;justify-content:center;padding:8px 0 0"><span style="width:36px;height:4px;border-radius:2px;background:var(--tg-border-strong)"></span></div></sc-if>
+
+      <sc-if value="{{ modeDetail }}">
+        <div style="flex:none;display:flex;align-items:flex-start;gap:8px;padding:14px 12px 12px 18px;border-bottom:1px solid var(--tg-border)">
+          <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px">
+            <span style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);color:var(--tg-muted)"><span aria-hidden="true" style="width:13px;height:13px;background:{{ d.statusColor }};mask:url({{ d.kindIcon }}) center/contain no-repeat"></span>{{ d.kindLabel }}<span style="width:6px;height:6px;border-radius:50%;background:{{ d.statusColor }}"></span>{{ d.statusLabel }}</span>
+            <h2 style="margin:0;font-size:var(--tg-text-lg);line-height:1.35;font-weight:600;color:var(--tg-foreground-strong);text-wrap:pretty">{{ d.title }}</h2>
+            <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ d.forkText }}</span>
+          </div>
+          <button onClick="{{ closeDetail }}" aria-label="關閉詳情" style="width:var(--tg-hit-target);height:var(--tg-hit-target);flex:none;display:grid;place-items:center;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);cursor:pointer" style-hover="background:var(--tg-accent)"><span aria-hidden="true" style="width:15px;height:15px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat"></span></button>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:16px 18px">
+          <sc-if value="{{ d.hasLeaf }}">
+            <div style="display:flex;flex-direction:column;gap:4px;padding:10px 12px;border-radius:var(--tg-radius);background:var(--tg-surface-sunken)">
+              <span style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);font-weight:500;color:var(--tg-muted)"><span aria-hidden="true" style="width:13px;height:13px;background:{{ d.leafColor }};mask:url({{ d.leafIcon }}) center/contain no-repeat"></span>收尾：{{ d.leafLabel }}</span>
+              <span style="text-wrap:pretty">{{ d.leafText }}</span>
+            </div>
+          </sc-if>
+          <sc-if value="{{ d.noLeaf }}"><div style="padding:10px 12px;border:1px solid var(--tg-border);border-radius:var(--tg-radius);font-size:var(--tg-text-sm);color:var(--tg-muted)">{{ d.noLeafText }}</div></sc-if>
+          <sc-if value="{{ d.hasChip }}"><div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border:1px {{ d.chipLine }} {{ d.chipBorder }};border-radius:var(--tg-radius);background:{{ d.chipBg }};font-size:var(--tg-text-sm)"><span aria-hidden="true" style="width:14px;height:14px;flex:none;background:{{ d.chipColor }};mask:url({{ d.chipIcon }}) center/contain no-repeat"></span>{{ d.chipText }}</div></sc-if>
+          <dl style="margin:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">
+            <sc-for list="{{ d.stats }}" as="s" hint-placeholder-count="3">
+              <div style="display:flex;flex-direction:column;gap:2px;padding:8px 10px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-sm)"><dt style="font-size:11px;color:var(--tg-muted)">{{ s.k }}</dt><dd style="margin:0;font-family:var(--tg-font-mono);font-size:var(--tg-text-sm);color:var(--tg-foreground-strong)">{{ s.v }}</dd></div>
+            </sc-for>
+          </dl>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <sc-for list="{{ d.actions }}" as="a" hint-placeholder-count="3">
+              <sc-if value="{{ a.primary }}"><button onClick="{{ a.run }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:var(--tg-radius-sm);background:var(--tg-primary);color:var(--tg-primary-foreground);font-size:var(--tg-text-sm);font-weight:500;cursor:pointer" style-hover="background:var(--tg-primary-hover)">{{ a.label }}</button></sc-if>
+              <sc-if value="{{ a.secondary }}"><button onClick="{{ a.run }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);color:var(--tg-foreground);font-size:var(--tg-text-sm);cursor:pointer" style-hover="background:var(--tg-surface-raised)">{{ a.label }}</button></sc-if>
+              <sc-if value="{{ a.danger }}"><button onClick="{{ a.run }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-destructive);font-size:var(--tg-text-sm);cursor:pointer" style-hover="background:var(--tg-destructive-soft)">{{ a.label }}</button></sc-if>
+            </sc-for>
+          </div>
+          <sc-if value="{{ d.hasKids }}">
+            <div style="display:flex;flex-direction:column;gap:4px">
+              <span style="display:flex;justify-content:space-between;align-items:center;font-size:var(--tg-text-xs);color:var(--tg-muted)">子支線（{{ d.kidCount }}）<button onClick="{{ d.toggleCollapse }}" style="height:24px;padding:0 6px;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-primary-text);font-size:var(--tg-text-xs);cursor:pointer">{{ d.collapseLabel }}</button></span>
+              <sc-for list="{{ d.kids }}" as="k" hint-placeholder-count="2">
+                <button onClick="{{ k.go }}" style="min-height:36px;display:flex;align-items:center;gap:8px;padding:6px 10px;border:0;border-radius:var(--tg-radius-sm);background:transparent;text-align:left;cursor:pointer" style-hover="background:var(--tg-accent)"><span style="width:6px;height:6px;flex:none;border-radius:50%;background:{{ k.color }}"></span><span style="flex:1;min-width:0;font-size:var(--tg-text-sm)">{{ k.title }}</span><span style="font-size:11px;color:var(--tg-muted)">{{ k.status }}</span></button>
+              </sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ modePrune }}">
+        <div style="flex:none;display:flex;align-items:flex-start;gap:8px;padding:14px 12px 12px 18px;border-bottom:1px solid var(--tg-border)">
+          <div style="flex:1;display:flex;flex-direction:column;gap:2px">
+            <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">整理：還沒收尾的事</h2>
+            <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ pruneLeft }}・其他節點先淡化。動作名稱和「待處理」一樣。</span>
+          </div>
+          <button onClick="{{ togglePrune }}" aria-label="結束整理" style="width:var(--tg-hit-target);height:var(--tg-hit-target);flex:none;display:grid;place-items:center;border:0;border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-muted);cursor:pointer" style-hover="background:var(--tg-accent)"><span aria-hidden="true" style="width:15px;height:15px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/x.svg) center/contain no-repeat"></span></button>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:18px;padding:14px 18px 18px">
+          <sc-if value="{{ pruneEmpty }}"><div style="padding:24px 8px;text-align:center;color:var(--tg-muted);text-wrap:pretty">都處理完了。這棵樹沒有開太久的支線，也沒有等你決定的建議。</div></sc-if>
+          <sc-for list="{{ pruneSections }}" as="sec" hint-placeholder-count="3">
+            <section style="display:flex;flex-direction:column;gap:8px">
+              <h3 style="margin:0;display:flex;align-items:center;gap:6px;font-size:var(--tg-text-sm);font-weight:600"><span aria-hidden="true" style="width:14px;height:14px;background:var(--tg-muted);mask:url({{ sec.icon }}) center/contain no-repeat"></span>{{ sec.title }}<span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);font-weight:400;color:var(--tg-muted)">{{ sec.n }}</span></h3>
+              <sc-for list="{{ sec.items }}" as="it" hint-placeholder-count="2">
+                <div style="display:flex;flex-direction:column;gap:8px;padding:10px 12px;border:1px {{ it.line }} {{ it.border }};border-radius:var(--tg-radius);background:{{ it.bg }}">
+                  <button onClick="{{ it.go }}" style="padding:0;border:0;background:transparent;text-align:left;font-weight:500;color:var(--tg-foreground-strong);cursor:pointer;text-wrap:pretty" style-hover="color:var(--tg-primary-text)">{{ it.title }}</button>
+                  <span style="font-size:var(--tg-text-xs);color:var(--tg-muted);text-wrap:pretty">{{ it.meta }}</span>
+                  <span style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-for list="{{ it.acts }}" as="a" hint-placeholder-count="2">
+                      <sc-if value="{{ a.primary }}"><button onClick="{{ a.run }}" style="height:var(--tg-control-height-sm);padding:0 10px;border:0;border-radius:var(--tg-radius-sm);background:var(--tg-primary);color:var(--tg-primary-foreground);font-size:var(--tg-text-xs);font-weight:500;cursor:pointer" style-hover="background:var(--tg-primary-hover)">{{ a.label }}</button></sc-if>
+                      <sc-if value="{{ a.secondary }}"><button onClick="{{ a.run }}" style="height:var(--tg-control-height-sm);padding:0 10px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);font-size:var(--tg-text-xs);cursor:pointer" style-hover="background:var(--tg-surface-raised)">{{ a.label }}</button></sc-if>
+                      <sc-if value="{{ a.danger }}"><button onClick="{{ a.run }}" style="height:var(--tg-control-height-sm);padding:0 10px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:transparent;color:var(--tg-destructive);font-size:var(--tg-text-xs);cursor:pointer" style-hover="background:var(--tg-destructive-soft)">{{ a.label }}</button></sc-if>
+                    </sc-for>
+                  </span>
+                </div>
+              </sc-for>
+            </section>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ modeOverview }}">
+        <div style="flex:none;padding:14px 18px 12px;border-bottom:1px solid var(--tg-border)">
+          <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">這棵樹</h2>
+          <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">點一個節點看它問了什麼、得出什麼。</span>
+        </div>
+        <div style="flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:18px;padding:16px 18px">
+          <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px">
+            <sc-for list="{{ overview }}" as="o" hint-placeholder-count="4">
+              <button onClick="{{ o.pick }}" style="display:flex;flex-direction:column;gap:2px;padding:10px 12px;border:1px solid var(--tg-border);border-radius:var(--tg-radius);background:var(--tg-surface);text-align:left;cursor:pointer" style-hover="background:var(--tg-surface-raised)"><span style="display:flex;align-items:center;gap:6px;font-size:var(--tg-text-xs);color:var(--tg-muted)"><span style="width:7px;height:7px;border-radius:50%;background:{{ o.color }}"></span>{{ o.label }}</span><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-lg);color:var(--tg-foreground-strong)">{{ o.n }}</span></button>
+            </sc-for>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <span style="font-size:var(--tg-text-xs);font-weight:500;color:var(--tg-muted)">怎麼讀</span>
+            <sc-for list="{{ legend }}" as="l" hint-placeholder-count="5">
+              <span style="display:flex;align-items:center;gap:8px;font-size:var(--tg-text-sm)"><span aria-hidden="true" style="width:14px;height:14px;flex:none;background:{{ l.color }};mask:url({{ l.icon }}) center/contain no-repeat"></span>{{ l.text }}</span>
+            </sc-for>
+          </div>
+          <button onClick="{{ togglePrune }}" style="height:var(--tg-control-height);display:inline-flex;align-items:center;justify-content:center;gap:6px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius-sm);background:var(--tg-surface);font-size:var(--tg-text-sm);cursor:pointer" style-hover="background:var(--tg-surface-raised)"><span aria-hidden="true" style="width:14px;height:14px;background:currentColor;mask:url(https://unpkg.com/lucide-static@0.460.0/icons/scissors.svg) center/contain no-repeat"></span>開始整理（{{ pruneCount }} 項）</button>
+        </div>
+      </sc-if>
+    </aside>
+    </sc-if>
+
+    <sc-if value="{{ hasDialog }}">
+      <div style="position:absolute;inset:0;z-index:10;display:grid;place-items:center;padding:16px;background:var(--tg-scrim)">
+        <div role="dialog" aria-modal="true" aria-labelledby="mm-dlg-t" style="width:min(440px,100%);display:flex;flex-direction:column;gap:14px;padding:20px 22px;border-radius:var(--tg-radius-lg);background:var(--tg-surface);box-shadow:var(--tg-shadow-overlay)">
+          <h2 id="mm-dlg-t" style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">{{ dlgTitle }}</h2>
+          <p style="margin:0;color:var(--tg-muted);text-wrap:pretty">支線會保留在樹上（灰色），主線不會收到結論卡。{{ dlgExtra }}</p>
+          <sc-for list="{{ dlgItems }}" as="t" hint-placeholder-count="1"><span style="font-size:var(--tg-text-sm)">・{{ t }}</span></sc-for>
+          <label style="display:flex;flex-direction:column;gap:6px"><span style="font-size:var(--tg-text-sm);font-weight:500">原因（選填，會寫成「死路」收尾）</span><textarea ref="{{ reasonRef }}" value="{{ reason }}" onChange="{{ onReason }}" rows="2" placeholder="例如：成本太高，不考慮" style="padding:8px 10px;border:1px solid var(--tg-border-input);border-radius:var(--tg-radius);background:var(--tg-surface);resize:vertical"></textarea></label>
+          <div style="display:flex;justify-content:flex-end;gap:8px">
+            <button onClick="{{ closeDialog }}" style="height:var(--tg-control-height);padding:0 12px;border:0;border-radius:var(--tg-radius-sm);background:transparent;cursor:pointer" style-hover="background:var(--tg-accent)">取消</button>
+            <button onClick="{{ confirmDiscard }}" style="height:var(--tg-control-height);padding:0 14px;border:0;border-radius:var(--tg-radius-sm);background:var(--tg-destructive);color:var(--tg-primary-foreground);font-weight:500;cursor:pointer">不帶回</button>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;light&quot;,&quot;dark&quot;,&quot;host&quot;],&quot;default&quot;:&quot;light&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;defaultSample&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;居家：NAS 備份&quot;,&quot;學習：Rust 入門&quot;,&quot;開發管理：App v3 改版&quot;,&quot;研究：遠距工作與生產力&quot;,&quot;腦力激盪：咖啡店品牌&quot;],&quot;default&quot;:&quot;居家：NAS 備份&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;defaultShape&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;分層樹&quot;,&quot;收尾分組&quot;,&quot;心智圖&quot;,&quot;組織圖&quot;,&quot;時間軸&quot;],&quot;default&quot;:&quot;分層樹&quot;,&quot;tsType&quot;:&quot;string&quot;},&quot;startInPrune&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;}}">
+const IC = n => `https://unpkg.com/lucide-static@0.460.0/icons/${n}.svg`;
+const RAW_NAS = [
+  { id: 'root', parent: null, title: 'NAS 備份規劃', kind: 'main', status: 'open', msgs: 24, tokens: '12.4k', idle: 0 },
+  { id: 'size', parent: 'root', title: '4TB 與 8TB 怎麼選', kind: 'investigate', status: 'merged', fork: 3, msgs: 8, tokens: '2.6k', idle: 6, leaf: ['conclusion', '8TB×2 做鏡像，能撐四年'] },
+  { id: 'used', parent: 'size', title: '二手硬碟能不能買', kind: 'aside', status: 'answered', fork: 2, msgs: 2, tokens: '0.4k', idle: 5, leaf: ['answer', '可以，但要看 SMART 通電時數'], expires: 2 },
+  { id: 'raid', parent: 'root', title: 'RAID 5 還是 RAID 1', kind: 'investigate', status: 'merged', fork: 5, msgs: 10, tokens: '3.0k', idle: 9, leaf: ['decision', '兩顆硬碟就用 RAID 1'] },
+  { id: 'fs', parent: 'raid', title: '檔案系統：ZFS 或 Btrfs', kind: 'investigate', status: 'open', fork: 6, msgs: 7, tokens: '2.2k', idle: 12 },
+  { id: 'ecc', parent: 'fs', title: 'ZFS 一定要 ECC 記憶體嗎', kind: 'aside', status: 'answered', fork: 3, msgs: 2, tokens: '0.3k', idle: 12, leaf: ['answer', '不是必要，但建議'], expires: 0 },
+  { id: 'b2', parent: 'root', title: '改用雲端備份（Backblaze B2）還是第二台 NAS', kind: 'investigate', status: 'open', fork: 7, msgs: 12, tokens: '3.1k', idle: 0 },
+  { id: 'egress', parent: 'b2', title: 'B2 下載費怎麼算', kind: 'aside', status: 'answered', fork: 4, msgs: 2, tokens: '0.3k', idle: 0, leaf: ['answer', '每月前 3 倍儲存量免費'], expires: 7 },
+  { id: 'uplink', parent: 'b2', title: '爸媽家的上傳速度夠不夠', kind: 'investigate', status: 'open', fork: 9, msgs: 5, tokens: '1.1k', idle: 1, leaf: ['pending', '等爸媽測速'] },
+  { id: 'ext', parent: 'root', title: '只用外接硬碟輪流備份', kind: 'alternative', status: 'discarded', fork: 4, msgs: 4, tokens: '0.9k', idle: 10, leaf: ['deadend', '太容易忘記換'] },
+  { id: 'laptop', parent: 'root', title: '用舊筆電當 NAS', kind: 'alternative', status: 'discarded', fork: 2, msgs: 6, tokens: '1.4k', idle: 14, leaf: ['deadend', '只有一個 SATA 槽'] },
+  { id: 'power', parent: 'laptop', title: '舊筆電一年電費多少', kind: 'aside', status: 'answered', fork: 3, msgs: 2, tokens: '0.2k', idle: 14, leaf: ['answer', '約 NT$600'], expires: 0 },
+  { id: 'ups', parent: 'root', title: 'UPS 要不要買', kind: 'investigate', status: 'open', fork: 11, msgs: 3, tokens: '0.8k', idle: 9 },
+  { id: 'auto', parent: 'root', title: '自動化備份腳本', kind: 'investigate', status: 'open', fork: 14, msgs: 9, tokens: '2.4k', idle: 2, leaf: ['pending', '差排程方式沒決定'] },
+  { id: 'rclone', parent: 'auto', title: 'rclone 參數怎麼設', kind: 'aside', status: 'answered', fork: 3, msgs: 2, tokens: '0.4k', idle: 2, leaf: ['answer', '--transfers 8 加 --fast-list'], expires: 5 },
+  { id: 'timer', parent: 'auto', title: 'cron 還是 systemd timer', kind: 'investigate', status: 'open', fork: 6, msgs: 4, tokens: '0.9k', idle: 15 },
+];
+const KIND = { main: ['主線', IC('list')], aside: ['順口問', IC('message-circle-question')], investigate: ['查證', IC('search')], alternative: ['另一條路', IC('split')] };
+const STATUS = { open: ['進行中', 'var(--tg-branch-open)'], merged: ['已帶回', 'var(--tg-branch-merged)'], discarded: ['未帶回', 'var(--tg-branch-discarded)'], answered: ['已回答', 'var(--tg-leaf-answer)'] };
+const LEAF = { conclusion: ['結論', IC('flag'), 'var(--tg-leaf-conclusion)'], decision: ['決定', IC('gavel'), 'var(--tg-leaf-decision)'], answer: ['答案', IC('corner-down-right'), 'var(--tg-leaf-answer)'], deadend: ['死路', IC('ban'), 'var(--tg-leaf-deadend)'], pending: ['待續', IC('hourglass'), 'var(--tg-leaf-pending)'] };
+const KC = { i: 'investigate', a: 'aside', l: 'alternative' }, SC = { o: 'open', m: 'merged', d: 'discarded', a: 'answered' }, LC = { c: 'conclusion', d: 'decision', a: 'answer', x: 'deadend', p: 'pending' };
+const build = (title, rootMsgs, rows) => [{ id: 'root', parent: null, title, kind: 'main', status: 'open', msgs: rootMsgs, tokens: (rootMsgs * 0.5).toFixed(1) + 'k', idle: 0 }].concat(rows.map(([id, parent, t, k, st, fork, msgs, idle, lt, lx, , exp]) => ({ id, parent, title: t, kind: KC[k], status: SC[st], fork, msgs, idle, tokens: (msgs * 0.28).toFixed(1) + 'k', leaf: lt ? [LC[lt], lx] : undefined, expires: exp ?? 7 })));
+const SAMPLES = {
+  nas: { label: '居家：NAS 備份', goal: '決定 NAS 的備份方式', nodes: RAW_NAS, group: { ids: ['ext', 'laptop'], name: '放棄的方案', why: '「只用外接硬碟輪流備份」和「用舊筆電當 NAS」都是死路。' } },
+  learn: { label: '學習：Rust 入門', goal: '三個月內能用 Rust 寫 CLI 工具', group: { ids: ['tokio', 'video'], name: '不走的路', why: '「tokio 還是 async-std」和「看影片課程」都已經放棄。' }, nodes: build('學習 Rust', 41, [
+    ['own', 'root', '所有權與借用', 'i', 'm', 3, 14, 20, 'c', '先懂 move 與 borrow 再碰 lifetime'],
+    ['move', 'own', 'Move 語意和 Copy 差在哪', 'a', 'a', 2, 2, 20, 'a', '實作 Copy 的型別賦值時複製', null, 0],
+    ['borrow', 'own', '可變借用為什麼只能有一個', 'i', 'm', 5, 6, 18, 'a', '避免資料競爭，編譯期就擋'],
+    ['nll', 'borrow', 'NLL 讓哪些寫法變合法', 'a', 'a', 3, 2, 18, 'a', '借用在最後一次使用後就結束', null, 1],
+    ['life', 'own', 'Lifetime 標註什麼時候需要', 'i', 'o', 9, 8, 9],
+    ['elision', 'life', '省略規則有哪三條', 'a', 'a', 2, 2, 9, 'a', '輸入、&self、單一輸入', null, 2],
+    ['static', 'life', "'static 不等於永遠存在", 'i', 'm', 5, 4, 9, 'c', '是「可以活到程式結束」'],
+    ['err', 'root', '錯誤處理', 'i', 'm', 8, 10, 12, 'd', '應用層用 anyhow，函式庫用 thiserror'],
+    ['qop', 'err', '? 運算子怎麼轉型別', 'a', 'a', 3, 2, 12, 'a', '透過 From trait', null, 4],
+    ['panic', 'err', 'panic 和 Result 怎麼選', 'i', 'm', 5, 5, 12, 'c', '只有不可能發生的錯才 panic'],
+    ['trait', 'root', 'Trait 與泛型', 'i', 'o', 12, 9, 4],
+    ['dyn', 'trait', 'dyn Trait 還是泛型', 'i', 'o', 4, 6, 4, 'p', '等看完效能比較'],
+    ['vtable', 'dyn', 'vtable 的成本有多少', 'a', 'a', 3, 2, 4, 'a', '一次間接呼叫，通常可忽略', null, 6],
+    ['assoc', 'trait', '關聯型別 vs 泛型參數', 'i', 'o', 7, 4, 11],
+    ['async', 'root', '先跳過 async，之後再學', 'l', 'o', 15, 7, 6],
+    ['tokio', 'async', 'tokio 還是 async-std', 'i', 'd', 3, 4, 6, 'x', 'async-std 已停止維護'],
+    ['pin', 'async', 'Pin 到底在 pin 什麼', 'i', 'o', 5, 3, 14],
+    ['path', 'root', '學習路線', 'i', 'm', 1, 8, 25, 'd', 'Rust Book → Rustlings → 自己的 CLI'],
+    ['book', 'path', 'Rust Book 讀到第幾章再實作', 'a', 'a', 2, 2, 25, 'a', '第 9 章錯誤處理之後', null, 0],
+    ['exer', 'path', 'Exercism 還是 Rustlings', 'i', 'm', 4, 4, 25, 'a', 'Rustlings，比較貼 Book'],
+    ['video', 'path', '改看影片課程', 'l', 'd', 5, 3, 25, 'x', '太慢，跳過'],
+    ['cli', 'root', '第一個 CLI 專案：日誌分析工具', 'i', 'o', 30, 12, 1],
+    ['clap', 'cli', 'clap 的 derive 寫法', 'a', 'a', 2, 2, 1, 'a', '#[derive(Parser)] 加欄位註解', null, 5],
+    ['regex', 'cli', 'regex 還是手寫解析', 'i', 'm', 4, 5, 2, 'd', '用 regex，先求能動'],
+    ['perf', 'regex', '大檔案太慢怎麼辦', 'i', 'o', 3, 4, 2, 'p', '試 BufReader 和 rayon'],
+    ['rayon', 'perf', 'rayon 會不會亂序', 'a', 'a', 2, 2, 2, 'a', '用 par_iter().collect() 保序', null, 6],
+    ['test', 'cli', '怎麼寫整合測試', 'i', 'o', 8, 3, 8],
+    ['dist', 'cli', '跨平台發佈', 'i', 'o', 10, 2, 3],
+  ]) },
+  dev: { label: '開發管理：App v3 改版', goal: '11 月底前上架 v3，不延期', group: { ids: ['flutter', 'graphql'], name: '放棄的技術方案', why: '「改用 Flutter」和「API 改 GraphQL」都已經放棄，可以收成一組。' }, nodes: build('行動版 App v3 改版', 58, [
+    ['scope', 'root', '範圍怎麼砍', 'i', 'm', 2, 12, 15, 'd', '砍掉離線模式，留到 v3.1'],
+    ['offline', 'scope', '離線模式要多少工', 'i', 'm', 3, 5, 15, 'a', '約 3 週，含同步衝突'],
+    ['darkm', 'scope', '深色模式算不算必要', 'a', 'a', 5, 2, 15, 'a', '系統已經強制，必要', null, 0],
+    ['widget', 'scope', '加桌面小工具', 'l', 'd', 6, 4, 15, 'x', 'iOS 審核風險太高'],
+    ['sched', 'root', '時程', 'i', 'o', 9, 10, 2],
+    ['est', 'sched', '估時為什麼總是低估', 'i', 'm', 2, 6, 6, 'c', '沒算 code review 和 QA 來回'],
+    ['buffer', 'sched', '要留多少緩衝', 'i', 'o', 5, 4, 2, 'p', '等 PM 確認上架日'],
+    ['freeze', 'sched', 'code freeze 訂在哪天', 'a', 'a', 7, 2, 2, 'a', '11/14，上架前兩週', null, 2],
+    ['team', 'root', '人力', 'i', 'o', 14, 8, 10],
+    ['hire', 'team', '要不要找外包', 'i', 'o', 3, 6, 10],
+    ['vendor', 'hire', '三家外包廠商比較', 'i', 'o', 2, 5, 10],
+    ['nda', 'hire', '合約與 NDA 要注意什麼', 'a', 'a', 4, 2, 10, 'a', '程式碼所有權寫清楚', null, 1],
+    ['onboard', 'team', '新人上手要多久', 'i', 'm', 6, 4, 12, 'a', '兩週可以接小票'],
+    ['tech', 'root', '技術決策', 'i', 'm', 20, 14, 7, 'c', '框架不換，先升級'],
+    ['rn', 'tech', '繼續用 React Native', 'i', 'm', 2, 6, 7, 'd', '繼續用，不換框架'],
+    ['flutter', 'rn', '改用 Flutter', 'l', 'd', 3, 5, 7, 'x', '重寫成本太高'],
+    ['upgrade', 'rn', 'RN 0.76 升級風險', 'i', 'o', 5, 4, 3, 'p', '等新架構相容清單'],
+    ['graphql', 'tech', 'API 改 GraphQL', 'l', 'd', 8, 4, 9, 'x', '後端沒有人力'],
+    ['ci', 'tech', 'CI 太慢怎麼辦', 'i', 'o', 11, 6, 8],
+    ['cache', 'ci', '快取 node_modules', 'a', 'a', 2, 2, 8, 'a', '省 4 分鐘', null, 5],
+    ['shard', 'ci', '測試分片', 'i', 'o', 4, 3, 8],
+    ['risk', 'root', '風險', 'i', 'o', 31, 6, 1],
+    ['review', 'risk', 'App Store 審核被退件', 'i', 'm', 2, 4, 4, 'c', '先送 TestFlight 外部測試'],
+    ['pay', 'risk', '金流 SDK 版本過舊', 'i', 'o', 4, 3, 16],
+    ['report', 'root', '跟老闆怎麼報告進度', 'i', 'o', 40, 5, 0, 'p', '等時程定案'],
+    ['demo', 'report', '週會要 demo 什麼', 'a', 'a', 3, 2, 0, 'a', '新的結帳流程', null, 6],
+  ]) },
+  research: { label: '研究：遠距工作與生產力', goal: '寫一篇 3000 字的文獻回顧', group: { ids: ['gen', 'confound'], name: '研究的限制', why: '「能不能推論到知識工作者」和「混淆變數」都在講研究的限制，適合放在同一節。' }, nodes: build('遠距工作對生產力的影響', 64, [
+    ['def', 'root', '生產力怎麼定義', 'i', 'm', 2, 10, 14, 'c', '分成產出量、品質、主觀感受三種'],
+    ['self', 'def', '自評量表可信嗎', 'i', 'm', 4, 5, 14, 'a', '偏差大，要配客觀指標'],
+    ['output', 'def', '用產出量衡量的研究有哪些', 'a', 'a', 6, 2, 14, 'a', '多半是客服與程式碼提交', null, 0],
+    ['lit', 'root', '主要研究', 'i', 'o', 10, 16, 1],
+    ['bloom', 'lit', 'Bloom 2015 客服中心實驗', 'i', 'm', 2, 8, 9, 'c', '生產力 +13%，但升遷變少'],
+    ['promo', 'bloom', '升遷變少的原因', 'i', 'o', 4, 4, 9, 'p', '找能見度相關研究'],
+    ['gen', 'bloom', '能不能推論到知識工作者', 'i', 'm', 6, 5, 9, 'c', '不行，工作性質差太多'],
+    ['ms', 'lit', 'Microsoft 2021 協作網路研究', 'i', 'm', 9, 6, 6, 'c', '跨團隊連結變少、更同步'],
+    ['silo', 'ms', '筒倉效應怎麼量', 'a', 'a', 3, 2, 6, 'a', '用網路的模組度', null, 1],
+    ['pandemic', 'lit', '疫情期間的研究', 'i', 'o', 14, 9, 2],
+    ['confound', 'pandemic', '混淆變數太多', 'i', 'm', 2, 5, 3, 'c', '要排除疫情壓力與托育'],
+    ['meta', 'pandemic', '有沒有統合分析', 'i', 'o', 4, 3, 2, 'p', '找到兩篇，還沒讀'],
+    ['preprint', 'pandemic', '預印本可以引用嗎', 'a', 'a', 6, 2, 2, 'a', '可以，但要註明', null, 2],
+    ['hybrid', 'pandemic', '混合制和全遠距分開看', 'i', 'o', 8, 4, 1],
+    ['method', 'root', '方法論', 'i', 'o', 22, 8, 9],
+    ['causal', 'method', '怎麼判斷因果', 'i', 'o', 3, 6, 9],
+    ['did', 'causal', '差異中的差異法', 'i', 'm', 3, 4, 10, 'a', '要平行趨勢假設'],
+    ['iv', 'causal', '工具變數可行嗎', 'i', 'o', 5, 3, 12],
+    ['qual', 'method', '加入質性研究', 'l', 'o', 7, 4, 7],
+    ['counter', 'root', '反方論點', 'i', 'o', 30, 7, 4],
+    ['lonely', 'counter', '孤獨感與倦怠', 'i', 'm', 2, 5, 4, 'c', '效果在第二年才出現'],
+    ['mgmt', 'counter', '管理者的觀點', 'i', 'o', 4, 3, 4],
+    ['survivor', 'counter', '倖存者偏差', 'a', 'a', 6, 2, 4, 'a', '不適應的人早就離職', null, 7],
+    ['write', 'root', '寫作結構', 'i', 'o', 50, 8, 0],
+    ['outline', 'write', '大綱怎麼排', 'i', 'm', 2, 4, 0, 'd', '定義 → 證據 → 爭議 → 結論'],
+    ['cite', 'write', '引用格式', 'a', 'a', 4, 2, 0, 'a', 'APA 第 7 版', null, 3],
+    ['length', 'write', '3000 字放得下所有產業嗎', 'l', 'd', 6, 3, 0, 'x', '決定只談知識工作者'],
+  ]) },
+  brain: { label: '腦力激盪：咖啡店品牌', goal: '下週一前選出品牌名稱和開幕活動', group: { ids: ['n3', 'n4'], name: '淘汰的名稱', why: '「阿青」和「3 號」都已淘汰，圈起來以後名稱這一支會清爽很多。' }, nodes: build('咖啡店的新品牌', 47, [
+    ['name', 'root', '品牌名稱', 'i', 'o', 2, 10, 1],
+    ['n1', 'name', '用地名：「巷口」', 'l', 'o', 2, 3, 1, 'p', '等查商標'],
+    ['n1a', 'n1', '跟附近店名撞嗎', 'a', 'a', 2, 2, 1, 'a', '隔兩條街有「巷口麵」', null, 1],
+    ['n2', 'name', '用動作：「慢慢來」', 'l', 'o', 4, 5, 0],
+    ['n2a', 'n2', '英文怎麼翻', 'a', 'a', 2, 2, 0, 'a', 'Take Your Time', null, 5],
+    ['n2b', 'n2', '會不會讓人覺得出餐慢', 'i', 'm', 4, 3, 0, 'c', '會，但「來」字有邀請感'],
+    ['n3', 'name', '用人名：「阿青」', 'l', 'd', 6, 2, 3, 'x', '太像小吃店'],
+    ['n4', 'name', '用數字：「3 號」', 'l', 'd', 7, 2, 3, 'x', '商標已被註冊'],
+    ['n5', 'name', '用時間：「午後」', 'l', 'o', 9, 3, 2],
+    ['n5a', 'n5', '那早上要不要開', 'a', 'a', 2, 2, 2, 'a', '要，早餐客最穩', null, 0],
+    ['vis', 'root', '視覺風格', 'i', 'o', 12, 8, 4],
+    ['v1', 'vis', '復古手寫', 'l', 'o', 2, 3, 4],
+    ['v2', 'vis', '極簡北歐', 'l', 'd', 3, 2, 4, 'x', '附近已經三家'],
+    ['v3', 'vis', '台式老店', 'l', 'o', 4, 4, 4],
+    ['v3a', 'v3', '招牌字體', 'i', 'o', 2, 3, 8],
+    ['v3b', 'v3', '老磁磚哪裡找', 'a', 'a', 4, 2, 4, 'a', '鶯歌與拆屋行', null, 2],
+    ['event', 'root', '開幕活動', 'i', 'o', 20, 12, 1],
+    ['e1', 'event', '第一杯免費', 'l', 'd', 2, 2, 3, 'x', '成本太高'],
+    ['e2', 'event', '集點卡', 'l', 'm', 3, 4, 2, 'd', '集 8 點送 1 杯'],
+    ['e2a', 'e2', '紙本還是 LINE', 'i', 'm', 2, 3, 2, 'd', 'LINE 官方帳號'],
+    ['e3', 'event', '跟附近書店合辦', 'l', 'o', 5, 4, 9],
+    ['e3a', 'e3', '書店老闆的意願', 'i', 'o', 2, 3, 9],
+    ['e3b', 'e3', '活動怎麼分潤', 'a', 'a', 3, 2, 9, 'a', '各收各的，互相導客', null, 6],
+    ['e4', 'event', '咖啡拉花教學', 'l', 'o', 7, 3, 1, 'p', '等咖啡師排班'],
+    ['menu', 'root', '招牌飲品', 'i', 'o', 30, 6, 7],
+    ['m1', 'menu', '黑糖拿鐵', 'l', 'm', 2, 3, 7, 'c', '試喝最多人選'],
+    ['m2', 'menu', '桂花冷萃', 'l', 'o', 3, 2, 7],
+    ['m3', 'menu', '季節限定', 'l', 'o', 4, 2, 7],
+  ]) },
+};
+let RAW = RAW_NAS, AI_GROUP = SAMPLES.nas.group, SAMPLE = SAMPLES.nas;
+const SAMPLE_KEYS = { '居家：NAS 備份': 'nas', '學習：Rust 入門': 'learn', '開發管理：App v3 改版': 'dev', '研究：遠距工作與生產力': 'research', '腦力激盪：咖啡店品牌': 'brain' };
+const useSample = key => { SAMPLE = SAMPLES[key] || SAMPLES.nas; RAW = SAMPLE.nodes; AI_GROUP = SAMPLE.group; };
+
+class Component extends DCLogic {
+  pickSample = key => { useSample(key); this.autoCollapsed = false; this.userMoved = false; this.setState({ ds: key, sel: null, multi: [], collapsed: {}, over: {}, removed: {}, groups: {}, dismissed: {}, dialog: null, toast: null, sheet: false }, () => this.fit()); };
+  state = { ds: (useSample(SAMPLE_KEYS[this.props.defaultSample] || 'nas'), SAMPLE_KEYS[this.props.defaultSample] || 'nas'), shape: ({ '心智圖': 'mind', '分層樹': 'logic', '邏輯樹': 'logic', '組織圖': 'org', '時間軸': 'time', '收尾分組': 'group' })[this.props.defaultShape] || 'logic', sel: null, multi: [], collapsed: {}, showAsides: true, filter: 'all', prune: false, query: '', view: { tx: 0, ty: 0, k: 1 }, dialog: null, reason: '', toast: null, over: {}, removed: {}, groups: {}, dismissed: {}, narrow: false, sheet: false };
+  onWheel = e => { e.preventDefault(); this.userMoved = true; const r = this.canvasRef.current.getBoundingClientRect(); this.zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * 0.0015)); };
+  ro = new ResizeObserver(() => {
+    const rw = this.rootRef.current?.getBoundingClientRect().width || 0;
+    if (rw) { const narrow = rw < 768; if (narrow !== this.state.narrow) this.setState({ narrow }); }
+    const c = this.canvasRef.current?.getBoundingClientRect();
+    if (c && c.width) { const wide = c.width >= 760; if (wide !== this.state.canvasWide) this.setState({ canvasWide: wide }); }
+    if (c && c.width > 0 && c.height > 0 && !this.userMoved) this.fitSoon();
+  });
+  canvasRef = Object.assign(el => {
+    const prev = this.canvasRef.current; if (el === prev) return;
+    if (prev) { prev.removeEventListener('wheel', this.onWheel); this.ro.unobserve(prev); }
+    this.canvasRef.current = el;
+    if (el) { el.addEventListener('wheel', this.onWheel, { passive: false }); this.ro.observe(el); }
+  }, { current: null });
+  rootRef = Object.assign(el => {
+    const prev = this.rootRef.current; if (el === prev) return;
+    if (prev) this.ro.unobserve(prev);
+    this.rootRef.current = el; if (el) this.ro.observe(el);
+  }, { current: null });
+  reasonRef = React.createRef();
+
+  userMoved = false;
+  componentDidMount() {
+    if (this.props.startInPrune) this.setState({ prune: true });
+    this.fitSoon();
+  }
+  componentWillUnmount() { this.ro.disconnect(); this.canvasRef.current?.removeEventListener('wheel', this.onWheel); clearTimeout(this.toastT); clearTimeout(this.fitT); }
+  componentDidUpdate() {
+    const s = this.state, ps = this.prevSnap || {}; this.prevSnap = { dialog: s.dialog, prune: s.prune, showAsides: s.showAsides, shape: s.shape };
+    if (ps.shape && ps.shape !== s.shape) this.userMoved = false;
+    if (this.pendingFocus) { const el = document.getElementById('mm-' + this.pendingFocus); this.pendingFocus = null; if (el) { el.focus({ preventScroll: true }); this.ensureVisible(el.dataset.node); } }
+    if (this.state.dialog && !ps.dialog) setTimeout(() => this.reasonRef.current?.focus(), 0);
+    if (ps.shape !== s.shape || ps.prune !== s.prune || ps.showAsides !== s.showAsides) this.fitSoon();
+  }
+  fitSoon() { clearTimeout(this.fitT); this.fitT = setTimeout(() => this.fit(), 0); }
+
+  data(s = this.state) { if (SAMPLE !== SAMPLES[s.ds]) useSample(s.ds); return RAW.filter(n => !s.removed[n.id]).map(n => ({ ...n, ...(s.over[n.id] || {}) })); }
+  kidsOf(all, id, s = this.state) { return all.filter(n => n.parent === id && (s.showAsides || n.kind !== 'aside')); }
+  candidates(all, s = this.state) {
+    const c = {};
+    all.forEach(n => {
+      if (n.kind !== 'aside' && n.status === 'open' && n.idle >= 7 && !s.dismissed[n.id]) c[n.id] = { type: 'stale', text: `${n.idle} 天沒動` };
+      if (n.kind === 'aside' && n.status === 'answered' && n.expires <= 2 && !s.dismissed[n.id]) c[n.id] = { type: 'aside', text: n.expires <= 0 ? '今天會清除' : `${n.expires} 天後清除` };
+    });
+    if (!s.dismissed.aiGroup && AI_GROUP.ids.every(id => all.find(n => n.id === id) && !s.groups[id])) AI_GROUP.ids.forEach(id => { c[id] = { type: 'ai', text: `建議圈成群組「${AI_GROUP.name}」・待確認` }; });
+    return c;
+  }
+  layout(all, s = this.state) { return this.scene(all, s).pos; }
+  scene(all, s = this.state) {
+    const shape = s.shape;
+    const kids = id => s.collapsed[id] ? [] : this.kidsOf(all, id, s);
+    const memo = {};
+    const size = id => memo[id] ?? (memo[id] = (() => { const k = kids(id); return k.length ? k.reduce((a, c) => a + size(c.id), 0) : 1; })());
+    const pos = {}, ticks = [], heads = []; let axis = null;
+    if (shape === 'mind' || shape === 'logic') {
+      const two = shape === 'mind'; const ROW = s.prune ? 128 : 108, COL = 300;
+      const place = (id, depth, side, top) => {
+        const k = kids(id); let y = top; const ys = [];
+        k.forEach(c => { ys.push(place(c.id, depth + 1, side, y)); y += size(c.id) * ROW; });
+        const cy = ys.length ? (ys[0] + ys[ys.length - 1]) / 2 : top;
+        pos[id] = { cx: side * depth * COL, cy, depth, side, dir: 'h' };
+        return cy;
+      };
+      const rk = kids('root'); let L = 0, R = 0; const sideOf = {};
+      rk.forEach(c => { const z = size(c.id); if (!two || R <= L) { sideOf[c.id] = 1; R += z; } else { sideOf[c.id] = -1; L += z; } });
+      [1, -1].forEach(side => { const list = rk.filter(c => sideOf[c.id] === side); const tot = list.reduce((a, c) => a + size(c.id), 0); let y = -(tot - 1) * ROW / 2; list.forEach(c => { place(c.id, 1, side, y); y += size(c.id) * ROW; }); });
+      pos.root = { cx: 0, cy: 0, depth: 0, side: 0, dir: 'h' };
+    } else if (shape === 'org') {
+      const COLW = 248, ROWV = s.prune ? 170 : 150;
+      const place = (id, depth, left) => { const k = kids(id); let x = left; const xs = []; k.forEach(c => { xs.push(place(c.id, depth + 1, x)); x += size(c.id) * COLW; }); const cx = xs.length ? (xs[0] + xs[xs.length - 1]) / 2 : left; pos[id] = { cx, cy: depth * ROWV, depth, side: 0, dir: 'v' }; return cx; };
+      const rc = place('root', 0, 0); Object.values(pos).forEach(p => { p.cx -= rc; });
+    } else if (shape === 'time') {
+      const XSTEP = 140, GAP = s.prune ? 128 : 108, IND = 20;
+      pos.root = { cx: 0, cy: 0, depth: 0, side: 0, dir: 't' };
+      const rk = kids('root').slice().sort((a, b) => a.fork - b.fork); let xEnd = 132;
+      rk.forEach((c, i) => {
+        const side = i % 2 ? 1 : -1; const x = 132 + 60 + 114 + i * XSTEP; let y = side * 124;
+        pos[c.id] = { cx: x, cy: y, depth: 1, side, dir: 't' };
+        ticks.push({ x, side, label: '#' + c.fork });
+        const walk = (id, depth) => kids(id).forEach(k => { y += side * GAP; pos[k.id] = { cx: x + (depth - 1) * IND, cy: y, depth, side, dir: 't' }; walk(k.id, depth + 1); });
+        walk(c.id, 2); xEnd = x + 160;
+      });
+      axis = { x1: 132, x2: xEnd };
+    } else {
+      const order = ['conclusion', 'decision', 'answer', 'pending', 'deadend', 'none'];
+      const label = { none: ['還沒有收尾', IC('circle-dashed'), 'var(--tg-subtle)'] };
+      const ROW = s.prune ? 124 : 100;
+      const items = all.filter(n => n.id !== 'root' && (s.showAsides || n.kind !== 'aside'));
+      let col = 0;
+      order.forEach(key => {
+        const list = items.filter(n => (n.leaf ? n.leaf[0] : 'none') === key); if (!list.length) return;
+        const [name, icon, color] = LEAF[key] || label[key]; const x = col * 256;
+        heads.push({ x, name, icon, color, n: list.length });
+        list.forEach((n, i) => { pos[n.id] = { cx: x, cy: 70 + i * ROW, depth: 1, side: 0, dir: 'none' }; });
+        col++;
+      });
+    }
+    return { pos, ticks, heads, axis };
+  }
+  dims(id) { return id === 'root' ? { w: 264, h: 100 } : { w: 228, h: 88 }; }
+  edgeD(p, pp, cd, pd) {
+    if (p.dir === 'v') { const x1 = pp.cx, y1 = pp.cy + pd.h / 2, x2 = p.cx, y2 = p.cy - cd.h / 2, my = (y1 + y2) / 2; return `M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`; }
+    if (p.dir === 't') { if (p.depth === 1) return `M ${p.cx} 0 L ${p.cx} ${p.cy - p.side * cd.h / 2}`; const pl = pp.cx - pd.w / 2 + 12, py = pp.cy + p.side * pd.h / 2; return `M ${pl} ${py} L ${pl} ${p.cy} L ${p.cx - cd.w / 2} ${p.cy}`; }
+    const sgn = p.side < 0 ? -1 : 1; const x1 = pp.cx + sgn * pd.w / 2, y1 = pp.cy, x2 = p.cx - sgn * cd.w / 2, y2 = p.cy, mx = (x1 + x2) / 2;
+    return `M ${x1} ${y1} C ${mx} ${y1}, ${mx} ${y2}, ${x2} ${y2}`;
+  }
+  bounds() { const sc = this.scene(this.data()); const pos = sc.pos; let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity; Object.entries(pos).forEach(([id, p]) => { const { w, h } = this.dims(id); a = Math.min(a, p.cx - w / 2); c = Math.max(c, p.cx + w / 2); b = Math.min(b, p.cy - h / 2); d = Math.max(d, p.cy + h / 2 + (this.state.prune ? 30 : 0)); }); if (sc.heads.length) b = Math.min(b, -10); if (sc.axis) c = Math.max(c, sc.axis.x2); return { a, b, c, d, pos }; }
+  fit = () => { const el = this.canvasRef.current; if (!el) return; const r = el.getBoundingClientRect(); if (!r.width || !r.height) return; const { a, b, c, d } = this.bounds(); const pad = 40, top = 100; const raw = Math.min(1.1, (r.width - pad * 2) / (c - a), (r.height - top - pad) / (d - b));
+    if (raw < 0.5 && !this.autoCollapsed && this.state.shape !== 'group') { this.autoCollapsed = true; const all = this.data(); const collapsed = {}; this.kidsOf(all, 'root').forEach(n => { if (this.kidsOf(all, n.id).length) collapsed[n.id] = true; }); this.setState({ collapsed }, () => this.fit()); return; }
+    const shape = this.state.shape;
+    if (raw < 0.5) { const k = 0.5, mid = (top + r.height - pad) / 2; const rx = this.bounds().pos.root?.cx ?? 0;
+      const tx = shape === 'time' || shape === 'group' ? pad - a * k : r.width / 2 - rx * k;
+      const ty = shape === 'org' || shape === 'group' ? top - b * k : shape === 'time' ? mid : mid - (b + d) / 2 * k;
+      this.setState({ view: { k, tx, ty } }); return; }
+    const k = raw; this.setState({ view: { k, tx: r.width / 2 - (a + c) / 2 * k, ty: (top + r.height - pad) / 2 - (b + d) / 2 * k } }); };
+  zoomAt(x, y, f) { this.setState(s => { const k = Math.max(0.35, Math.min(1.8, s.view.k * f)); const g = k / s.view.k; return { view: { k, tx: x - (x - s.view.tx) * g, ty: y - (y - s.view.ty) * g } }; }); }
+  zoomBy(f) { this.userMoved = true; const r = this.canvasRef.current.getBoundingClientRect(); this.zoomAt(r.width / 2, r.height / 2, f); }
+  ensureVisible(id) {
+    const p = this.layout(this.data())[id]; if (!p) return; const r = this.canvasRef.current.getBoundingClientRect(); const { k, tx, ty } = this.state.view; const { w, h } = this.dims(id);
+    const sx = p.cx * k + tx, sy = p.cy * k + ty, m = 40;
+    if (sx - w * k / 2 < m || sx + w * k / 2 > r.width - m || sy - h * k / 2 < m || sy + h * k / 2 > r.height - m) this.setState(s => ({ view: { ...s.view, tx: r.width / 2 - p.cx * k, ty: r.height / 2 - p.cy * k } }));
+  }
+
+  uncollapsed(ids, collapsed) { const c = { ...collapsed }; const all = this.data(); ids.forEach(id => { let n = all.find(x => x.id === id); while (n && n.parent) { delete c[n.parent]; n = all.find(x => x.id === n.parent); } }); return c; }
+  select(id, opts = {}) { this.setState(s => ({ sel: id, sheet: s.narrow, collapsed: this.uncollapsed([id], s.collapsed), showAsides: s.showAsides || RAW.find(n => n.id === id)?.kind !== 'aside' ? s.showAsides : true })); if (opts.focus) this.pendingFocus = id; }
+  toggleMulti(id) { if (id === 'root') return; this.setState(s => ({ multi: s.multi.includes(id) ? s.multi.filter(x => x !== id) : [...s.multi, id] })); }
+  snapshot() { const { over, removed, groups, dismissed } = this.state; return { over, removed, groups, dismissed }; }
+  toast(text, undo) { clearTimeout(this.toastT); this.setState({ toast: { text, undo } }); this.toastT = setTimeout(() => this.setState({ toast: null }), 5000); }
+  title(id) { return RAW.find(n => n.id === id)?.title; }
+  askDiscard(ids) { const all = this.data(); ids = ids.filter(id => { const n = all.find(x => x.id === id); return n && n.status === 'open' && n.kind !== 'aside'; }); if (ids.length) this.setState({ dialog: { ids }, reason: '' }); }
+  confirmDiscard = () => { const { ids } = this.state.dialog; const snap = this.snapshot(); const reason = this.state.reason.trim() || '（沒有寫原因）'; this.setState(s => { const over = { ...s.over }; ids.forEach(id => { over[id] = { status: 'discarded', leaf: ['deadend', reason] }; }); return { over, dialog: null, multi: [] }; }); this.toast(ids.length > 1 ? `已不帶回 ${ids.length} 條支線。` : `已不帶回「${this.title(ids[0])}」。`, snap); };
+  merge(id) { const snap = this.snapshot(); this.setState(s => ({ over: { ...s.over, [id]: { status: 'merged', leaf: ['conclusion', '（結論卡審閱後填入）'] } } })); this.toast(`「${this.title(id)}」標成已帶回。實際會先打開結論卡審閱。`, snap); }
+  spinoff(id) { const snap = this.snapshot(); const all = RAW; const sub = [id]; for (let i = 0; i < sub.length; i++) all.filter(n => n.parent === sub[i]).forEach(n => sub.push(n.id)); this.setState(s => { const removed = { ...s.removed }; sub.forEach(x => { removed[x] = true; }); return { removed, sel: null, multi: s.multi.filter(x => !sub.includes(x)) }; }); this.toast(`已獨立 →「${this.title(id)}」（含 ${sub.length - 1} 條子支線）`, snap); }
+  makeGroup(ids, name) { const snap = this.snapshot(); this.setState(s => { const groups = { ...s.groups }; ids.forEach(id => { groups[id] = name; }); return { groups, multi: [] }; }); this.toast(`已建立群組「${name}」，共 ${ids.length} 條。`, snap); }
+  dismiss(key, msg) { const snap = this.snapshot(); this.setState(s => ({ dismissed: { ...s.dismissed, [key]: true } })); this.toast(msg, snap); }
+  enter(id) { this.toast(id === 'root' ? '回到主線。' : `進入「${this.title(id)}」。原型裡停在樹狀圖。`); }
+
+  onKey = e => {
+    if (this.state.dialog) return;
+    const all = this.data(); const pos = this.layout(all); let id = e.target.closest?.('[data-node]')?.dataset.node || this.state.sel || 'root'; if (!pos[id]) id = pos.root ? 'root' : Object.keys(pos)[0]; const p = pos[id]; if (!p) return;
+    const go = t => { if (t) { e.preventDefault(); this.select(t, { focus: true }); } };
+    const DIRS = { ArrowRight: [1, 0], ArrowLeft: [-1, 0], ArrowDown: [0, 1], ArrowUp: [0, -1] };
+    if (DIRS[e.key]) { const [dx, dy] = DIRS[e.key]; let best = null, bs = Infinity; Object.entries(pos).forEach(([k, q]) => { if (k === id) return; const vx = q.cx - p.cx, vy = q.cy - p.cy; const along = vx * dx + vy * dy; if (along <= 1) return; const sc = along + (Math.abs(vx * dy) + Math.abs(vy * dx)) * 2.5; if (sc < bs) { bs = sc; best = k; } }); e.preventDefault(); return go(best); }
+    switch (e.key) {
+      case 'Home': return go(pos.root ? 'root' : Object.keys(pos)[0]);
+      case 'Enter': e.preventDefault(); return this.select(id);
+      case ' ': e.preventDefault(); return this.toggleMulti(id);
+      case 'Delete': case 'Backspace': e.preventDefault(); return this.askDiscard(this.state.multi.length ? this.state.multi : [id]);
+      case '+': case '=': e.preventDefault(); return this.zoomBy(1.2);
+      case '-': e.preventDefault(); return this.zoomBy(1 / 1.2);
+      case '0': e.preventDefault(); return this.fit();
+      case 'Escape': e.preventDefault(); if (this.state.multi.length) return this.setState({ multi: [] }); if (this.state.sheet) return this.setState({ sheet: false }); if (this.state.sel) return this.setState({ sel: null }); if (this.state.prune) return this.setState({ prune: false });
+    }
+  };
+  onDown = e => { if (e.target.closest('[data-node],button')) return; this.drag = { x: e.clientX, y: e.clientY, tx: this.state.view.tx, ty: this.state.view.ty, moved: false }; e.currentTarget.setPointerCapture?.(e.pointerId); this.setState({ dragging: true }); };
+  onMove = e => { const d = this.drag; if (!d) return; const dx = e.clientX - d.x, dy = e.clientY - d.y; if (Math.abs(dx) + Math.abs(dy) > 3) { d.moved = true; this.userMoved = true; } this.setState(s => ({ view: { ...s.view, tx: d.tx + dx, ty: d.ty + dy } })); };
+  onUp = () => { const d = this.drag; this.drag = null; this.setState({ dragging: false }); if (d && !d.moved && this.state.narrow) this.setState({ sheet: false }); };
+
+  renderVals() {
+    const s = this.state; const all = this.data(); const sc = this.scene(all); const pos = sc.pos; const cand = this.candidates(all);
+    const tabId = pos[s.sel] ? s.sel : pos.root ? 'root' : Object.keys(pos)[0];
+    const q = s.query.trim().toLowerCase();
+    const theme = this.props.theme ?? 'light';
+    const matchF = n => s.filter === 'all' || n.kind === 'main' || (s.filter === 'open' ? n.status === 'open' : n.status !== 'open');
+    const byId = Object.fromEntries(all.map(n => [n.id, n]));
+    const hiddenWork = id => { let c = 0; const st = [id]; while (st.length) { const x = st.pop(); all.filter(k => k.parent === x).forEach(k => { if (cand[k.id]) c++; st.push(k.id); }); } return c; };
+    const countDesc = id => { let c = 0; const st = [id]; while (st.length) { const x = st.pop(); this.kidsOf(all, x).forEach(k => { c++; st.push(k.id); }); } return c; };
+    const chipOf = c => c.type === 'stale' ? { line: 'solid', border: 'var(--tg-warning)', bg: 'var(--tg-warning-soft)', color: 'var(--tg-warning)', icon: IC('hourglass') }
+      : c.type === 'aside' ? { line: 'solid', border: 'var(--tg-border-strong)', bg: 'var(--tg-surface-raised)', color: 'var(--tg-muted)', icon: IC('clock') }
+      : { line: 'dashed', border: 'var(--tg-suggestion)', bg: 'var(--tg-suggestion-soft)', color: 'var(--tg-suggestion)', icon: IC('lightbulb') };
+
+    const nodes = Object.keys(pos).map(id => {
+      const n = byId[id]; const p = pos[id]; const { w, h } = this.dims(id); const isRoot = id === 'root';
+      const [stLabel, stColor] = STATUS[n.status]; const isSel = s.sel === id; const isMulti = s.multi.includes(id);
+      const faded = (!isRoot && !matchF(n)) || (q && !n.title.toLowerCase().includes(q) && !isRoot) || (s.prune && !isRoot && !cand[id]);
+      const kc = this.kidsOf(all, id).length; const col = !!s.collapsed[id];
+      const leaf = n.leaf ? LEAF[n.leaf[0]] : null; const c = s.prune && cand[id]; const ch = c ? chipOf(c) : {};
+      const tab = tabId === id ? 0 : -1;
+      const par = n.parent && byId[n.parent];
+      const kp = p.dir === 'v' ? { T: 'auto', B: '-12px', L: '50%', R: 'auto', tf: 'translateX(-50%)' }
+        : p.dir === 't' ? (p.side < 0 ? { T: '-12px', B: 'auto', L: '10px', R: 'auto', tf: 'none' } : { T: 'auto', B: '-12px', L: '10px', R: 'auto', tf: 'none' })
+        : { T: '50%', B: 'auto', L: p.side < 0 ? '-12px' : 'auto', R: p.side < 0 ? 'auto' : '-12px', tf: 'translateY(-50%)' };
+      return {
+        rootMeta: isRoot ? `主線・${n.msgs} 則・你在這裡` : '', goalText: isRoot ? `目標：${SAMPLE.goal}` : '',
+        id, domId: 'mm-' + id, isRoot, notRoot: !isRoot, title: n.title, level: p.depth + 1, isSel, isMulti, tab,
+        ariaExp: kc ? (col ? 'false' : 'true') : null,
+        aria: isRoot ? `主線：${n.title}` : `${KIND[n.kind][0]}・${stLabel}：${n.title}${n.leaf ? `；收尾：${LEAF[n.leaf[0]][0]}，${n.leaf[1]}` : ''}${c ? `；${c.text}` : ''}`,
+        left: p.cx - w / 2, top: p.cy - h / 2, w, h, pad: isRoot ? '12px 14px' : '9px 11px',
+        border: isSel ? '2px solid var(--tg-primary)' : isRoot ? '1.5px solid var(--tg-border-strong)' : `1.5px solid ${n.status === 'discarded' ? 'var(--tg-border-strong)' : stColor}`,
+        bg: isSel || isMulti ? 'var(--tg-primary-soft)' : n.status === 'discarded' ? 'var(--tg-surface-sunken)' : isRoot ? 'var(--tg-surface-raised)' : 'var(--tg-surface)',
+        shadow: isSel ? 'var(--tg-shadow-overlay)' : isRoot ? 'var(--tg-shadow)' : 'none',
+        op: faded ? 0.32 : 1,
+        statusColor: stColor, kindIcon: KIND[n.kind][1], titleColor: n.status === 'discarded' ? 'var(--tg-muted)' : 'var(--tg-foreground-strong)',
+        meta: p.dir === 'none' ? `${stLabel}・來自${par && par.id !== 'root' ? `「${par.title}」` : '主線'}` : `${stLabel}・#${n.fork} 岔出・${n.msgs} 則`,
+        leafIcon: leaf ? leaf[1] : IC('circle-dashed'), leafColor: leaf ? leaf[2] : 'var(--tg-subtle)', leafFg: leaf ? 'var(--tg-foreground)' : 'var(--tg-muted)',
+        leafText: leaf ? `${leaf[0]}：${n.leaf[1]}` : '還沒有收尾',
+        hasGroup: !!s.groups[id], group: s.groups[id],
+        hasKnob: !isRoot && kc > 0 && p.dir !== 'none', knobT: kp.T, knobB: kp.B, knobL: kp.L, knobR: kp.R, knobTf: kp.tf, knobText: col ? (hiddenWork(id) ? `+${countDesc(id)} ●` : `+${countDesc(id)}`) : '−', knobAria: col ? `展開 ${countDesc(id)} 條子支線${hiddenWork(id) ? `，其中 ${hiddenWork(id)} 項待整理` : ''}` : '收起子支線', knobColor: col && hiddenWork(id) ? 'var(--tg-warning)' : 'var(--tg-muted)',
+        onKnob: e => { e.stopPropagation(); this.setState(st => ({ collapsed: { ...st.collapsed, [id]: !st.collapsed[id] } })); },
+        hasChip: !!c, chipText: c?.text, chipLine: ch.line, chipBorder: ch.border, chipBg: ch.bg, chipColor: ch.color, chipIcon: ch.icon,
+        onClick: e => { if (e.shiftKey || e.metaKey || e.ctrlKey) this.toggleMulti(id); else this.select(id); },
+        onFocus: () => { if (s.sel !== id && !this.drag) this.setState({ sel: id }); },
+      };
+    });
+    const edges = Object.keys(pos).filter(id => id !== 'root' && pos[id].dir !== 'none' && pos[byId[id].parent]).map(id => {
+      const n = byId[id]; const p = pos[id], pp = pos[n.parent];
+      const nodeOp = nodes.find(x => x.id === id).op;
+      return { d: this.edgeD(p, pp, this.dims(id), this.dims(n.parent)), fill: 'none', color: n.status === 'discarded' ? 'var(--tg-border-strong)' : STATUS[n.status][1], w: p.depth === 1 ? 2.5 : 1.5, op: nodeOp < 1 ? 0.35 : 0.9 };
+    });
+    if (sc.axis) {
+      edges.unshift({ d: `M ${sc.axis.x1} 0 L ${sc.axis.x2} 0`, fill: 'none', color: 'var(--tg-border-strong)', w: 3, op: 1 });
+      sc.ticks.forEach(t => edges.push({ d: `M ${t.x - 4} 0 a 4 4 0 1 0 8 0 a 4 4 0 1 0 -8 0`, fill: 'var(--tg-surface-raised)', color: 'var(--tg-border-strong)', w: 2, op: 1 }));
+    }
+    const ticks = sc.ticks.map(t => ({ left: t.x - 30, top: t.side < 0 ? 10 : -28, text: t.label }));
+    const heads = sc.heads.map(h => ({ left: h.x - 114, top: -14, name: h.name, icon: h.icon, color: h.color, n: h.n }));
+    const SHAPES = [
+      ['logic', '分層樹', 'list-tree', '由左到右一層層拆解，最接近現在的地圖。（預設・這次交付）', true],
+      ['group', '收尾分組', 'columns-3', '依得出的結果分欄，適合回顧結論、找出死路和待續。（這次交付）', true],
+      ['mind', '心智圖', 'orbit', '從一個主題往兩側發散。（只在原型保留，這次不交付）'],
+      ['org', '組織圖', 'network', '由上而下看層級。（只在原型保留，這次不交付）'],
+      ['time', '時間軸', 'git-commit-horizontal', '依分岔點排在主線上。（只在原型保留，這次不交付）'],
+    ];
+    const shapes = SHAPES.map(([key, label, icon, ship]) => ({ key, label: ship ? label : label + '（原型）', icon: IC(icon), on: s.shape === key, bg: s.shape === key ? 'var(--tg-primary-soft)' : 'transparent', fg: s.shape === key ? 'var(--tg-primary-text)' : 'var(--tg-muted)', pick: () => this.setState({ shape: key }) }));
+    const shapeDesc = SHAPES.find(x => x[0] === s.shape)[3];
+
+    const btn = (label, run, v = 'secondary') => ({ label, run, primary: v === 'primary', secondary: v === 'secondary', danger: v === 'danger' });
+    let d = {};
+    const sn = s.sel && byId[s.sel];
+    if (sn) {
+      const isRoot = sn.id === 'root'; const kids = this.kidsOf(all, sn.id);
+      const leaf = sn.leaf ? LEAF[sn.leaf[0]] : null; const c = cand[sn.id]; const ch = c ? chipOf(c) : {};
+      const acts = [];
+      if (isRoot) { acts.push(btn('回主線', () => this.enter('root'), 'primary')); acts.push(btn('全部展開', () => this.setState({ collapsed: {} }))); }
+      else if (sn.kind === 'aside') { acts.push(btn('看順口問', () => this.enter(sn.id), 'primary')); acts.push(btn('記進紀要', () => this.toast(`已把「${sn.title}」的答案記進紀要的「待確認」。`))); }
+      else if (sn.status === 'open') { acts.push(btn('進入支線', () => this.enter(sn.id), 'primary')); acts.push(btn('結束並帶回', () => this.merge(sn.id))); acts.push(btn('獨立成新對話', () => this.spinoff(sn.id))); acts.push(btn('不帶回…', () => this.askDiscard([sn.id]), 'danger')); }
+      else { acts.push(btn('看支線', () => this.enter(sn.id), 'primary')); acts.push(btn('獨立成新對話', () => this.spinoff(sn.id))); }
+      const parent = sn.parent ? byId[sn.parent] : null;
+      d = {
+        title: sn.title, kindLabel: KIND[sn.kind][0], kindIcon: KIND[sn.kind][1], statusLabel: STATUS[sn.status][0], statusColor: STATUS[sn.status][1],
+        forkText: isRoot ? `目標：${SAMPLE.goal}` : `從${parent.id === 'root' ? '主線' : `「${parent.title}」`} #${sn.fork} 岔出${s.groups[sn.id] ? `・群組「${s.groups[sn.id]}」` : ''}`,
+        hasLeaf: !!leaf, noLeaf: !leaf, leafIcon: leaf?.[1], leafColor: leaf?.[2], leafLabel: leaf?.[0], leafText: sn.leaf?.[1],
+        noLeafText: isRoot ? `底下有 ${all.length - 1} 條支線。` : '這條支線還沒有收尾。結束時寫一句話，樹上就看得到它得出了什麼。',
+        hasChip: !!c, chipText: c?.text, chipLine: ch.line, chipBorder: ch.border, chipBg: ch.bg, chipColor: ch.color, chipIcon: ch.icon,
+        stats: [{ k: '訊息', v: `${sn.msgs} 則` }, { k: 'token', v: sn.tokens }, { k: '最後活動', v: sn.idle === 0 ? '今天' : `${sn.idle} 天前` }],
+        actions: acts,
+        hasKids: kids.length > 0, kidCount: kids.length, kids: kids.map(k => ({ title: k.title, status: STATUS[k.status][0], color: STATUS[k.status][1], go: () => this.select(k.id, { focus: true }) })),
+        collapseLabel: s.collapsed[sn.id] ? '在圖上展開' : '在圖上收起', toggleCollapse: () => this.setState(st => ({ collapsed: { ...st.collapsed, [sn.id]: !st.collapsed[sn.id] } })),
+      };
+    }
+
+    const cIds = Object.keys(cand);
+    const it = (id, meta, acts, type) => { const ch = chipOf({ type }); return { title: byId[id].title, meta, acts, go: () => this.select(id, { focus: true }), line: ch.line, border: type === 'ai' ? 'var(--tg-suggestion)' : 'var(--tg-border)', bg: type === 'ai' ? 'var(--tg-suggestion-soft)' : 'var(--tg-surface)' }; };
+    const stale = cIds.filter(id => cand[id].type === 'stale').map(id => it(id, `${byId[id].msgs} 則・${byId[id].idle} 天沒有動・還沒有收尾`, [btn('繼續', () => this.enter(id), 'primary'), btn('結束並帶回', () => this.merge(id)), btn('不帶回…', () => this.askDiscard([id]), 'danger')], 'stale'));
+    const asides = cIds.filter(id => cand[id].type === 'aside').map(id => it(id, `${cand[id].text}・答案：${byId[id].leaf[1]}`, [btn('記進紀要', () => this.dismiss(id, `已把「${byId[id].title}」的答案記進紀要的「待確認」。`), 'primary'), btn('讓它清除', () => this.dismiss(id, `「${byId[id].title}」會照時間清除。`))], 'aside'));
+    const aiItems = cIds.some(id => cand[id].type === 'ai') ? [{ ...it(AI_GROUP.ids[0], `${AI_GROUP.why}圈成群組「${AI_GROUP.name}」後，下一輪只送一段共同摘要。`, [btn('建立群組', () => this.makeGroup(AI_GROUP.ids, AI_GROUP.name), 'primary'), btn('忽略', () => this.dismiss('aiGroup', '已忽略這個建議。'))], 'ai'), title: `圈成群組「${AI_GROUP.name}」・AI 草稿・待你確認` }] : [];
+    const pruneSections = [
+      stale.length && { title: '開太久的支線', icon: IC('hourglass'), n: stale.length, items: stale },
+      asides.length && { title: '快清除的順口問', icon: IC('clock'), n: asides.length, items: asides },
+      aiItems.length && { title: '建議', icon: IC('inbox'), n: aiItems.length, items: aiItems },
+    ].filter(Boolean);
+    const pruneCount = stale.length + asides.length + aiItems.length;
+
+    const cnt = st => all.filter(n => n.id !== 'root' && n.status === st).length;
+    const overview = [
+      { label: '進行中', color: STATUS.open[1], n: cnt('open'), pick: () => this.setState({ filter: 'open' }) },
+      { label: '已帶回', color: STATUS.merged[1], n: cnt('merged'), pick: () => this.setState({ filter: 'done' }) },
+      { label: '未帶回', color: STATUS.discarded[1], n: cnt('discarded'), pick: () => this.setState({ filter: 'done' }) },
+      { label: '順口問已回答', color: STATUS.answered[1], n: cnt('answered'), pick: () => this.setState({ filter: 'done' }) },
+    ];
+    const legend = [
+      { icon: IC('search'), color: 'var(--tg-muted)', text: '圖示是種類：查證、另一條路、順口問' },
+      { icon: IC('circle'), color: 'var(--tg-branch-open)', text: '邊框與連線顏色是狀態' },
+      { icon: IC('flag'), color: 'var(--tg-leaf-conclusion)', text: '第三行是收尾：它得出了什麼' },
+      { icon: IC('minus'), color: 'var(--tg-muted)', text: '節點外側的「−／+N」收起或展開子樹' },
+      { icon: IC('mouse-pointer-click'), color: 'var(--tg-muted)', text: 'Shift＋點擊多選，可以一次不帶回或建立群組' },
+    ];
+
+    const multiNodes = s.multi.map(id => byId[id]).filter(Boolean);
+    const canDiscard = multiNodes.length > 0 && multiNodes.every(n => n.status === 'open' && n.kind !== 'aside');
+    const canGroup = multiNodes.length >= 2 && multiNodes.every(n => n.status !== 'open' && n.kind !== 'aside');
+    const mode = s.sel ? 'detail' : s.prune ? 'prune' : 'overview';
+    const panelShow = !s.narrow || (s.sheet && (!!s.sel || s.prune));
+    const panelStyle = s.narrow
+      ? { position: 'absolute', left: 0, right: 0, bottom: 0, zIndex: 5, maxHeight: '62%', display: 'flex', flexDirection: 'column', borderRadius: 'var(--tg-radius-lg) var(--tg-radius-lg) 0 0', background: 'var(--tg-surface)', boxShadow: 'var(--tg-shadow-overlay)' }
+      : { width: 360, flex: 'none', display: 'flex', flexDirection: 'column', borderLeft: '1px solid var(--tg-border)', background: 'var(--tg-background)' };
+    const f = (key, label) => ({ label, on: s.filter === key, pick: () => this.setState({ filter: key }), bg: s.filter === key ? 'var(--tg-primary-soft)' : 'transparent', fg: s.filter === key ? 'var(--tg-primary-text)' : 'var(--tg-muted)', fw: s.filter === key ? 500 : 400 });
+    const dlg = s.dialog;
+    return {
+      dsName: byId.root.title, goal: SAMPLE.goal, rootMeta: `主線・${byId.root.msgs} 則・你在這裡`,
+      samples: Object.entries(SAMPLES).map(([key, v]) => ({ key, label: v.label })), dsKey: s.ds, onSample: e => this.pickSample(e.target.value),
+      theme, canvasRef: this.canvasRef, reasonRef: this.reasonRef, rootRef: this.rootRef,
+      countText: `${all.length - 1} 條支線・${cnt('open')} 條進行中`,
+      query: s.query, onQuery: e => this.setState({ query: e.target.value }),
+      filters: [f('all', '全部'), f('open', '進行中'), f('done', '已結束')],
+      showAsides: s.showAsides, asideCount: all.filter(n => n.kind === 'aside').length, asideBg: s.showAsides ? 'var(--tg-accent)' : 'transparent',
+      toggleAsides: () => this.setState(st => ({ showAsides: !st.showAsides })),
+      prune: s.prune, pruneCount, pruneBg: s.prune ? 'var(--tg-primary)' : 'var(--tg-surface)', pruneFg: s.prune ? 'var(--tg-primary-foreground)' : 'var(--tg-foreground)', pruneBorder: s.prune ? 'var(--tg-primary)' : 'var(--tg-border-input)',
+      togglePrune: () => { this.userMoved = false; this.setState(st => ({ prune: !st.prune, sel: null, sheet: !st.prune, showAsides: !st.prune ? true : st.showAsides, collapsed: !st.prune ? this.uncollapsed(Object.keys(this.candidates(this.data(st), st)), st.collapsed) : st.collapsed })); },
+      goBack: () => this.toast('回到對話。'),
+      worldTf: `translate(${s.view.tx}px, ${s.view.ty}px) scale(${s.view.k})`,
+      dotPos: `${s.view.tx}px ${s.view.ty}px`, cursor: s.dragging ? 'grabbing' : 'grab',
+      edges, nodes, ticks, heads, shapes, shapeDesc,
+      onDown: this.onDown, onMove: this.onMove, onUp: this.onUp, onKey: this.onKey,
+      zoomPct: Math.round(s.view.k * 100) + '%', zoomIn: () => this.zoomBy(1.2), zoomOut: () => this.zoomBy(1 / 1.2), fit: () => { this.userMoved = false; this.fit(); },
+      expandAll: () => this.setState({ collapsed: {} }), showKbd: !s.narrow && !!s.canvasWide,
+      hasMulti: s.multi.length > 0, multiCount: s.multi.length, clearMulti: () => this.setState({ multi: [] }),
+      batchDiscard: () => canDiscard && this.askDiscard(s.multi), batchDiscardOff: !canDiscard, batchDiscardOp: canDiscard ? 1 : 0.45, batchDiscardWhy: canDiscard ? '' : '只有進行中的查證、另一條路能不帶回',
+      batchGroup: () => canGroup && this.makeGroup(s.multi, '新群組'), batchGroupOff: !canGroup, batchGroupOp: canGroup ? 1 : 0.45, batchGroupWhy: canGroup ? '' : '至少兩條，而且都要已結束',
+      hasToast: !!s.toast, toastText: s.toast?.text, toastUndo: !!s.toast?.undo, undo: () => { const u = s.toast.undo; clearTimeout(this.toastT); this.setState({ ...u, toast: null }); },
+      isNarrow: s.narrow, panelShow, panelStyle, panelLabel: mode === 'detail' ? '節點詳情' : mode === 'prune' ? '整理清單' : '總覽',
+      showScrim: s.narrow && panelShow,
+      closeSheet: () => this.setState({ sheet: false, sel: s.narrow ? null : s.sel }),
+      modeDetail: mode === 'detail', modePrune: mode === 'prune', modeOverview: mode === 'overview',
+      d, closeDetail: () => { this.pendingFocus = s.sel; this.setState({ sel: null, sheet: s.narrow && s.prune }); },
+      pruneSections, pruneEmpty: pruneCount === 0, pruneLeft: pruneCount ? `剩 ${pruneCount} 項` : '都處理完了',
+      overview, legend,
+      hasDialog: !!dlg, dlgTitle: dlg ? (dlg.ids.length > 1 ? `結束 ${dlg.ids.length} 條支線，不帶回` : `結束「${byId[dlg.ids[0]]?.title}」，不帶回`) : '',
+      dlgItems: dlg && dlg.ids.length > 1 ? dlg.ids.map(id => byId[id]?.title) : [],
+      dlgExtra: dlg ? (() => { const open = dlg.ids.flatMap(id => all.filter(n => n.parent === id && n.status === 'open')).length; return open ? `底下 ${open} 條進行中的子支線維持原狀。` : ''; })() : '',
+      reason: s.reason, onReason: e => this.setState({ reason: e.target.value }),
+      closeDialog: () => this.setState({ dialog: null }), confirmDiscard: this.confirmDiscard,
+    };
+  }
+}
+</script>
+</body>
+</html>

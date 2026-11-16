@@ -1,0 +1,25 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/seeds",
+  "request": {
+    "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+    "text": "Is a rail pass worth it?"
+  },
+  "response": {
+    "seed": {
+      "anchorLineId": "00000000-0000-4000-8000-000000000001",
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "expandedLineId": "",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "noteId": "",
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "sourceLabel": "主線 #2",
+      "status": "open",
+      "text": "Is a rail pass worth it?",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 201
+}

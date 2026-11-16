@@ -1,0 +1,4007 @@
+package domain // import "github.com/Rynvex/tangent/domain"
+
+Package domain holds the pure types and logic of tangent's tree-structured
+conversations: lines and messages, branches and their background packs,
+conclusion cards, notes, chapters, rolling summaries and the turn prompt.
+
+Nothing here does IO. The package imports only the standard library and
+github.com/google/uuid, so the store, the engine and any host can share it.
+Most of it was ported from 宿主 (internal/service, Step 7/8); see
+docs/devlog/S1-domain.md for what changed on the way.
+
+CONSTANTS
+
+const (
+	AttachStatusOpen   = BranchStatusOpen
+	AttachStatusMerged = BranchStatusMerged
+)
+    Statuses an attached branch can start in.
+
+const (
+	BranchKindAside       = "aside"
+	BranchKindInvestigate = "investigate"
+	BranchKindAlternative = "alternative"
+)
+    Branch kinds (how heavy the side line is).
+
+const (
+	BranchStatusOpen      = "open"
+	BranchStatusMerged    = "merged"
+	BranchStatusDiscarded = "discarded"
+	BranchStatusPromoted  = "promoted"
+)
+    Branch statuses. open → merged | discarded | promoted, one way and final.
+
+const (
+	BranchOriginSelection = "selection"
+	BranchOriginButton    = "button"
+	// BranchOriginSuggestion: opened from an assistant's suggestion.
+	BranchOriginSuggestion = "suggestion"
+	// BranchOriginMove marks a branch opened by moving the tail of a line.
+	BranchOriginMove = "move"
+	// BranchOriginPreviousMainLine marks the ended branch that holds the old
+	// main line's tail after a promotion.
+	BranchOriginPreviousMainLine = "previous_main_line"
+	// BranchOriginMerge marks a branch that combines several (group).
+	BranchOriginMerge = "merge"
+	// BranchOriginDiverge marks one of the sibling directions a diverge
+	// opened (diverge).
+	BranchOriginDiverge = "diverge"
+	// BranchOriginImport marks a branch an import wrote (B18).
+	BranchOriginImport = "import"
+)
+    Branch origins (which entry point opened the branch).
+
+const (
+	// BranchCardFieldMaxRunes caps every free-text field of a card.
+	BranchCardFieldMaxRunes = 2000
+	// BranchCardTotalMaxRunes caps all text of one card together.
+	BranchCardTotalMaxRunes = 12000
+	// BranchCardMaxEvidence caps the evidence pointers.
+	BranchCardMaxEvidence = 12
+	// BranchCardMaxOpenItems caps the "still unresolved" list.
+	BranchCardMaxOpenItems = 10
+	// BranchCardMaxNeedsDecision caps the "needs your decision" list.
+	BranchCardMaxNeedsDecision = 8
+	// BranchCardMaxExcerpts caps the attached verbatim excerpts.
+	BranchCardMaxExcerpts = 3
+	// BranchCardExcerptMaxRunes caps one excerpt.
+	BranchCardExcerptMaxRunes = 1500
+	// BranchCardMaxReferences is the most messages one card may make the store
+	// look up: every evidence, excerpt and decision pointer, ids counted once.
+	BranchCardMaxReferences = BranchCardMaxEvidence + BranchCardMaxExcerpts + BranchCardMaxNeedsDecision
+	// BranchCardIDMaxRunes caps a message id (a canonical UUID is 36).
+	BranchCardIDMaxRunes = 64
+	// BranchCardRequestMaxBytes bounds a merge request: the card's total text
+	// at its widest JSON escaping, plus its ids.
+	BranchCardRequestMaxBytes = 256 << 10
+	// BranchConclusionLineMaxRunes caps the one-line conclusion kept on the branch.
+	BranchConclusionLineMaxRunes = 160
+	// BranchDraftParentSinceMessages is how many main-line messages after the
+	// fork the draft sees.
+	BranchDraftParentSinceMessages = 30
+	// BranchDraftInputTokenBudget bounds the draft prompt (EstimatePackTokens).
+	BranchDraftInputTokenBudget = 24000
+	// BranchDraftOutputMaxBytes bounds the model output that is parsed.
+	BranchDraftOutputMaxBytes = 64 * 1024
+)
+    Limits of the conclusion card and its draft. They define the card format
+    (what a stored card may hold), so they are constants, not Limits.
+
+const (
+	BranchDraftNone     = "none"
+	BranchDraftDrafting = "drafting"
+	BranchDraftReady    = "ready"
+	BranchDraftFailed   = "failed"
+)
+    Draft states of a branch: none → drafting → ready | failed.
+
+const (
+	// DraftRunFailedText: the runner reported an error.
+	DraftRunFailedText = "the drafting run failed"
+	// DraftUnusableText: the output could not be parsed or nothing usable was left.
+	DraftUnusableText = "the drafting run did not return a usable card"
+	// DraftTimeoutText: the draft stayed "drafting" past its timeout.
+	DraftTimeoutText = "the draft took too long"
+)
+    Fixed reasons stored with a failed draft. The model's raw output is never
+    stored.
+
+const (
+	// BranchSuggestMax is how many suggestions one reply keeps.
+	BranchSuggestMax = 3
+)
+const (
+	ChapterKindStart     = "start"
+	ChapterKindIdle      = "idle"
+	ChapterKindTopic     = "topic"
+	ChapterKindMilestone = "milestone"
+)
+    Cut kinds, in priority order (a higher one wins when cuts sit close
+    together).
+
+const (
+	ChapterTitleMilestone = "milestone"
+	ChapterTitleTopic     = "topic"
+	ChapterTitleTime      = "time"
+)
+    Where a chapter title came from.
+
+const (
+	ComparisonDrafting = "drafting"
+	ComparisonReady    = "ready"
+	ComparisonFailed   = "failed"
+	ComparisonDecided  = "decided"
+)
+    Comparison statuses: drafting while the converge job runs, ready with a
+    matrix, failed when the job failed, decided once a branch was chosen.
+
+const (
+	// DecomposeMaxMessages caps the messages read (the oldest of the line).
+	DecomposeMaxMessages = 2000
+	// DecomposeMaxTags, DecomposeMaxCuts, DecomposeMaxDetours,
+	// DecomposeMaxSeeds and DecomposeMaxRelated cap each list.
+	DecomposeMaxTags    = 5
+	DecomposeMaxCuts    = 8
+	DecomposeMaxDetours = 8
+	DecomposeMaxSeeds   = 8
+	DecomposeMaxRelated = 5
+	// DecomposeTimeGap is the pause before an operator message that
+	// suggests a chapter cut.
+	DecomposeTimeGap = 30 * time.Minute
+)
+    Bounds of a decompose plan.
+
+const (
+	DecomposeReasonTopicShift = "topic_shift"
+	DecomposeReasonTimeGap    = "time_gap"
+)
+    Reasons of a suggested chapter cut.
+
+const (
+	DecomposeSeedQuestion = "question"
+	DecomposeSeedOpenItem = "open_item"
+)
+    Reasons of a seed candidate.
+
+const (
+	// Opening branches.
+	CodeDepthSoftLimit     = "depth_soft_limit"
+	CodeDepthHardLimit     = "depth_hard_limit"
+	CodeBranchLimit        = "branch_limit"
+	CodeTreeLimit          = "tree_limit"
+	CodeParentClosed       = "parent_closed"
+	CodeAnchorNotFound     = "anchor_not_found"
+	CodeKindUnsupported    = "kind_unsupported"
+	CodeSuggestionNotFound = "suggestion_not_found"
+	// Turns and the state of a branch.
+	CodeBranchClosed   = "branch_closed"
+	CodeArchived       = "archived"
+	CodeAsideAnswered  = "aside_answered"
+	CodeBranchBusy     = "branch_busy"
+	CodeBranchDrafting = "branch_drafting"
+	// Drafting and merging.
+	CodeNoMessages       = "no_messages"
+	CodeDraftNotPending  = "draft_not_pending"
+	CodeParentBusy       = "parent_busy"
+	CodeParentMoved      = "parent_moved"
+	CodeInvalidCard      = "invalid_card"
+	CodeInvalidParentTip = "invalid_parent_tip"
+	// Moving, promoting and deleting.
+	CodeInvalidCount          = "invalid_count"
+	CodeNotEnoughMessages     = "not_enough_messages"
+	CodeMoveMustStartWithUser = "move_must_start_with_user"
+	CodeMoveProtected         = "move_protected_message"
+	CodeMoveNoAnchor          = "move_no_anchor"
+	CodeSourceBusy            = "source_busy"
+	CodePromoteNotTopLevel    = "promote_not_top_level"
+	CodeOpenBranchesOnOldTail = "open_branches_on_old_tail"
+	CodeSessionBusy           = "session_busy"
+	CodeNotMainLine           = "branch_not_main_line"
+	// Notes.
+	CodeNoteNotFound       = "note_not_found"
+	CodeNoteSuperseded     = "note_superseded"
+	CodeNoteLimit          = "note_limit"
+	CodeInvalidNote        = "invalid_note"
+	CodeNoteSourceNotFound = "note_source_not_found"
+	// Chapters.
+	CodeMilestoneNotFound = "milestone_not_found"
+	CodeMilestoneExists   = "milestone_exists"
+	CodeMilestoneLimit    = "milestone_limit"
+	CodeMessageNotFound   = "message_not_found"
+	CodeInvalidMilestone  = "invalid_milestone"
+	// Codes tangent adds where 宿主 answered without a code.
+	CodeTurnPending       = "turn_pending"
+	CodeTurnNotPending    = "turn_not_pending"
+	CodeInvalidTransition = "invalid_transition"
+	CodeLineNotFound      = "line_not_found"
+	CodeBranchNotFound    = "branch_not_found"
+	CodeInvalidInput      = "invalid_input"
+	CodeJobNotFound       = "job_not_found"
+	CodeJobNotPending     = "job_not_pending"
+	CodeConcurrentChange  = "concurrent_change"
+	CodeIDUnavailable     = "id_unavailable"
+	CodeFeatureDisabled   = "feature_disabled"
+	CodeTooLong           = "too_long"
+	CodeModelNotAllowed   = "model_not_allowed"
+	CodeNothingToRetry    = "nothing_to_retry"
+	// P1 (B8): the leaf, the parked seeds and the suggestion inbox.
+	CodeInvalidLeaf       = "invalid_leaf"
+	CodeLeafNotFound      = "leaf_not_found"
+	CodeSeedNotFound      = "seed_not_found"
+	CodeSeedNotOpen       = "seed_not_open"
+	CodeSeedLimit         = "seed_limit"
+	CodeSuggestionNotOpen = "suggestion_not_open"
+	// P2 (B9): goals and relations.
+	CodeGoalNotFound     = "goal_not_found"
+	CodeRelationNotFound = "relation_not_found"
+	CodeRelationLimit    = "relation_limit"
+	CodeRelationExists   = "relation_exists"
+	// P2 (B9 part C): groups.
+	CodeGroupNotFound  = "group_not_found"
+	CodeGroupNotActive = "group_not_active"
+	CodeInvalidGroup   = "invalid_group"
+	CodeGroupLimit     = "group_limit"
+	// P3 (B10 part A): folds.
+	CodeFoldNotFound = "fold_not_found"
+	CodeFoldOverlap  = "fold_overlap"
+	CodeFoldLimit    = "fold_limit"
+	CodeInvalidFold  = "invalid_fold"
+	// P3 (B10 part B): comparisons.
+	CodeComparisonNotFound = "comparison_not_found"
+	CodeComparisonNotReady = "comparison_not_ready"
+	CodeComparisonDecided  = "comparison_decided"
+	CodeInvalidComparison  = "invalid_comparison"
+	// P3 (B10 part C): memories.
+	CodeMemoryNotFound   = "memory_not_found"
+	CodeMemorySuperseded = "memory_superseded"
+	CodeInvalidMemory    = "invalid_memory"
+	// B13: memos (not sent to the AI).
+	CodeMemoNotFound = "memo_not_found"
+	CodeMemoLimit    = "memo_limit"
+	// CodeEmbedderUnavailable: the host's Embedder failed (the cause is
+	// only logged); a write or search that needs a vector can be retried.
+	CodeEmbedderUnavailable = "embedder_unavailable"
+)
+    Error codes. Every code that 宿主 already sent keeps its string.
+
+const (
+	FisheyeFull     = "full"
+	FisheyeSummary  = "summary"
+	FisheyeLeafOnly = "leaf_only"
+	FisheyeHidden   = "hidden"
+)
+    Fisheye levels.
+
+const (
+	FisheyeItemMessage = "message"
+	FisheyeItemBranch  = "branch"
+	// FisheyeItemGroup is a group whose summary stands for its members.
+	FisheyeItemGroup = "group"
+	// FisheyeItemFold is a fold's summary standing for its messages.
+	FisheyeItemFold = "fold"
+)
+    Fisheye item kinds.
+
+const (
+
+	// FisheyeDecisionBonus is the head start of a message with a confirmed
+	// decision tag (ibis): like a reference from a note or a card.
+	FisheyeDecisionBonus = 4
+)
+    Head starts of a message.
+
+const (
+	FoldDrafting = "drafting"
+	FoldActive   = "active"
+	FoldFailed   = "failed"
+	FoldRemoved  = "removed"
+)
+    Fold statuses: drafting while a job writes the summary, active once it has
+    one (only active folds apply), failed when the draft failed, removed once
+    the operator took it back.
+
+const (
+	GoalSourceManual = "manual"
+	GoalSourceAI     = "ai"
+)
+    Goal sources.
+
+const (
+	GroupActive    = "active"
+	GroupDissolved = "dissolved"
+
+	GroupSummaryNone     = "none"
+	GroupSummaryDrafting = "drafting"
+	GroupSummaryReady    = "ready"
+	GroupSummaryFailed   = "failed"
+)
+    Group statuses and summary statuses.
+
+const (
+	ChoiceAdoptBranch = "adoptBranch"
+	ChoiceAdoptOther  = "adoptOther"
+	ChoiceKeepBoth    = "keepBoth"
+)
+    Conflict choices.
+
+const (
+	GroupSummaryMarker = "[GROUP-SUMMARY]"
+	GroupSuggestMarker = "[GROUP-SUGGEST]"
+)
+    Markers of the group jobs' replies.
+
+const (
+	TagQuestion = "question"
+	TagIdea     = "idea"
+	TagPro      = "pro"
+	TagCon      = "con"
+	TagDecision = "decision"
+)
+    Tag kinds.
+
+const (
+	TagSourceAI   = "ai"
+	TagSourceUser = "user"
+)
+    Who wrote a tag.
+
+const (
+	TagStatusDraft     = "draft"
+	TagStatusConfirmed = "confirmed"
+)
+    Tag statuses: a model's tag waits for the operator (draft) in Suggest and is
+    confirmed in Auto; the operator's are always confirmed.
+
+const (
+	// ImportMaxMessages caps the main line's messages.
+	ImportMaxMessages = 2000
+	// ImportMaxBranches caps the branches (all hang on the main line).
+	ImportMaxBranches = 50
+	// ImportMaxBranchMessages caps the messages of one branch.
+	ImportMaxBranchMessages = 500
+	// ImportTitleRunes caps a title or purpose taken from a message.
+	ImportTitleRunes = 60
+	// ImportSourceMaxRunes caps the source label.
+	ImportSourceMaxRunes = 40
+)
+    Limits of an import.
+
+const (
+	ImportDefaultBranchKind   = BranchKindAlternative
+	ImportDefaultBranchStatus = BranchStatusDiscarded
+)
+    Defaults of an imported branch: an earlier attempt that was left behind.
+
+const (
+	// ImportAnalyzeMaxUnits caps the units (rounds or sessions) analyzed in one call.
+	ImportAnalyzeMaxUnits = 200
+	// ImportAnalyzeTextRunes caps each unit's question or answer excerpt sent to the analyzer.
+	ImportAnalyzeTextRunes = 300
+	// ImportAnalyzeKeyRunes caps a unit's key.
+	ImportAnalyzeKeyRunes = 200
+	// ImportAnalyzeTitleRunes caps a unit's and the input's title.
+	ImportAnalyzeTitleRunes = 200
+	// ImportAnalyzeNodeTitleRunes caps a node's synthesized title.
+	ImportAnalyzeNodeTitleRunes = 60
+	// ImportAnalyzeConclusionRunes caps a node's drafted conclusion.
+	ImportAnalyzeConclusionRunes = 300
+	// ImportAnalyzeReasonRunes caps a node's reason.
+	ImportAnalyzeReasonRunes = 200
+	// ImportAnalyzeSummaryRunes caps the plan's summary.
+	ImportAnalyzeSummaryRunes = 300
+	// ImportAnalyzeMaxUnitMessages caps the message count one unit may claim.
+	ImportAnalyzeMaxUnitMessages = 100000
+)
+const (
+	ImportRoleChapter      = "chapter"
+	ImportRoleMergedBranch = "merged_branch"
+	ImportRoleOpenBranch   = "open_branch"
+	ImportRoleStandalone   = "standalone"
+
+	ImportModeTree     = "tree"
+	ImportModeTimeline = "timeline"
+	ImportModeBatch    = "batch"
+
+	// ImportAnalyzeSourceModel and ImportAnalyzeSourceHeuristic say who made a plan.
+	ImportAnalyzeSourceModel     = "model"
+	ImportAnalyzeSourceHeuristic = "heuristic"
+)
+    Roles of a node and modes of a plan.
+
+const (
+	// ImportMaxChapterCuts caps the chapter cuts of an import (also capped by
+	// ChapterLimits.MilestoneMaxPerTree).
+	ImportMaxChapterCuts = 50
+	// ImportFutureSlack is how far past now a date may be (clock skew
+	// between the source and this server).
+	ImportFutureSlack = 24 * time.Hour
+)
+    Limits of an assembled import.
+
+const (
+	JobRunFailedText = "the job run failed"
+	JobUnusableText  = "the job run did not return a usable answer"
+)
+    Fixed failure texts of a feature's background job (never the model's
+    output), and the code a client sees for each in job.failed.
+
+const (
+	JobErrorRunFailed = "run_failed"
+	JobErrorUnusable  = "unusable"
+	JobErrorTimedOut  = "timed_out"
+	JobErrorFailed    = "failed"
+)
+    Codes of a failed job (JobError.Code); the leaf draft uses the same.
+
+const (
+	LeafKindConclusion = "conclusion"
+	LeafKindDecision   = "decision"
+	LeafKindAnswer     = "answer"
+	LeafKindDeadEnd    = "dead_end"
+	LeafKindToContinue = "to_continue"
+)
+    Leaf kinds.
+
+const (
+	LeafStatusDraft     = "draft"
+	LeafStatusConfirmed = "confirmed"
+)
+    Leaf statuses: an AI draft waits for the operator; a confirmed leaf was
+    written or accepted by the operator (or comes from a conclusion card,
+    or an auto-mode draft, which is marked aiDrafted).
+
+const (
+	LeafDraftRunFailedText = "the leaf draft run failed"
+	LeafDraftUnusableText  = "the leaf draft run did not return a usable leaf"
+	// JobTimedOutText is what a job that stayed pending too long ends with.
+	JobTimedOutText = "the job timed out"
+)
+    Fixed failure texts of a leaf_draft job (never the model's output).
+
+const (
+	LeafDraftErrorRunFailed = "run_failed"
+	LeafDraftErrorUnusable  = "unusable"
+	LeafDraftErrorTimedOut  = "timed_out"
+	LeafDraftErrorFailed    = "failed"
+)
+    Codes of a failed leaf draft (LeafDraftError.Code).
+
+const (
+	LineStatusIdle     = "idle"
+	LineStatusThinking = "thinking"
+	LineStatusError    = "error"
+)
+    Line statuses.
+
+const (
+	RoleUser      = "user"
+	RoleAssistant = "assistant"
+	RoleSystem    = "system"
+)
+    Message roles.
+
+const (
+	MessagePending = "pending"
+	MessageDone    = "done"
+	MessageError   = "error"
+)
+    Message statuses.
+
+const (
+	// MessageKindChat is an ordinary operator, assistant or system message.
+	MessageKindChat = "chat"
+	// MessageKindBranchCard is the system message a merged branch leaves in its parent.
+	MessageKindBranchCard = "branch_card"
+	// MessageKindBranchMarker is the system message a move leaves where the
+	// moved messages were.
+	MessageKindBranchMarker = "branch_marker"
+)
+    Message kinds.
+
+const (
+	DeltaText      = "text"
+	DeltaReasoning = "reasoning"
+	DeltaTool      = "tool"
+)
+    Delta kinds of a streamed turn.
+
+const (
+	// FolderMaxRunes caps a folder name.
+	FolderMaxRunes = 40
+	// TagsMax caps the tags of one main line.
+	TagsMax = 12
+	// TagMaxRunes caps one tag.
+	TagMaxRunes = 24
+	// FolderUnfiled is the GET /lines filter value for main lines without a
+	// folder; it cannot be a folder's name.
+	FolderUnfiled = "__unfiled__"
+)
+    Limits of folders and tags.
+
+const (
+	MemoryFact       = "fact"
+	MemoryDecision   = "decision"
+	MemoryPreference = "preference"
+	MemoryLesson     = "lesson"
+)
+    Memory kinds.
+
+const (
+	MemoryActive     = "active"
+	MemorySuperseded = "superseded"
+)
+    Memory statuses: active, or superseded by another (one way).
+
+const (
+	MemoryExtractMarker     = "[MEMORY-EXTRACT]"
+	MemoryConsolidateMarker = "[MEMORY-CONSOLIDATE]"
+)
+    Markers of the memory jobs' replies.
+
+const (
+	MemorySourceCard = "card"
+	MemorySourceLeaf = "leaf"
+	MemorySourceNote = "note"
+)
+    Kinds of what a memory is extracted from.
+
+const (
+	// Note sections, in the order the prompt lists them.
+	NoteSectionDecided   = "decided"
+	NoteSectionFact      = "fact"
+	NoteSectionTodo      = "todo"
+	NoteSectionToConfirm = "to_confirm"
+
+	// Note statuses. A superseded note is kept and points at its successor.
+	NoteStatusActive     = "active"
+	NoteStatusDone       = "done"
+	NoteStatusSuperseded = "superseded"
+
+	// Operations of a note change carried by a merge request.
+	NoteOpAdd       = "add"
+	NoteOpSupersede = "supersede"
+)
+const (
+	SectionBranchCards  = "branch_cards"
+	SectionInstructions = "instructions"
+	SectionRules        = "rules"
+	// SectionGoal is the conversation's goal (the goal feature), right
+	// after the rules.
+	SectionGoal       = "goal"
+	SectionNotes      = "notes"
+	SectionBranchPack = "branch_pack"
+	// SectionOriginCapsule is a spun-off main line's capsule.
+	SectionOriginCapsule = "origin_capsule"
+	// SectionBranchConclusions is the fisheye's "other branches'
+	// conclusions" block (it changes as branches end, so the engine puts
+	// it among the trailing sections).
+	SectionBranchConclusions = "branch_conclusions"
+)
+    Keys of the built-in prompt sections.
+
+const (
+	ChatRoleUser      = "user"
+	ChatRoleAssistant = "assistant"
+	ChatRoleSystem    = "system"
+)
+    ChatMessage roles of Prompt.History. A system entry (a delivered card,
+    a move marker, a notice) is sent to chat APIs as a user message.
+
+const (
+	// RebalanceReasonShare: enough turns since the fork and at least
+	// ShareFactor times the parent's since then.
+	RebalanceReasonShare = "share"
+	// RebalanceReasonRecent: the conversation's last RecentTurns turns all
+	// happened in this branch.
+	RebalanceReasonRecent = "recent"
+)
+    Reasons a branch is due.
+
+const (
+	RelationKindRelated     = "related"
+	RelationKindSupports    = "supports"
+	RelationKindContradicts = "contradicts"
+	RelationKindDependsOn   = "depends_on"
+)
+    A relation's kind (B15): what the line between the two places says.
+
+const (
+	// SummaryMarker prefixes the JSON digest in a summary reply.
+	SummaryMarker = "[SESSION-SUMMARY]"
+	// BranchCardMarker prefixes the card JSON in a draft reply.
+	BranchCardMarker = "[BRANCH-CARD]"
+	// BranchSuggestMarker starts a suggestion line in an assistant reply.
+	BranchSuggestMarker = "[BRANCH-SUGGEST]"
+)
+    Markers the library parses out of model output.
+
+const (
+	SearchKindTitle   = "title"
+	SearchKindPurpose = "purpose"
+	SearchKindMessage = "message"
+)
+    Kinds of search hit.
+
+const (
+	SearchQueryMinRunes = 2
+	SearchQueryMaxRunes = 200
+	SearchDefaultLimit  = 20
+	SearchMaxLimit      = 50
+	// SearchSnippetRunes is how much text a hit shows around its match.
+	SearchSnippetRunes = 120
+)
+    Bounds of a search request.
+
+const (
+	SeedStatusOpen     = "open"
+	SeedStatusExpanded = "expanded"
+	SeedStatusNoted    = "noted"
+	SeedStatusDropped  = "dropped"
+)
+    Seed statuses: open → expanded | noted | dropped, one way.
+
+const (
+	SpinoffDetach = "detach"
+	SpinoffFresh  = "fresh"
+)
+    Spinoff modes.
+
+const (
+	LinkKindSpinoff  = "spinoff"
+	LinkKindRelation = "relation"
+)
+    Link kinds (relations come with B9).
+
+const (
+	SuggestionOpen      = "open"
+	SuggestionAccepted  = "accepted"
+	SuggestionDismissed = "dismissed"
+	SuggestionExpired   = "expired"
+)
+    Suggestion statuses: open → accepted | dismissed | expired, one way.
+
+const (
+	// TopicMarker starts the topic summary line of a line's first reply.
+	TopicMarker = "[TOPIC]"
+	// ChapterCutMarker starts the line that opens a new main-line chapter.
+	ChapterCutMarker = "[CHAPTER]"
+)
+const (
+	// TopicSummaryMaxRunes caps a topic summary title.
+	TopicSummaryMaxRunes = 36
+
+	// ChapterCutMinMessages is how many finished messages (cards not
+	// counted) the current chapter needs before the model may cut a new one.
+	ChapterCutMinMessages = 4
+)
+const BranchOriginSeed = "seed"
+    BranchOriginSeed marks a branch opened by expanding a seed.
+
+const BranchPreviousMainLinePurpose = "Previous main line"
+    BranchPreviousMainLinePurpose is the title of the branch that holds the old
+    main line's tail after a promotion; clients should label it from the origin,
+    not from this text.
+
+const BranchSuggestRules = "- Only when a clearly separate question would pull this conversation off its topic, you may end the reply with at most " +
+	"3 lines like " + BranchSuggestMarker + `{"purpose":"one short sentence","kind":"investigate"}` +
+	" (kind is investigate or alternative; an optional excerpt quotes the part of your reply it comes from). " +
+	"This only offers a side line to the operator, it opens nothing; do not suggest on every reply.\n"
+    BranchSuggestRules is the sentence block that tells a model when it may
+    suggest a side line.
+
+const ChapterCutRule = "- Only when the operator's new message clearly shifts the main conversation to a new sub-topic or stage, end your reply with one line " +
+	ChapterCutMarker + `{"title":"short stage title (4-15 chars in the operator's language)"}` + ". Do not output it if the topic continues.\n"
+    ChapterCutRule allows the [CHAPTER] line.
+
+const ConvergeMarker = "[CONVERGE]"
+    ConvergeMarker prefixes the JSON of a converge job's reply.
+
+const DivergeMarker = "[DIVERGE]"
+    DivergeMarker prefixes the JSON of a diverge job's reply.
+
+const DriftCheckMarker = "[DRIFT-CHECK]"
+    DriftCheckMarker prefixes the JSON of a drift_check job's reply.
+
+const FisheyeGroupKind = "group"
+    FisheyeGroupKind is the LeafKind of a FisheyeBranch that is a group (its
+    LineID is the group's id, its Line the group's summary).
+
+const FoldSummaryMarker = "[FOLD-SUMMARY]"
+    FoldSummaryMarker prefixes the JSON of a fold_summary or fold_suggest job's
+    reply.
+
+const GoalProposeMarker = "[GOAL-PROPOSE]"
+    GoalProposeMarker prefixes the JSON of a goal_propose job's reply.
+
+const IbisTagMarker = "[IBIS-TAG]"
+    IbisTagMarker prefixes the JSON of an ibis_tag job's reply.
+
+const LeafDraftMarker = "[LEAF-DRAFT]"
+    LeafDraftMarker prefixes the leaf JSON in a leaf_draft job's reply.
+
+const MessageKindFold = "fold"
+    MessageKindFold is the kind of the history entry a fold stands as in a
+    prompt; it is never stored.
+
+const NotesEmptyNotice = "The conversation notes are now empty.\n\n"
+    NotesEmptyNotice is what a resumed prompt says when the notes were cleared.
+
+const RelationSuggestMarker = "[RELATION-SUGGEST]"
+    RelationSuggestMarker prefixes the JSON of a relation_suggest job's reply.
+
+const SectionMemory = "memory"
+    SectionMemory is the recalled memories' prompt block (it changes with every
+    operator message, so the engine puts it among the trailing ones).
+
+const SectionReplyLines = "reply_lines"
+    SectionReplyLines is the prompt section that carries the [TOPIC] and
+    [CHAPTER] rules. It changes from turn to turn, so it sits among the trailing
+    (uncached) sections, and a resumed session gets it too.
+
+const SeedBatchMax = 20
+    SeedBatchMax caps the thoughts one batch parks (an outline or a to-do list
+    turned into seeds, B14).
+
+const TagDraftContentRunes = 200
+    TagDraftContentRunes caps the content snippet of a listed tag draft (cut
+    with CutRunes, so a cut snippet ends with "…").
+
+const TopicSummaryRule = "- End your reply with one line " + TopicMarker + `{"title":"a concise 6-18 character topic summary in the operator's language"}` +
+	" summarizing the core subject of the operator's question.\n"
+    TopicSummaryRule asks for the [TOPIC] line.
+
+
+VARIABLES
+
+var (
+	// ErrBranchClosed: the branch (or an ancestor) is no longer open.
+	ErrBranchClosed = NewError(CodeBranchClosed, "this branch is closed", nil)
+	// ErrBranchParentClosed: a branch cannot be opened under a closed branch.
+	ErrBranchParentClosed = NewError(CodeParentClosed, "the parent branch is closed", nil)
+	// ErrBranchDepthHard: the deepest allowed branch already exists on this path.
+	ErrBranchDepthHard = NewError(CodeDepthHardLimit, "branches cannot be nested any deeper", nil)
+	// ErrBranchLimit: too many unfinished branches under one line.
+	ErrBranchLimit = NewError(CodeBranchLimit, "too many open branches under this message's conversation", nil)
+	// ErrBranchTreeLimit: too many branches in the whole conversation.
+	ErrBranchTreeLimit = NewError(CodeTreeLimit, "too many branches in this conversation", nil)
+	// ErrBranchAnchorNotFound: the anchor is not a finished operator or assistant message of the parent.
+	ErrBranchAnchorNotFound = NewError(CodeAnchorNotFound, "anchor message not found in this conversation", nil)
+	// ErrBranchNotFound: the line is not a branch.
+	ErrBranchNotFound = NewError(CodeBranchNotFound, "this conversation is not a branch", nil)
+	// ErrKindUnsupported: the branch kind is unknown or not allowed here.
+	ErrKindUnsupported = NewError(CodeKindUnsupported, "kind must be aside, investigate or alternative", nil)
+	// ErrSuggestionNotFound: the message carries no such suggestion.
+	ErrSuggestionNotFound = NewError(CodeSuggestionNotFound, "no such suggestion on that message", nil)
+	// ErrAsideAnswered: an aside takes one question and one answer.
+	ErrAsideAnswered = NewError(CodeAsideAnswered, "this aside has been answered; open a new one or a branch", nil)
+	// ErrInvalidPurpose: the purpose is empty or too long.
+	ErrInvalidPurpose = NewError(CodeInvalidInput, "purpose is required and must not be too long", nil)
+	// ErrInvalidExcerpt: the selected text is too long.
+	ErrInvalidExcerpt = NewError(CodeInvalidInput, "the selected excerpt is too long", nil)
+)
+    Errors of opening a branch and of taking a turn in one.
+
+var (
+	// ErrCardNotEditable: the branch was not merged, so it has no card.
+	ErrCardNotEditable = NewError(CodeBranchClosed, "only a merged branch has a conclusion card to edit", nil)
+	// ErrCardHolderBusy: the line holding the card is answering; its turn
+	// may already carry the card as it was.
+	ErrCardHolderBusy = NewError(CodeParentBusy, "the conversation the card was brought back to is answering; edit the card when it has finished", nil)
+	// ErrCardHolderClosed: the line holding the card takes no more turns.
+	ErrCardHolderClosed = NewError(CodeParentClosed, "the conversation the card was brought back to has ended", nil)
+)
+    Errors of editing a merged branch's conclusion card.
+
+var (
+	// ErrBranchDrafting: a draft is running; the branch cannot take a turn meanwhile.
+	ErrBranchDrafting = NewError(CodeBranchDrafting, "a conclusion card is being drafted for this branch; wait for it or write the card by hand", nil)
+	// ErrBranchNoMessages: there is nothing in the branch to draft from.
+	ErrBranchNoMessages = NewError(CodeNoMessages, "this branch has no finished messages to draft a conclusion from", nil)
+	// ErrBranchBusy: the branch has a turn in flight.
+	ErrBranchBusy = NewError(CodeBranchBusy, "the branch is still answering; wait for it or cancel the turn", nil)
+	// ErrBranchParentTipUnknown: the main-line message the operator says they saw last is not one of its messages.
+	ErrBranchParentTipUnknown = NewError(CodeInvalidParentTip, "parentTipMessageId is not a message of the conversation this branch grew from", nil)
+	// ErrBranchParentBusy: the parent is answering, so a card cannot be placed after its reply yet.
+	ErrBranchParentBusy = NewError(CodeParentBusy, "the conversation this branch grew from is answering; bring the conclusion back when it has finished", nil)
+	// ErrDraftNotPending: no draft is waiting for this result (wrong job, timed out or closed).
+	ErrDraftNotPending = NewError(CodeDraftNotPending, "no draft is waiting for this result", nil)
+)
+    Errors of the drafting and ending operations.
+
+var (
+	// ErrBranchMoveCount: the number of messages to move is out of range.
+	ErrBranchMoveCount = NewError(CodeInvalidCount, "count is out of range", nil)
+	// ErrBranchMoveTooFew: the line has fewer messages than asked for.
+	ErrBranchMoveTooFew = NewError(CodeNotEnoughMessages, "the conversation has fewer messages than that", nil)
+	// ErrBranchMoveNotUserStart: the first message to move is not the operator's.
+	ErrBranchMoveNotUserStart = NewError(CodeMoveMustStartWithUser, "the first message to move must be one of yours", nil)
+	// ErrBranchMoveProtected: a conclusion card or a move marker is in the range.
+	ErrBranchMoveProtected = NewError(CodeMoveProtected, "a conclusion card or a move marker is in that range and cannot be moved", nil)
+	// ErrBranchMoveNoAnchor: nothing would be left to hang the branch on.
+	ErrBranchMoveNoAnchor = NewError(CodeMoveNoAnchor, "moving that many messages would leave nothing to branch from", nil)
+	// ErrBranchSourceBusy: the line is answering or has a turn waiting.
+	ErrBranchSourceBusy = NewError(CodeSourceBusy, "the conversation is answering; wait for it or cancel the turn", nil)
+	// ErrBranchPromoteNotTopLevel: only a branch opened on the main line can be promoted.
+	ErrBranchPromoteNotTopLevel = NewError(CodePromoteNotTopLevel, "only a branch opened directly on the main conversation can become the main conversation", nil)
+	// ErrBranchPromoteDrafting: a conclusion card is being drafted for the branch.
+	ErrBranchPromoteDrafting = NewError(CodeBranchDrafting, "a conclusion card is being drafted for this branch; wait for it", nil)
+	// ErrDeleteBusy: a conversation of the tree is answering.
+	ErrDeleteBusy = NewError(CodeSessionBusy, "a conversation in this tree is answering; cancel it first", nil)
+	// ErrDeleteNotMainLine: only a whole conversation can be deleted.
+	ErrDeleteNotMainLine = NewError(CodeNotMainLine, "a branch cannot be deleted on its own; delete the main conversation", nil)
+)
+    Errors of moving, promoting and deleting.
+
+var (
+	ErrChapterMilestoneNotFound = NewError(CodeMilestoneNotFound, "milestone not found", nil)
+	ErrChapterMilestoneExists   = NewError(CodeMilestoneExists, "this message already has a milestone", nil)
+	ErrChapterMilestoneLimit    = NewError(CodeMilestoneLimit, "this conversation has reached its limit of milestones", nil)
+	ErrChapterMessageNotFound   = NewError(CodeMessageNotFound, "message not found in this conversation", nil)
+	ErrChapterTitleInvalid      = NewError(CodeInvalidMilestone, "the milestone name is too long", nil)
+)
+    Errors of milestones.
+
+var (
+	// ErrComparisonNotFound: no such comparison for this tenant.
+	ErrComparisonNotFound = NewError(CodeComparisonNotFound, "comparison not found", nil)
+	// ErrComparisonNotReady: the matrix is not there (drafting or failed).
+	ErrComparisonNotReady = NewError(CodeComparisonNotReady, "the comparison is not ready", nil)
+	// ErrComparisonDecided: a branch was chosen already.
+	ErrComparisonDecided = NewError(CodeComparisonDecided, "the comparison is decided already", nil)
+)
+    Errors of comparisons.
+
+var (
+	// ErrLineNotFound: no such line for this tenant.
+	ErrLineNotFound = NewError(CodeLineNotFound, "conversation not found", nil)
+	// ErrLineArchived: archived conversations accept no new branches, messages or notes.
+	ErrLineArchived = NewError(CodeArchived, "the conversation is archived", nil)
+	// ErrLineBusy: the line is answering, so the operation is skipped.
+	ErrLineBusy = NewError(CodeSessionBusy, "the conversation is busy", nil)
+	// ErrTurnPending: a turn is already pending on this line.
+	ErrTurnPending = NewError(CodeTurnPending, "a turn is already pending for this conversation", nil)
+	// ErrTurnNotPending: the turn being completed is no longer pending.
+	ErrTurnNotPending = NewError(CodeTurnNotPending, "this turn is no longer pending", nil)
+	// ErrStatusTransition: an invalid line status change.
+	ErrStatusTransition = NewError(CodeInvalidTransition, "invalid conversation status transition", nil)
+	// ErrArchiveNotMainLine: only a whole conversation is archived.
+	ErrArchiveNotMainLine = NewError(CodeNotMainLine, "a branch cannot be archived on its own; discard it or archive the main line", nil)
+	// ErrConcurrentChange: other writes kept getting in the way; try again.
+	ErrConcurrentChange = NewError(CodeConcurrentChange, "the conversation changed while this was being saved; try again", nil)
+	// ErrIDUnavailable: a host-chosen id cannot be used (it says nothing about why).
+	ErrIDUnavailable = NewError(CodeIDUnavailable, "this id cannot be used", nil)
+	// ErrMessageNotFound: no such message on this line (the chapter error, shared).
+	ErrMessageNotFound = ErrChapterMessageNotFound
+)
+    Errors of lines and turns.
+
+var (
+	// ErrJobNotFound: no such job.
+	ErrJobNotFound = NewError(CodeJobNotFound, "job not found", nil)
+	// ErrJobNotPending: the job already finished, was superseded or timed out.
+	ErrJobNotPending = NewError(CodeJobNotPending, "this job is no longer pending", nil)
+)
+    Errors of background jobs.
+
+var (
+	// ErrFoldNotFound: no such fold (or one that was removed).
+	ErrFoldNotFound = NewError(CodeFoldNotFound, "fold not found", nil)
+	// ErrFoldLimit: the line holds as many folds as it may.
+	ErrFoldLimit = NewError(CodeFoldLimit, "this conversation line has reached its limit of folds", nil)
+)
+    Errors of folds.
+
+var (
+	// ErrGroupNotFound: no such group in this conversation.
+	ErrGroupNotFound = NewError(CodeGroupNotFound, "group not found", nil)
+	// ErrGroupNotActive: the group was dissolved.
+	ErrGroupNotActive = NewError(CodeGroupNotActive, "this group was dissolved", nil)
+	// ErrGroupLimit: the conversation holds as many active groups as it may.
+	ErrGroupLimit = NewError(CodeGroupLimit, "this conversation has reached its limit of groups", nil)
+)
+var (
+	// ErrMemoNotFound: no such memo for this tenant.
+	ErrMemoNotFound = NewError(CodeMemoNotFound, "memo not found", nil)
+	// ErrMemoLimit: the conversation holds as many memos as it may.
+	ErrMemoLimit = NewError(CodeMemoLimit, "this conversation has reached its limit of memos", nil)
+)
+    Errors of memos.
+
+var (
+	// ErrMemoryNotFound: no such memory for this tenant.
+	ErrMemoryNotFound = NewError(CodeMemoryNotFound, "memory not found", nil)
+	// ErrMemorySuperseded: the memory was superseded already.
+	ErrMemorySuperseded = NewError(CodeMemorySuperseded, "the memory was superseded already", nil)
+	// ErrEmbedderUnavailable: the Embedder failed or answered with vectors
+	// of the wrong shape.
+	ErrEmbedderUnavailable = NewError(CodeEmbedderUnavailable, "the memory service is unavailable; try again later", nil)
+)
+    Errors of memories.
+
+var (
+	// ErrNoteNotFound: no such note in this conversation.
+	ErrNoteNotFound = NewError(CodeNoteNotFound, "note not found in this conversation", nil)
+	// ErrNoteSuperseded: the note was already replaced and cannot change.
+	ErrNoteSuperseded = NewError(CodeNoteSuperseded, "this note was already superseded; change the note that replaced it", nil)
+	// ErrNoteLimit: the conversation holds as many notes as it may.
+	ErrNoteLimit = NewError(CodeNoteLimit, "this conversation has reached its limit of notes", nil)
+	// ErrNoteSourceNotFound: a source line or message is not part of this conversation.
+	ErrNoteSourceNotFound = NewError(CodeNoteSourceNotFound, "the note's source is not part of this conversation", nil)
+)
+var (
+	// ErrRelationNotFound: no such relation touching this conversation.
+	ErrRelationNotFound = NewError(CodeRelationNotFound, "relation not found", nil)
+	// ErrRelationLimit: the conversation holds as many relations as it may.
+	ErrRelationLimit = NewError(CodeRelationLimit, "this conversation has reached its limit of relations", nil)
+	// ErrRelationExists: the same two places are related already.
+	ErrRelationExists = NewError(CodeRelationExists, "these two places are related already", nil)
+)
+var (
+	// ErrSeedNotFound: no such seed in this conversation.
+	ErrSeedNotFound = NewError(CodeSeedNotFound, "seed not found in this conversation", nil)
+	// ErrSeedNotOpen: the seed was already expanded, noted or dropped.
+	ErrSeedNotOpen = NewError(CodeSeedNotOpen, "this seed was already expanded, noted or dropped", nil)
+	// ErrSeedLimit: the conversation holds as many open seeds as it may.
+	ErrSeedLimit = NewError(CodeSeedLimit, "this conversation has reached its limit of parked thoughts", nil)
+)
+    Errors of seeds.
+
+var (
+	// ErrSuggestionGone: no such suggestion in the inbox (it shares the code
+	// of an unknown [BRANCH-SUGGEST] suggestion).
+	ErrSuggestionGone = NewError(CodeSuggestionNotFound, "suggestion not found", nil)
+	// ErrSuggestionNotOpen: the suggestion was already accepted, dismissed or expired.
+	ErrSuggestionNotOpen = NewError(CodeSuggestionNotOpen, "this suggestion was already accepted, dismissed or expired", nil)
+)
+    Errors of the suggestion inbox.
+
+var ErrAttachEmpty = NewError(CodeInvalidInput, "the conversation to attach has no finished messages", map[string]any{"field": "sourceLineId"})
+    ErrAttachEmpty refuses a source with no finished operator or assistant
+    message.
+
+var ErrAttachNotMainLine = NewError(CodeInvalidInput, "sourceLineId must be a main line (a conversation of its own)", map[string]any{"field": "sourceLineId"})
+    ErrAttachNotMainLine refuses a source that is already a branch.
+
+var ErrAttachSelf = NewError(CodeInvalidInput, "a conversation cannot be attached to itself", map[string]any{"field": "sourceLineId"})
+    ErrAttachSelf refuses attaching a conversation to itself or into its own
+    tree.
+
+var ErrFeatureDisabled = NewError(CodeFeatureDisabled, "this feature is not enabled", nil)
+    ErrFeatureDisabled: the feature this needs is not enabled for the caller
+    (not configured, or switched off by the host's FeaturePolicy).
+
+var ErrGoalNotFound = NewError(CodeGoalNotFound, "this conversation has no goal", nil)
+    ErrGoalNotFound: the conversation has no goal.
+
+var ErrImportAnalyzeOutput = errors.New("the analysis reply is not a usable plan")
+    ErrImportAnalyzeOutput is a model reply ParseImportAnalyzeOutput cannot use.
+
+var ErrLeafNotFound = NewError(CodeLeafNotFound, "this branch has no leaf", nil)
+    ErrLeafNotFound: the branch has no leaf.
+
+var ErrModelNotAllowed = NewError(CodeModelNotAllowed, "this provider or model is not allowed", nil)
+    ErrModelNotAllowed: the provider or model is not one this host allows.
+
+var ErrNothingToRetry = NewError(CodeNothingToRetry, "the last turn of this conversation did not fail", nil)
+    ErrNothingToRetry: the line's last turn did not fail, so there is nothing to
+    retry.
+
+var ErrTooLong = NewError(CodeTooLong, "a text is too long", nil)
+    ErrTooLong: a text field is longer than its limit (extra field, max).
+
+var ImportEarliest = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+    ImportEarliest is the earliest date an import may carry.
+
+var RelationKinds = []string{RelationKindRelated, RelationKindSupports, RelationKindContradicts, RelationKindDependsOn}
+    RelationKinds are the kinds a relation may have, related first (the
+    default).
+
+
+FUNCTIONS
+
+func ApplyFolds(messages []Message, folds []Fold) ([]Message, []AppliedFold)
+    ApplyFolds replaces the messages each active fold covers by one fold entry
+    (at the fold's last seq); a fold none of whose messages are among them is
+    not applied. Messages come back in seq order.
+
+func AttachPurpose(given, title, firstUser, firstAny string, l BranchLimits) (string, bool)
+    AttachPurpose is the purpose of the attached branch: the one given,
+    else the source's title cut to the purpose limit, else its first operator
+    message (the first finished message when there is none) on one line, cut to
+    ImportTitleRunes. ok is false when the given purpose is too long or nothing
+    gives one.
+
+func BranchConclusionLine(card BranchCard) string
+    BranchConclusionLine is the one line kept on the branch for the map:
+    the first non-empty line of the conclusion, flattened and cut to
+    BranchConclusionLineMaxRunes.
+
+func BranchMoveMarkerText(count int, purpose string) string
+    BranchMoveMarkerText is the system message left where moved messages were.
+
+func BranchRenamable(status, origin string) bool
+    BranchRenamable reports whether a branch's purpose may change (B13):
+    open and ended branches, but not a promoted one (its messages went to the
+    main line) nor the previous main line (always shown under a fixed name).
+
+func BuildBranchCardNotice(items []BranchCardNoticeItem) string
+    BuildBranchCardNotice renders the cards that were not delivered yet as the
+    block placed first in the parent's prompt. It returns "" for no cards.
+
+func BuildBranchConclusions(branches []FisheyeBranch, extraMarkers []string) string
+    BuildBranchConclusions renders the "other branches' conclusions" block;
+    "" without any.
+
+func BuildBranchDraftPrompt(in BranchDraftInput) string
+    BuildBranchDraftPrompt renders the drafting prompt. Branch and main-line
+    text is quoted and stripped of protocol markers; the whole prompt stays
+    within BranchDraftInputTokenBudget by dropping the oldest messages first
+    (the newest branch message is always kept, cut if it is huge).
+
+func BuildCombinedBackground(in CombinedInput) string
+    BuildCombinedBackground renders what a combined branch's pack adds after
+    the parent's background: each source within an equal share of the budget,
+    then what the operator settled and what stays to confirm.
+
+func BuildConvergePrompt(in ConvergeInput) string
+    BuildConvergePrompt renders the prompt of a converge job.
+
+func BuildDivergeNote(d DivergeDirection, all []string) string
+    BuildDivergeNote is what a diverged branch's pack adds: its direction, why,
+    and the other directions explored beside it.
+
+func BuildDivergePrompt(in DivergeInput) string
+    BuildDivergePrompt renders the prompt of a diverge job.
+
+func BuildDivergeTargetsNote(own int, targets []DivergeTarget, purposes []string) string
+    BuildDivergeTargetsNote is what a cross-model branch's pack adds: that it is
+    one of several parallel answers to the message above, which model answers
+    it, and the sibling branches with theirs. purposes holds every target's
+    branch purpose in targets' order; own is this branch's index.
+
+func BuildDriftCheckPrompt(in DriftCheckInput) string
+    BuildDriftCheckPrompt renders the prompt of a drift_check job.
+
+func BuildFoldSummaryPrompt(in FoldSummaryInput) string
+    BuildFoldSummaryPrompt renders the prompt of a fold_summary or fold_suggest
+    job; each message is cut so the stretch fits the budget.
+
+func BuildGoalBlock(text string) string
+    BuildGoalBlock renders the goal section of a prompt; "" without a goal.
+
+func BuildGoalProposePrompt(in GoalProposeInput) string
+    BuildGoalProposePrompt renders the prompt of a goal_propose job.
+
+func BuildGroupSuggestPrompt(in GroupSuggestInput) string
+    BuildGroupSuggestPrompt renders the prompt of a group_suggest job.
+
+func BuildGroupSummaryPrompt(in GroupSummaryInput) string
+    BuildGroupSummaryPrompt renders the prompt of a group_summary job.
+
+func BuildIbisTagPrompt(in IbisTagInput) string
+    BuildIbisTagPrompt renders the prompt of an ibis_tag job.
+
+func BuildLeafDraftPrompt(in LeafDraftInput) string
+    BuildLeafDraftPrompt renders the prompt of a leaf_draft job.
+
+func BuildMemoryConsolidatePrompt(a, b Memory, extraMarkers []string) string
+    BuildMemoryConsolidatePrompt renders the prompt of a memory_consolidate job.
+
+func BuildMemoryExtractPrompt(src MemoryExtractSource, related []RelatedMemory, extraMarkers []string) string
+    BuildMemoryExtractPrompt renders the prompt of a memory_extract job.
+
+func BuildNotesBlock(notes []Note, budget int) string
+    BuildNotesBlock renders the active notes (newest first within a section)
+    for a prompt. When the block is over budget tokens, the oldest "to confirm"
+    notes are left out first, then "to do", then facts; "decided" never.
+    The closing lines name how many were left out. It returns "" when no note
+    is active; non-active ones are ignored. Notes are ordered newest first by
+    CreatedAt here; notes with the same time keep their given order.
+
+func BuildRelationSuggestPrompt(in RelationSuggestInput) string
+    BuildRelationSuggestPrompt renders the prompt of a relation_suggest job.
+
+func BuildReplyLinesBlock(in PromptInput) string
+    BuildReplyLinesBlock renders the rules the prompt input asks for ("" when
+    none: the chapter rule only on a main line).
+
+func BuildSummaryPrompt(previous Summary, messages []Message, extraMarkers ...string) string
+    BuildSummaryPrompt renders the summarization prompt: the previous
+    digest plus the newest finished messages (in seq order), asking for one
+    marker-prefixed JSON object. Message bodies and the previous (model-written)
+    summary are flattened and stripped of protocol markers and of the host's
+    extraMarkers.
+
+func CanAnchorBranch(role, kind, status string) bool
+    CanAnchorBranch reports whether a message of the parent may anchor a new
+    branch: a finished operator or assistant message, or a conclusion card (a
+    follow-up on what a branch brought back).
+
+func ChapterCutDue(chapters []Chapter, own int) bool
+    ChapterCutDue reports whether the line's current (last) chapter holds at
+    least ChapterCutMinMessages finished messages besides cards and the turn's
+    own messages (own: how many of the turn's messages the chapters already
+    include, 1 for the stored operator message of a begun turn).
+
+func CheckAttach(in AttachCheck, l BranchLimits) (int, error)
+    CheckAttach applies the branch limits to an attach and returns the depth
+    of the attached branch. The open count only matters for an open branch;
+    the tree count and the depths include the source's tree. Refusals,
+    in CheckBranchCreate's order: archived, parent closed, the hard depth,
+    the open branches of the parent, the tree size, the soft depth.
+
+func CheckBranchCreate(in BranchCreateCheck, l BranchLimits) (int, error)
+    CheckBranchCreate applies the state, depth and count rules and returns the
+    new branch's depth. The hard limits are checked before the soft one so the
+    operator is never asked to confirm something that would then be refused.
+
+func CheckDivergeCount(n int, l DivergeLimits) error
+    CheckDivergeCount refuses a number of directions outside the limits.
+
+func CheckImportAnalyzeGold(units []ImportAnalyzeUnit, gold []ImportAnalyzeGoldNode) error
+    CheckImportAnalyzeGold refuses a gold that is not a plan of units: every
+    unit in exactly one node, no unknown unit, no empty node, roles known when
+    given, and at least one chapter when any role is given.
+
+func CheckMoveCount(count int, l BranchLimits) error
+    CheckMoveCount refuses a move of fewer than one or more than the move limit
+    of messages, naming the range the way 宿主 did.
+
+func CheckRunes(field, text string, max int) error
+    CheckRunes refuses text longer than max runes, naming the field.
+
+func ClampSearchLimit(limit int) int
+    ClampSearchLimit is the number of hits a search returns: the default for
+    zero or less, at most SearchMaxLimit.
+
+func CleanCardText(text string) string
+    CleanCardText neutralises untrusted card text: every kind of line break
+    normalised to "\n", bidirectional controls and zero-width characters next to
+    ASCII removed, other control characters replaced by spaces, then protocol
+    markers removed (repeatedly) and fences defused.
+
+func CleanSystemText(text string, extraMarkers []string) string
+    CleanSystemText cleans the text of a host system message (shown to operators
+    and, labelled "system: ", in later prompts): line separators are normalised
+    to "\n", bidirectional controls (and zero-width characters next to ASCII)
+    removed and other control characters replaced by spaces, then every protocol
+    marker (the library's and extraMarkers) is removed and the outer space
+    trimmed. Unlike card text it keeps code fences: the message is displayed as
+    written.
+
+func CodeOf(err error) string
+    CodeOf returns the code of a domain error anywhere in err's chain, or ""
+    when err is not one (an internal failure).
+
+func ConflictNoteText(c Conflict, purposes map[string]string, l NoteLimits) string
+    ConflictNoteText is the to-confirm note a keepBoth writes, cut to the notes'
+    limit.
+
+func CutRunes(text string, max int) string
+    CutRunes shortens text to at most max runes, ending with "…" when cut.
+
+func DivergeTargetPurpose(t DivergeTarget, shared, anchor string, l BranchLimits) (string, bool)
+    DivergeTargetPurpose is the purpose of a target's branch: its own purpose
+    when given (ok false when it is too long), else "{shared} · {model}", else
+    the anchor's first 40 characters on one line plus " · {model}". A derived
+    purpose is cut to the purpose limit, keeping the model name when it fits.
+
+func EffectiveBranchDraftStatus(status string, startedAt *time.Time, now time.Time, timeout time.Duration) string
+    EffectiveBranchDraftStatus turns a draft that has been running longer than
+    timeout into "failed", lazily, so no reaper is needed.
+
+func EstimateInputTokens(in PromptInput) int
+    EstimateInputTokens estimates the blocks of a prompt input that vary with
+    the conversation (pack, capsule, card notice, notes, goal, summary, host
+    sections, branch conclusions); the history, the rules and the operator's
+    message are not counted. The engine's shared budget measures each feature's
+    share with it.
+
+func EstimatePackTokens(s string) int
+    EstimatePackTokens is a conservative token estimate for pack text. Words
+    of ordinary length cost a quarter token per ASCII character; a long run of
+    non-space characters that is mostly ASCII (hashes, base64, minified JSON,
+    URLs, long identifiers) costs three quarters of a token per character,
+    because such strings tokenise into many short pieces. CJK costs a token
+    and a half per character and any other non-ASCII character a whole token.
+    For the text kinds listed it stays at or above half a token per character;
+    it is an estimate, not a guarantee for every possible string.
+
+func EstimateTokens(s string) int
+    EstimateTokens approximates the token count of s: a CJK character (including
+    full-width punctuation) counts as one token, every other character as a
+    quarter token.
+
+func ExtractChapterCut(content string, l ChapterLimits) (string, string)
+    ExtractChapterCut removes every [CHAPTER] line from content and returns
+    the cleaned text and the first valid chapter title (at most the topic title
+    limit); "" when there is none.
+
+func ExtractTopicSummary(content string, l TextLimits) (string, string)
+    ExtractTopicSummary removes every [TOPIC] line from content and returns
+    the cleaned text (trimmed by TrimReply) and the first valid title: JSON
+    {"title":...}, flattened to one line, at most TopicSummaryMaxRunes (and the
+    title limit); "" when there is none.
+
+func ExtractableMessage(role, kind, status string) bool
+    ExtractableMessage reports whether a message may be moved by an extract
+    (B18): only finished operator and assistant chat messages. Pending and
+    failed replies, conclusion cards, move markers and host system messages stay
+    where they are (move_protected_message).
+
+func FlattenUntrusted(text string) string
+    FlattenUntrusted renders untrusted text as one safe line: protocol markers,
+    fences, control characters and line breaks removed.
+
+func FoldTokens(messages []Message) int
+    FoldTokens estimates what a stretch of messages costs as history: every
+    finished message a prompt would show, with its framing.
+
+func FoldsOverlap(aFrom, aTo, bFrom, bTo int64) bool
+    FoldsOverlap reports whether two closed seq ranges share a seq.
+
+func ImportTitle(messages []ImportMessage) string
+    ImportTitle is the title of an imported conversation (or the purpose of an
+    imported branch) that names none: the first operator message (the first
+    message when there is none) on one line, cut to ImportTitleRunes.
+
+func MarkerLineStart(line string) string
+    MarkerLineStart is a line as marker-line detection sees it: leading white
+    space, bidirectional controls and zero-width characters removed, so an
+    invisible character before a marker cannot hide the line from the stream
+    filter or the reply parser (both use it, so they agree).
+
+func NeutraliseNoteText(text string) string
+    NeutraliseNoteText flattens operator or card text to one safe line: protocol
+    markers, code fences, control characters and line breaks are removed,
+    so a note can never open a block or a heading in a prompt.
+
+func NormaliseNoteChanges(changes []NoteChange, l NoteLimits) ([]NoteChange, []NoteProblem)
+    NormaliseNoteChanges validates the shape of the changes (not the stored
+    facts) and returns them with neutralised text. Problems name every refusal.
+
+func NormalizeAttachKind(kind string) (string, error)
+    NormalizeAttachKind is the kind of the attached branch: investigate
+    by default, or alternative (an aside is a quick question, not a whole
+    conversation).
+
+func NormalizeAttachStatus(status string) (string, error)
+    NormalizeAttachStatus is the status an attach asks for: open by default,
+    or merged; anything else is invalid_input naming the field.
+
+func NormalizeBranchExcerpt(excerpt string, l BranchLimits) (string, bool)
+    NormalizeBranchExcerpt trims the selected text and reports whether it is
+    within the excerpt limit. It is not required to be a substring of the anchor
+    message: the browser shows rendered Markdown, so the selection need not
+    match the stored text byte for byte.
+
+func NormalizeBranchPurpose(purpose string, l BranchLimits) (string, bool)
+    NormalizeBranchPurpose trims the purpose and reports whether it is valid:
+    non-empty and within the purpose limit.
+
+func NormalizeCriteria(criteria []string, l DivergeLimits) ([]string, error)
+    NormalizeCriteria flattens the operator's criteria, drops repeats (ignoring
+    case) and checks their number and length; none is fine (the model proposes
+    them).
+
+func NormalizeFoldSummary(summary string, l FoldLimits) (string, error)
+    NormalizeFoldSummary trims a summary and refuses one over the limit;
+    "" means none was given.
+
+func NormalizeFolder(folder string) (string, error)
+    NormalizeFolder trims a folder name and removes its control characters;
+    "" means unfiled. Longer than FolderMaxRunes, or the reserved FolderUnfiled,
+    is invalid_input (field folder).
+
+func NormalizeGoalText(text string, l GoalLimits) (string, error)
+    NormalizeGoalText flattens a goal to one line and checks it is not empty and
+    not longer than the limit.
+
+func NormalizeGroupTitle(title string, l GroupLimits) (string, error)
+    NormalizeGroupTitle flattens a title to one line; it may not be empty.
+
+func NormalizeLeaf(in LeafInput, l LeafLimits) (LeafInput, []LeafProblem)
+    NormalizeLeaf neutralises a leaf (the line flattened to one safe line,
+    the body cleaned like card text) and checks its kind and lengths.
+
+func NormalizeMemoText(text string, l MemoLimits) (string, error)
+    NormalizeMemoText trims a memo's text and checks it: not empty, within the
+    limit. Line breaks are kept (a memo may be several lines); Windows line ends
+    become "\n".
+
+func NormalizeRelationKind(kind string) (string, error)
+    NormalizeRelationKind trims a kind given on create: empty is related;
+    anything but the four kinds is invalid_input.
+
+func NormalizeRelationLabel(label string, l RelationLimits) (string, error)
+    NormalizeRelationLabel flattens a label to one line; it may be empty.
+
+func NormalizeSearchQuery(query string) (string, error)
+    NormalizeSearchQuery trims a query and checks its length: at least
+    SearchQueryMinRunes (invalid_input), at most SearchQueryMaxRunes (too_long,
+    field "q").
+
+func NormalizeSeedText(text string, l ParkingLimits) (string, error)
+    NormalizeSeedText flattens a seed's text to one safe line and checks it is
+    not empty and within the limit.
+
+func NormalizeSeedTexts(texts []string, l ParkingLimits) ([]string, error)
+    NormalizeSeedTexts checks a batch of thoughts: 1 to SeedBatchMax of them
+    (invalid_input otherwise), each as NormalizeSeedText checks one.
+
+func NormalizeTag(tag string) string
+    NormalizeTag is one tag as stored: control characters removed, trimmed,
+    leading "#" removed, lower case. "" when nothing is left.
+
+func NormalizeTagKind(kind string) (string, error)
+    NormalizeTagKind trims a tag kind and refuses anything else than the five.
+
+func NormalizeTagStatus(status string) (string, error)
+    NormalizeTagStatus is the status the operator writes a tag with: empty is
+    confirmed; draft puts it back for review as the model's (B15).
+
+func NormalizeTags(tags []string) ([]string, error)
+    NormalizeTags normalises every tag (NormalizeTag), drops the empty ones and
+    the repeats (first one kept, input order) and refuses a tag over TagMaxRunes
+    or more than TagsMax tags with invalid_input (field tags). The result is
+    never nil.
+
+func OpenClaims(conflicts []Conflict, purposes map[string]string) []string
+    OpenClaims are the conflicts kept as both, one line each.
+
+func OpenLoopStaleAge(days int, l OpenLoopLimits) (time.Duration, error)
+    OpenLoopStaleAge is how long an open branch must be idle to be an open loop:
+    days (1..365), or the limit's default for 0.
+
+func OrganizeBranchError(field string) error
+    OrganizeBranchError refuses a folder or tags given for a branch
+    (invalid_input naming the field).
+
+func ParseBranchDraftProposal(output string) (BranchCard, []NoteChange, error)
+    ParseBranchDraftProposal is ParseBranchDraft for an output that may also
+    carry "noteChanges". The object is decoded as strictly as a card: unknown or
+    repeated fields fail the draft.
+
+func ParseFoldSummary(output string, l FoldLimits) (string, error)
+    ParseFoldSummary reads a fold job's reply: the summary, trimmed, cut to the
+    limit, not empty.
+
+func ParseGoalProposal(output string, l GoalLimits) (string, error)
+    ParseGoalProposal reads a goal_propose reply: the marker once, then {"goal":
+    …} and nothing else; the goal must be a valid one.
+
+func ParseGroupSummary(output string, l GroupLimits) (string, error)
+    ParseGroupSummary reads a group_summary reply: the summary, trimmed,
+    cut to the limit, not empty.
+
+func ParseRelationKind(kind string) (string, error)
+    ParseRelationKind trims a kind given on edit: anything but the four kinds,
+    empty included, is invalid_input.
+
+func ProtocolMarkers(extra []string) []string
+    ProtocolMarkers lists every marker the library parses (with closing forms)
+    and the host's extra markers: what must never reach an operator as the start
+    of a streamed line.
+
+func QuoteUntrusted(text string) string
+    QuoteUntrusted renders untrusted multi-line text the way the library quotes
+    data in prompts: protocol markers removed, fences defused, every line
+    prefixed with "> ". Hosts use it for untrusted data in their PromptSection
+    bodies.
+
+func RebalanceDue(s RebalanceSignals, l RebalanceLimits) (string, bool)
+    RebalanceDue reports whether a branch should be suggested for promotion or
+    spinoff, and why.
+
+func RecallScore(similarity float64, age time.Duration, importance int, l MemoryLimits) float64
+    RecallScore is relevance × recency × importance: the similarity (not below
+    0), a recency weight from 1 (new) down towards 0.5 (halving its excess every
+    HalfLife), and importance / 10.
+
+func RenderBranchCardMarkdown(card BranchCard, purpose string) string
+    RenderBranchCardMarkdown is the stored content of a card message. The card
+    must already be neutralised (ValidateBranchCard / SanitizeBranchDraft);
+    it is quoted again here so a card read back from storage is safe as well.
+
+func SearchLikePattern(query string) string
+    SearchLikePattern is the ILIKE pattern of a substring query, with the
+    pattern's own wildcards and the escape character escaped (backslash,
+    the default escape).
+
+func SeedNoteText(text string, l NoteLimits) string
+    SeedNoteText is the note a seed becomes: its text, cut to the note limit.
+
+func SeedPurpose(text string, l BranchLimits) string
+    SeedPurpose is the purpose a seed's branch gets when none is given:
+    its text, cut to the purpose limit.
+
+func SettledClaims(conflicts []Conflict) []string
+    SettledClaims are the claims the choices adopted.
+
+func SpinoffMarkerText(title string) string
+    SpinoffMarkerText is the system message the source line keeps.
+
+func StripAgentMarkers(text string) string
+    StripAgentMarkers removes every protocol marker from text. It repeats until
+    nothing changes, so a marker built by removing another ("[BRANCH-[…]CARD]")
+    is removed too.
+
+func StripMarkers(text string, markers []string) string
+    StripMarkers removes every one of markers from text, repeating until nothing
+    changes. Empty markers are ignored.
+
+func SuggestionPayload(raw []byte, l SuggestionLimits) (json.RawMessage, error)
+    SuggestionPayload checks a feature's payload: empty means {}, anything else
+    must be a JSON object within the limit.
+
+func SuggestionTargetBranch(lineID string) string
+    SuggestionTargetBranch is the target key of a suggestion about a branch.
+
+func SuggestionTargetLine(lineID string) string
+    SuggestionTargetLine is the target key of a suggestion about a line.
+
+func SummaryDue(messagesAfterCursor []Message, l HistoryLimits) bool
+    SummaryDue reports whether the messages after the summary cursor have grown
+    past the trigger.
+
+func SummaryTokenCount(messages []Message) int
+    SummaryTokenCount estimates the tokens of messages, used to decide when to
+    summarize.
+
+func SummaryUptoSeq(messages []Message) int64
+    SummaryUptoSeq is the cursor a summary over messages records: the seq of the
+    newest message that is not pending, or 0 when there is none.
+
+func TagSourceOf(status string) string
+    TagSourceOf is who a tag written with a status counts as: a draft is the
+    model's to be confirmed, a confirmed tag the operator's.
+
+func TopicCutFor(previousTopic string, summary Summary, reported string, input []Message, uptoSeq int64) string
+    TopicCutFor decides where a finished summary's topic cut lands, or "" when
+    no cut is due: the model reported no start and the topic did not change.
+    input are the messages after the previous cursor; only those up to uptoSeq
+    (the new cursor, 0 = all) count.
+
+func TopicCutMessage(reported string, input []Message) string
+    TopicCutMessage picks the message a topic cut lands on: the model's id when
+    it names one of the messages the summary was given, otherwise the first of
+    them (lowest seq). It returns "" when the summary had no messages.
+
+func TransitionLineStatus(from, to string) error
+    TransitionLineStatus validates a status change: a turn starts from any
+    non-thinking status, a result lands only on a thinking line, and error is
+    reachable from everywhere (timeouts, cancelled runners).
+
+func TrimReply(content string) string
+    TrimReply is how a stored reply is trimmed: Unicode white space at both
+    ends goes. ResolveTurnOutcome and ExtractBranchSuggestions use it, and the
+    engine's stream filter mirrors it, so a streamed reply and the stored one
+    are the same bytes.
+
+func ValidBranchKind(kind string) bool
+    ValidBranchKind reports whether kind is one of the branch kinds.
+
+func ValidBranchOrigin(origin string) bool
+    ValidBranchOrigin reports whether origin is one of the branch origins.
+
+func ValidDeltaKind(kind string) bool
+    ValidDeltaKind reports whether kind is text, reasoning or tool.
+
+func ValidLeafKind(kind string) bool
+    ValidLeafKind reports whether kind is one of the leaf kinds.
+
+func ValidLineStatus(s string) bool
+    ValidLineStatus reports whether s is one of the line statuses.
+
+func ValidMemoryKind(kind string) bool
+    ValidMemoryKind reports whether kind is one of the four.
+
+func ValidNoteSection(s string) bool
+    ValidNoteSection reports whether s is one of the four sections.
+
+func ValidNoteStatus(s string) bool
+    ValidNoteStatus reports whether s is one of the note statuses.
+
+func ValidSeedStatus(s string) bool
+    ValidSeedStatus reports whether s is one of the seed statuses.
+
+func ValidSpinoffMode(mode string) bool
+    ValidSpinoffMode reports whether mode is detach or fresh.
+
+func ValidSuggestionStatus(s string) bool
+    ValidSuggestionStatus reports whether s is one of the suggestion statuses.
+
+func ValidTagKind(kind string) bool
+    ValidTagKind reports whether kind is one of the five tag kinds.
+
+func ValidateBranchCard(card BranchCard, refs BranchCardRefs) (BranchCard, []BranchCardProblem)
+    ValidateBranchCard checks a card the operator confirmed and returns it
+    neutralised. Any problem means the card must not be stored: each one names
+    the field. Evidence and excerpts must point at real messages of the branch
+    or its pack; an excerpt must be a verbatim substring of the message it
+    names.
+
+func VectorLiteral(v []float32) string
+    VectorLiteral renders an embedding as pgvector's text form.
+
+func WantsTopicSummary(in PromptInput, lineTitle string) bool
+    WantsTopicSummary reports whether a turn prompt asks for a [TOPIC] line:
+    only on the line's first turn (no history, no condensed or selected history,
+    no summary), never on an aside or a spun-off line (its title came with the
+    spinoff); on a main line when the operator's message is longer than 20 runes
+    or the line has no title, on a branch when its purpose is longer than 25
+    runes.
+
+
+TYPES
+
+type AppliedFold struct {
+	FoldID         string `json:"foldId"`
+	FromSeq        int64  `json:"fromSeq"`
+	ToSeq          int64  `json:"toSeq"`
+	Messages       int    `json:"messages"`
+	TokensOriginal int    `json:"tokensOriginal"`
+	TokensSummary  int    `json:"tokensSummary"`
+}
+    AppliedFold is a fold a prompt used: how many of its messages it stood for
+    there, and its stored token counts.
+
+type AttachCheck struct {
+	// Parent describes the target line as BranchCreateCheck does.
+	Parent BranchCreateCheck
+	// Status is the status the attached branch starts in (open or merged).
+	Status string
+	// SubtreeLines counts the branches of the source's tree (they come along).
+	SubtreeLines int
+	// SubtreeDepth is the deepest of them in the source's tree (0 without).
+	SubtreeDepth int
+}
+    AttachCheck is what the limits of an attach are checked against, read under
+    the locks.
+
+type BranchCard struct {
+	Question      string               `json:"question"`
+	Conclusion    string               `json:"conclusion"`
+	Evidence      []BranchCardEvidence `json:"evidence"`
+	Impact        string               `json:"impact"`
+	OpenItems     []string             `json:"openItems"`
+	NeedsDecision []BranchCardDecision `json:"needsDecision"`
+	Excerpts      []BranchCardExcerpt  `json:"excerpts"`
+}
+    BranchCard is the structured conclusion of a branch.
+
+func DecodeBranchCardJSON(raw []byte) (BranchCard, error)
+    DecodeBranchCardJSON strictly decodes one card: a single JSON object,
+    no duplicate or unknown field, nothing after it.
+
+func ParseBranchDraft(output string) (BranchCard, error)
+    ParseBranchDraft extracts the card from a drafting model's output: exactly
+    one [BRANCH-CARD] marker followed by exactly one JSON object. Text before
+    the marker is ignored; anything after the object, a second marker, a code
+    fence, unknown or duplicate fields or oversized output fail the whole draft.
+
+func PlanAttachCard(card *BranchCard, status, purpose string) (*BranchCard, error)
+    PlanAttachCard checks the card of an attach before anything is read:
+    a merged attach carries one (invalid_input, field card), an open one must
+    not; an empty question is the purpose. Only the shape is checked here
+    (invalid_card); the messages it cites are checked under the locks.
+
+func SanitizeBranchDraft(draft BranchCard, refs BranchCardRefs) (BranchCard, []string, bool)
+    SanitizeBranchDraft repairs what a model drafted instead of refusing it:
+    unverifiable evidence and excerpts are dropped, over-long text and lists are
+    cut, and every repair is reported. It reports ok=false when nothing usable
+    is left (no question or conclusion, or still too long overall).
+
+func (c BranchCard) CappedReferencedIDs() (branchSide, parentSide []string)
+    CappedReferencedIDs is ReferencedIDs bounded by BranchCardMaxReferences,
+    branch-side ids first: the most lookups one card can cause.
+
+func (c BranchCard) ReferencedIDs() (branchSide, parentSide []string)
+    ReferencedIDs lists the message ids a card cites: those that must be
+    messages of the branch or its pack, and those that must be main-line
+    messages after the fork. Each id is listed once and only when it is a
+    canonical UUID (anything else can never name a message). Callers check
+    CheckBranchCardShape first and load exactly these before validating.
+
+type BranchCardDecision struct {
+	BranchClaim   string `json:"branchClaim"`
+	MainLineClaim string `json:"mainLineClaim"`
+	// MainLineMessageID is a main-line message written after the fork; optional.
+	MainLineMessageID string `json:"mainLineMessageId"`
+}
+    BranchCardDecision is a point where the branch and the main line disagree or
+    the operator must choose. Nothing resolves it automatically.
+
+type BranchCardEvidence struct {
+	MessageID string `json:"messageId"`
+	Note      string `json:"note"`
+}
+    BranchCardEvidence points at a message of the branch (or of its background
+    pack).
+
+type BranchCardExcerpt struct {
+	MessageID string `json:"messageId"`
+	Text      string `json:"text"`
+}
+    BranchCardExcerpt is a verbatim piece of a branch message (a command,
+    a number).
+
+type BranchCardNoticeItem struct {
+	// MessageID is the card's message in the parent.
+	MessageID string
+	Purpose   string
+	Card      BranchCard
+}
+    BranchCardNoticeItem is one confirmed card waiting to be shown to the
+    parent's model.
+
+type BranchCardProblem struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+    BranchCardProblem names one reason a card is refused.
+
+func CheckBranchCardShape(card BranchCard) []BranchCardProblem
+    CheckBranchCardShape is the part of validation that needs no lookup:
+    how many entries each list has and how long each text and id is. Callers run
+    it before loading any message, so a card with thousands of pointers costs no
+    query.
+
+type BranchCardRefs struct {
+	Messages          map[string]string
+	ParentAfterAnchor map[string]bool
+}
+    BranchCardRefs is what a card may point at: the finished messages of the
+    branch and of its background pack (id to content), and the referenced
+    main-line messages that were written after the fork.
+
+type BranchCounts struct {
+	Open      int `json:"open"`
+	Merged    int `json:"merged"`
+	Discarded int `json:"discarded"`
+	Promoted  int `json:"promoted"`
+}
+    BranchCounts is LineView.BranchCounts: the direct branches under a line.
+
+func (c BranchCounts) Add(status string, n int) BranchCounts
+    Add counts n branches of the given status and returns the new counts.
+
+func (c BranchCounts) Total() int
+    Total is the number of branches counted.
+
+type BranchCreateCheck struct {
+	// ParentArchived: the parent line (or its tree) is archived.
+	ParentArchived bool
+	// ParentIsBranch, ParentStatus and ParentDepth describe the parent when it
+	// is itself a branch.
+	ParentIsBranch bool
+	ParentStatus   string
+	ParentDepth    int
+	// OpenUnderParent counts the open branches already under the parent;
+	// TreeTotal counts every branch of the tree.
+	OpenUnderParent int
+	TreeTotal       int
+	// ConfirmDeeper accepts a depth beyond the soft limit.
+	ConfirmDeeper bool
+}
+    BranchCreateCheck is what the store knows, under its locks, when a branch is
+    about to be opened.
+
+type BranchDepthSoftError struct {
+	Depth int
+	Limit int
+}
+    BranchDepthSoftError asks the caller to confirm a deep branch.
+
+func (e *BranchDepthSoftError) Error() string
+
+type BranchDetail struct {
+	Branch             BranchView  `json:"branch"`
+	Pack               BranchPack  `json:"pack"`
+	Draft              BranchDraft `json:"draft"`
+	ParentTipMessageID string      `json:"parentTipMessageId"`
+}
+    BranchDetail is GET /branch: the header, the stored pack and its exact text,
+    the draft state and the newest message of the parent (the tip a merge must
+    name).
+
+type BranchDraft struct {
+	Status string `json:"status"`
+	// Card is the neutralised draft, nil unless Status is "ready".
+	Card *BranchCard `json:"card"`
+	// Warnings lists what was repaired or dropped while accepting the draft.
+	Warnings []string `json:"warnings"`
+	// Error says why the draft failed (never the model's raw output).
+	Error     string     `json:"error"`
+	Provider  string     `json:"provider"`
+	Model     string     `json:"model"`
+	StartedAt *time.Time `json:"startedAt"`
+	// UptoSeq is the seq of the newest branch message the draft read; 0 when
+	// no draft ran.
+	UptoSeq             int64  `json:"uptoSeq"`
+	ParentTipMessageID  string `json:"parentTipMessageId"`
+	ManualCardAvailable bool   `json:"manualCardAvailable"`
+	// NoteChanges are the changes of the notes the draft proposes, in the
+	// shape of a merge request's noteChanges; empty when the notes feature
+	// was off or nothing was proposed (and unless Status is "ready").
+	NoteChanges []NoteChange `json:"noteChanges"`
+}
+    BranchDraft is the draft as GET /branch shows it.
+
+type BranchDraftInput struct {
+	Purpose string
+	// Pack is the branch's stored background text (already quoted data).
+	Pack string
+	// BranchMessages are the branch's finished operator and assistant messages, ordered by seq here.
+	BranchMessages []Message
+	// ParentSince are the main line's finished messages after the fork, ordered by seq here.
+	ParentSince []Message
+	// ExtraMarkers are host protocol markers removed from the whole prompt
+	// besides the library's own.
+	ExtraMarkers []string
+	// ProposeNotes asks for noteChanges (the notes feature on); Notes are the
+	// conversation's notes the proposals may replace.
+	ProposeNotes bool
+	Notes        []Note
+}
+    BranchDraftInput is what the drafting run is shown.
+
+type BranchDraftOutcome struct {
+	Status   string      `json:"-"`
+	Card     *BranchCard `json:"card"`
+	Warnings []string    `json:"warnings"`
+	Error    string      `json:"error"`
+	Provider string      `json:"provider"`
+	Model    string      `json:"model"`
+	// NoteChanges are the sanitised note proposals (SanitizeDraftNoteChanges).
+	NoteChanges []NoteChange `json:"noteChanges,omitempty"`
+}
+    BranchDraftOutcome is what a finished draft run is stored as (the draft JSON
+    of the branch record).
+
+func DraftFailed(reason string) BranchDraftOutcome
+    DraftFailed is the outcome of a run that produced no card.
+
+func DraftOutcome(draft BranchCard, refs BranchCardRefs) BranchDraftOutcome
+    DraftOutcome judges a parsed draft against the messages it may cite:
+    a sanitised card when something usable is left, a failure otherwise.
+
+type BranchLimits struct {
+	// PurposeMaxRunes caps the purpose, which is also the branch's title.
+	PurposeMaxRunes int
+	// ExcerptMaxRunes caps the text the operator selected.
+	ExcerptMaxRunes int
+	// SoftMaxDepth is the depth beyond which opening a branch needs a second
+	// confirmation (confirmDeeper).
+	SoftMaxDepth int
+	// HardMaxDepth is the deepest branch that can exist.
+	HardMaxDepth int
+	// MaxOpenPerParent caps the unfinished branches under one line.
+	MaxOpenPerParent int
+	// MaxPerTree caps every branch of one main line.
+	MaxPerTree int
+	// MoveMaxMessages caps how many tail messages one move takes.
+	MoveMaxMessages int
+	// NoticeMaxPerTurn caps the conclusion cards attached to one parent turn.
+	NoticeMaxPerTurn int
+	// DraftTimeout is how long a draft may stay "drafting" before it counts as failed.
+	DraftTimeout time.Duration
+	// AsideRetention is how long an ended aside is kept before it is purged.
+	AsideRetention time.Duration
+}
+    BranchLimits bounds opening, moving and drafting branches.
+
+type BranchOpenTailError struct {
+	LineIDs []string
+}
+    BranchOpenTailError names the unfinished branches that hang on the part of
+    the main line a promotion would put away.
+
+func (e *BranchOpenTailError) Error() string
+
+type BranchPack struct {
+	// Rendered is the exact text the model receives and the operator can read.
+	Rendered        string `json:"rendered"`
+	AnchorMessageID string `json:"anchorMessageId"`
+	Purpose         string `json:"purpose"`
+	Excerpt         string `json:"excerpt"`
+	// Recent lists the verbatim main-line messages, oldest first; the last one is the anchor.
+	Recent []BranchPackMessage `json:"recent"`
+	// SummaryUsed is true when the main line's rolling summary was in range
+	// (it covers nothing after the anchor) and is part of Rendered.
+	SummaryUsed bool `json:"summaryUsed"`
+	// CondensedMessages is how many earlier messages appear as one-line
+	// digests; OmittedMessages how many earlier ones were left out for size.
+	CondensedMessages int `json:"condensedMessages"`
+	OmittedMessages   int `json:"omittedMessages"`
+	// DroppedRecent is how many of the last messages were dropped for size.
+	DroppedRecent int `json:"droppedRecent"`
+	TokenEstimate int `json:"tokenEstimate"`
+	TokenBudget   int `json:"tokenBudget"`
+	// LaterIncluded is true when the "what happened after the branch point"
+	// section is part of Rendered. LaterMessages is how many main-line
+	// messages came after the anchor (as read), LaterQuoted how many of them
+	// appear whole and LaterCondensed how many as one-line digests.
+	LaterIncluded  bool `json:"laterIncluded"`
+	LaterMessages  int  `json:"laterMessages"`
+	LaterQuoted    int  `json:"laterQuoted"`
+	LaterCondensed int  `json:"laterCondensed"`
+}
+    BranchPack is the stored background of one branch.
+
+func BuildBranchPack(in BranchPackInput) BranchPack
+    BuildBranchPack assembles the pack. Size order, when over the budget:
+    the older digest/summary goes first, then the oldest quoted messages,
+    and only last the anchor message itself is cut. Purpose and selected text
+    are length-limited at the door and never cut here. Callers that name the
+    anchor run in.Check first.
+
+type BranchPackInput struct {
+	// Aside quotes fewer recent messages (PackLimits.AsideRecentMessages).
+	Aside   bool
+	Purpose string
+	Excerpt string
+	// Messages are the finished main-line messages up to and including the
+	// anchor; the one with the highest seq must be the anchor.
+	Messages []Message
+	// Summary is the main line's rolling summary; it is used only when
+	// SummaryUptoSeq (the seq of the newest message it covers) is set and not
+	// after the anchor.
+	Summary        Summary
+	SummaryUptoSeq int64
+	// Later are the finished main-line messages after the anchor. They are
+	// used only when IncludeLater is set.
+	Later        []Message
+	IncludeLater bool
+	// AnchorMessageID, when set, names the anchor: messages after it (by seq)
+	// are ignored, and Check refuses an input whose anchor is missing.
+	AnchorMessageID string
+	// CardAnchor lets the anchor be a conclusion card among Messages (a
+	// follow-up branch on it): the card is quoted as the last message.
+	CardAnchor bool
+	// ExtraMarkers are host protocol markers removed from the rendered pack
+	// besides the library's own.
+	ExtraMarkers []string
+	// Limits bounds the pack; a field that is not positive means its default.
+	Limits PackLimits
+}
+    BranchPackInput is what the pack is built from.
+
+func (in BranchPackInput) Check() error
+    Check reports ErrBranchAnchorNotFound when AnchorMessageID is set but
+    is not a finished operator or assistant message among Messages (or, with
+    CardAnchor, a finished conclusion card).
+
+type BranchPackMessage struct {
+	ID        string    `json:"id"`
+	Seq       int64     `json:"seq"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"createdAt"`
+	// Truncated is true when the quoted text was cut to fit.
+	Truncated bool `json:"truncated"`
+}
+    BranchPackMessage describes one main-line message quoted in the pack.
+
+type BranchPromptInfo struct {
+	// Purpose is the branch's stated purpose (untrusted operator text).
+	Purpose string
+	// Pack is the stored pack text, exactly as shown to the operator.
+	Pack string
+	// Aside marks a one-question branch.
+	Aside bool
+}
+    BranchPromptInfo is what a branch line adds to its prompt.
+
+type BranchRef struct {
+	ParentLineID    string `json:"parentLineId"`
+	RootLineID      string `json:"rootLineId"`
+	AnchorMessageID string `json:"anchorMessageId"`
+	Depth           int    `json:"depth"`
+	Purpose         string `json:"purpose"`
+	Kind            string `json:"kind"`
+	Status          string `json:"status"`
+	Origin          string `json:"origin"`
+}
+    BranchRef is LineView.ConversationBranch: what a branch line says about
+    itself.
+
+func (r BranchRef) IsOpenForTurns() bool
+    IsOpenForTurns reports whether a branch still accepts messages.
+
+type BranchSuggestion struct {
+	Purpose string `json:"purpose"`
+	Kind    string `json:"kind"`
+	Excerpt string `json:"excerpt,omitempty"`
+}
+    BranchSuggestion is one proposed side line, as stored in message meta.
+
+func ExtractBranchSuggestions(content string, l BranchLimits) (string, []BranchSuggestion)
+    ExtractBranchSuggestions removes every suggestion line from content and
+    returns the cleaned text (trimmed by TrimReply) and the valid suggestions
+    (at most BranchSuggestMax; a bad line is dropped, never an error).
+
+func FindBranchSuggestion(meta MessageMeta, purpose, kind string) (BranchSuggestion, bool)
+    FindBranchSuggestion returns the suggestion of meta with the given purpose
+    and kind, if the model made one.
+
+type BranchView struct {
+	LineID          string `json:"lineId"`
+	ParentLineID    string `json:"parentLineId"`
+	RootLineID      string `json:"rootLineId"`
+	AnchorMessageID string `json:"anchorMessageId"`
+	Depth           int    `json:"depth"`
+	Purpose         string `json:"purpose"`
+	Kind            string `json:"kind"`
+	Status          string `json:"status"`
+	Origin          string `json:"origin"`
+	Excerpt         string `json:"excerpt"`
+	ConclusionLine  string `json:"conclusionLine"`
+	CardMessageID   string `json:"cardMessageId"`
+	Provider        string `json:"provider"`
+	Model           string `json:"model"`
+	// LineStatus is the branch line's own status (idle, thinking, error).
+	LineStatus     string     `json:"lineStatus"`
+	Unread         int        `json:"unread"`
+	MessageCount   int        `json:"messageCount"`
+	DraftStatus    string     `json:"draftStatus"`
+	Archived       bool       `json:"archived"`
+	CreatedAt      time.Time  `json:"createdAt"`
+	ClosedAt       *time.Time `json:"closedAt"`
+	LastActivityAt time.Time  `json:"lastActivityAt"`
+	// MergedIntoLineID is the branch a combine discarded this one into
+	// ("" otherwise; the group feature).
+	MergedIntoLineID string `json:"mergedIntoLineId"`
+	// Leaf is the branch's closing note (the leaf feature), nil when it has
+	// none. Stored leaves show even while the feature is off; clients follow
+	// /capabilities.
+	Leaf *LeafSummary `json:"leaf"`
+	// AnchorTag is the argument tag of the message the branch hangs on (the
+	// ibis feature); absent without one.
+	AnchorTag *MessageTag `json:"anchorTag,omitempty"`
+	// CardEditedAt is when a merged branch's conclusion card was last edited
+	// (B17.1); nil when the branch has no card or its card was never edited.
+	CardEditedAt *time.Time `json:"cardEditedAt,omitempty"`
+}
+    BranchView is one row of the outline (GET /branches) and the branch header.
+
+type Chapter struct {
+	Index          int       `json:"index"`
+	Title          string    `json:"title"`
+	TitleSource    string    `json:"titleSource"`
+	Kind           string    `json:"kind"`
+	MilestoneID    string    `json:"milestoneId"`
+	StartMessageID string    `json:"startMessageId"`
+	EndMessageID   string    `json:"endMessageId"`
+	StartAt        time.Time `json:"startAt"`
+	EndAt          time.Time `json:"endAt"`
+	MessageCount   int       `json:"messageCount"`
+	BranchIDs      []string  `json:"branchIds"`
+	CardMessageIDs []string  `json:"cardMessageIds"`
+}
+    Chapter is one stretch of a line.
+
+func ComputeChapters(messages []ChapterMessage, cuts []ChapterCut, branches []ChapterBranch, l ChapterLimits) []Chapter
+    ComputeChapters cuts the messages (ordered by seq here) into chapters.
+    Cuts whose message is not in the line are ignored.
+
+type ChapterBranch struct {
+	LineID          string
+	AnchorMessageID string
+}
+    ChapterBranch is a branch hanging off a message of the line.
+
+type ChapterCut struct {
+	ID        string    `json:"id"`
+	MessageID string    `json:"messageId"`
+	Kind      string    `json:"kind"`
+	Title     string    `json:"title"`
+	CreatedBy string    `json:"createdBy"`
+	CreatedAt time.Time `json:"createdAt"`
+}
+    ChapterCut is a stored topic cut or milestone.
+
+type ChapterCutSuggestion struct {
+	MessageID string `json:"messageId"`
+	Seq       int64  `json:"seq"`
+	Title     string `json:"title"`
+	Reason    string `json:"reason"`
+}
+    ChapterCutSuggestion is a proposed chapter start on an operator message.
+
+type ChapterLimits struct {
+	// IdleGap is the pause between two neighbouring messages that opens a
+	// new chapter.
+	IdleGap time.Duration
+	// MinMessages is the fewest messages a chapter keeps before a nearby
+	// cut is folded into its neighbour.
+	MinMessages int
+	// MaxCount caps the chapters of one line; the shortest neighbours merge.
+	MaxCount int
+	// MilestoneMaxPerTree caps the milestones of one conversation.
+	MilestoneMaxPerTree int
+	// MilestoneTitleMaxRunes caps a milestone name.
+	MilestoneTitleMaxRunes int
+	// TopicTitleMaxRunes caps a stored topic title.
+	TopicTitleMaxRunes int
+	// MaxMessages bounds how many messages of a line are scanned.
+	MaxMessages int
+}
+    ChapterLimits bounds the chapter cut.
+
+type ChapterMessage struct {
+	ID     string
+	Seq    int64
+	At     time.Time
+	IsCard bool
+}
+    ChapterMessage is the part of a message the chapter cut needs.
+
+type ChatMessage struct {
+	Role    string `json:"role"`
+	Content string `json:"content"`
+}
+    ChatMessage is one message of a chat-style request.
+
+type CombineSource struct {
+	LineID   string
+	Purpose  string
+	Leaf     string
+	Messages []Message
+}
+    CombineSource is a branch a combine draws from: its purpose, leaf and newest
+    messages.
+
+type CombinedInput struct {
+	Sources      []CombineSource
+	Settled      []string
+	Open         []string
+	TokenBudget  int
+	ExtraMarkers []string
+}
+    CombinedInput is what a combined branch's background is built from.
+
+type Comparison struct {
+	ID            string            `json:"id"`
+	RootLineID    string            `json:"rootLineId"`
+	ParentLineID  string            `json:"parentLineId"`
+	LineIDs       []string          `json:"lineIds"`
+	Criteria      []string          `json:"criteria"`
+	Status        string            `json:"status"`
+	Matrix        *ComparisonMatrix `json:"matrix"`
+	DecidedLineID string            `json:"decidedLineId"`
+	CreatedBy     string            `json:"createdBy"`
+	DecidedBy     string            `json:"decidedBy"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+	DecidedAt     *time.Time        `json:"decidedAt"`
+}
+    Comparison compares sibling branches of one parent.
+
+type ComparisonMatrix struct {
+	Criteria       []string                 `json:"criteria"`
+	Options        []ComparisonOption       `json:"options"`
+	Scores         [][]ComparisonScore      `json:"scores"`
+	Recommendation ComparisonRecommendation `json:"recommendation"`
+}
+    ComparisonMatrix is criteria × options: Scores[criterion][option].
+
+func ParseConvergence(output string, options []ConvergeOption, criteria []string, l Limits) (ComparisonMatrix, error)
+    ParseConvergence reads a converge reply into a full matrix: the operator's
+    criteria when given (else the model's, cut to the limits), every option,
+    a cell per criterion and option (0 where the model gave no score from 1 to
+    5) and a recommendation of a known option.
+
+type ComparisonOption struct {
+	LineID string `json:"lineId"`
+	Label  string `json:"label"`
+}
+    ComparisonOption is a compared branch with its purpose when compared.
+
+type ComparisonRecommendation struct {
+	LineID string `json:"lineId"`
+	Reason string `json:"reason"`
+}
+    ComparisonRecommendation is the option the model recommends and why.
+
+type ComparisonScore struct {
+	Score int    `json:"score"`
+	Why   string `json:"why"`
+}
+    ComparisonScore is one cell: 1–5, or 0 when the model gave none.
+
+type Conflict struct {
+	ID     string       `json:"id"`
+	Branch ConflictSide `json:"branch"`
+	Other  ConflictSide `json:"other"`
+	Choice string       `json:"choice,omitempty"`
+}
+    Conflict is two branches that say different things, and what the operator
+    chose.
+
+func NormalizeConflicts(conflicts []Conflict, members map[string]bool) ([]Conflict, error)
+    NormalizeConflicts checks the conflicts a request settles: both sides are
+    different members, claims are one line (1–300 runes), every conflict has a
+    choice; ids default to c1, c2…
+
+type ConflictSide struct {
+	LineID string `json:"lineId"`
+	Claim  string `json:"claim"`
+}
+    ConflictSide is one branch's claim.
+
+type ContextLimits struct {
+	TokenBudget int
+}
+    ContextLimits is the token budget the blocks of one prompt share:
+    the fixed blocks (pack, capsule, card notice), then the features' blocks in
+    WithFeatures order and the host's sections; the history gets what is left
+    (at most History.TokenBudget). The operator's message and the rules are not
+    counted.
+
+type ConvergeInput struct {
+	Options      []ConvergeOption
+	Criteria     []string
+	ExtraMarkers []string
+}
+    ConvergeInput is a comparison's options and the operator's criteria.
+
+type ConvergeOption struct {
+	Key      string
+	LineID   string
+	Purpose  string
+	Leaf     string
+	Messages []Message
+}
+    ConvergeOption is a branch a converge job sees under a short key.
+
+type DecomposeInput struct {
+	LineID        string
+	Title         string
+	Messages      []Message
+	CutMessageIDs map[string]bool
+	Tags          []string
+	TenantTags    []string
+	Related       []RelatedLine
+	Truncated     bool
+}
+    DecomposeInput is what a plan is made from. Messages are the line's
+    messages (any order; at most DecomposeMaxMessages are read, oldest first).
+    CutMessageIDs are the messages that already hold a chapter cut. Tags are
+    the conversation's own (never suggested again). TenantTags are the tags the
+    tenant's conversations use (suggested as they are, never joined or dropped
+    as fragments). Related are the related conversations the store found.
+
+type DecomposePlan struct {
+	LineID         string                 `json:"lineId"`
+	SuggestedTags  []string               `json:"suggestedTags"`
+	ChapterCuts    []ChapterCutSuggestion `json:"chapterCuts"`
+	DetourRanges   []DetourRange          `json:"detourRanges"`
+	SeedCandidates []SeedCandidate        `json:"seedCandidates"`
+	RelatedLines   []RelatedLine          `json:"relatedLines"`
+	// Truncated is true when the line has more messages than were read.
+	Truncated bool `json:"truncated"`
+}
+    DecomposePlan is the answer of GET /lines/{id}/decompose.
+
+func BuildDecomposePlan(in DecomposeInput) DecomposePlan
+    BuildDecomposePlan makes the plan. Every list is non-nil and capped.
+
+type Delta struct {
+	TurnID string `json:"turnId"`
+	Seq    int64  `json:"seq"`
+	Kind   string `json:"kind"`
+	Text   string `json:"text"`
+}
+    Delta is one streamed piece of a running turn.
+
+type DetourRange struct {
+	FromMessageID       string `json:"fromMessageId"`
+	ToMessageID         string `json:"toMessageId"`
+	AnchorMessageID     string `json:"anchorMessageId"`
+	MessageCount        int    `json:"messageCount"`
+	Purpose             string `json:"purpose"`
+	SuggestedConclusion string `json:"suggestedConclusion"`
+}
+    DetourRange is a stretch that could be extracted into a branch (POST
+    /lines/{id}/branches/extract).
+
+type DivergeDirection struct {
+	Purpose string `json:"purpose"`
+	Why     string `json:"why"`
+}
+    DivergeDirection is one proposed direction.
+
+func ParseDiverge(output string, count int, l Limits) ([]DivergeDirection, error)
+    ParseDiverge reads a diverge reply: purposes flattened and cut to the
+    branch purpose limit, repeats (ignoring case) and empty ones left out,
+    at most count; fewer than the minimum is unusable.
+
+type DivergeInput struct {
+	Context      string
+	Messages     []Message
+	Count        int
+	ExtraMarkers []string
+}
+    DivergeInput is what a diverge job reads: the line's context (its title or
+    branch purpose), its messages up to the anchor (the anchor last) and how
+    many directions to propose.
+
+type DivergeLimits struct {
+	// MinCount and MaxCount bound the directions of one diverge and the
+	// options of one comparison.
+	MinCount int
+	MaxCount int
+	// ContextMessages is how many messages up to the anchor a diverge job
+	// reads, and of each option a converge job reads.
+	ContextMessages int
+	// CriteriaMax and CriterionMaxRunes bound a comparison's criteria.
+	CriteriaMax       int
+	CriterionMaxRunes int
+	// ReasonMaxRunes caps a score's reason and the recommendation's.
+	ReasonMaxRunes int
+}
+    DivergeLimits bound diverging (the directions one job proposes) and
+    converging (the options and criteria of a comparison).
+
+type DivergeTarget struct {
+	Provider string
+	Model    string
+	// Purpose is the branch's own purpose; empty derives one (see
+	// DivergeTargetPurpose).
+	Purpose string
+}
+    DivergeTarget is one model a cross-model diverge opens a branch for.
+
+type DraftNoteContext struct {
+	BranchLineID   string
+	ActiveNotes    map[string]bool
+	BranchMessages map[string]bool
+	Limits         NoteLimits
+}
+    DraftNoteContext is what proposals are checked against: the branch they come
+    from, the tree's active notes (a supersede must name one) and the branch
+    messages a proposal may cite as its source.
+
+type DriftCheckInput struct {
+	Goal         string
+	Messages     []Message
+	AsideAllowed bool
+	ExtraMarkers []string
+}
+    DriftCheckInput is what a drift check reads. AsideAllowed offers an aside as
+    well as a branch (the aside feature is on).
+
+type DriftVerdict struct {
+	Drift   bool   `json:"drift"`
+	Kind    string `json:"kind"`
+	Purpose string `json:"purpose"`
+	Reason  string `json:"reason"`
+}
+    DriftVerdict is a drift check's answer. Kind and Purpose describe the branch
+    to open when Drift is true.
+
+func ParseDriftCheck(output string, l Limits, asideAllowed bool) (DriftVerdict, error)
+    ParseDriftCheck reads a drift_check reply. A drift needs a purpose (cut
+    to the purpose limit); its kind is aside or investigate (investigate when
+    missing, or when asides are not allowed).
+
+type Error struct {
+	Code    string
+	Message string
+	Extra   map[string]any
+
+	// Has unexported fields.
+}
+    Error is a refusal the caller can act on: a stable code, a message for the
+    operator and optional extra fields. The codes reuse 宿主's strings
+    so a ported frontend tells the refusals apart without changes. The HTTP
+    layer maps codes to statuses; this package knows nothing about HTTP.
+    The Err* sentinels are shared values: never modify their fields, use AsError
+    or NewError for a copy.
+
+func AsError(err error, l Limits) *Error
+    AsError turns any domain error in err's chain into a fresh *Error with the
+    extra fields 宿主 sent (limits, counts, ids), or returns nil when
+    err is not a domain error. The message is the domain error's own text,
+    never the wrapping context, so nothing internal leaks. Shared sentinels
+    are never modified, and the copy unwraps to the error it was made from,
+    so errors.Is(AsError(err, l), ErrX) still holds.
+
+func CardError(problems []BranchCardProblem) *Error
+    CardError is the refusal of a conclusion card: the first problem in the
+    message and every problem in the extra fields.
+
+func FeatureDisabled(feature string) *Error
+    FeatureDisabled is ErrFeatureDisabled naming the feature (extra "feature").
+
+func FoldOverlapError(foldID string) *Error
+    FoldOverlapError: the range overlaps another fold of the line (extra
+    foldId).
+
+func InvalidComparison(reason string) *Error
+    InvalidComparison refuses the options or the choice with the reason.
+
+func InvalidFold(reason string) *Error
+    InvalidFold refuses a range with the reason.
+
+func InvalidGroup(reason string) *Error
+    InvalidGroup is invalid_group with a reason.
+
+func InvalidMemory(reason string) *Error
+    InvalidMemory refuses a memory with the reason.
+
+func LeafError(problems []LeafProblem) *Error
+    LeafError is the refusal of a leaf, shaped like CardError.
+
+func ModelNotAllowed(provider, model string) *Error
+    ModelNotAllowed is ErrModelNotAllowed naming the provider and model.
+
+func NewError(code, message string, extra map[string]any) *Error
+    NewError builds an Error.
+
+func NoteError(problems []NoteProblem) *Error
+    NoteError is the refusal of a note request, shaped like CardError.
+
+func (e *Error) Error() string
+
+func (e *Error) Unwrap() error
+    Unwrap returns the error a refined or converted error stands for, if any.
+
+type FisheyeBranch struct {
+	LineID   string
+	Purpose  string
+	LeafKind string
+	Line     string
+	Distance int
+}
+    FisheyeBranch is another branch of the tree as the fisheye sees it: its leaf
+    (or, without one, its card's conclusion line) and how many edges away in the
+    tree it is.
+
+type FisheyeInput struct {
+	Messages        []Message
+	Referenced      map[string]bool
+	SummaryUptoSeq  int64
+	Branches        []FisheyeBranch
+	TokenBudget     int
+	MessageTokenCap int
+	Limits          Limits
+}
+    FisheyeInput is what one selection reads. Messages are the line's history
+    before the turn, oldest first; Referenced are message ids notes or cards
+    point at; messages up to SummaryUptoSeq are covered by the rolling summary
+    (unless pinned).
+
+type FisheyeItem struct {
+	Kind   string `json:"kind"`
+	ID     string `json:"id"`
+	LineID string `json:"lineId"`
+	Level  string `json:"level"`
+	Score  int    `json:"score"`
+	Tokens int    `json:"tokens"`
+}
+    FisheyeItem is one candidate with the level it got and its score; Tokens is
+    what it costs at that level.
+
+type FisheyeLimits struct {
+	// FullExchanges: messages scoring above −FullExchanges stay verbatim.
+	FullExchanges int
+	// SummaryExchanges: messages scoring above −SummaryExchanges are
+	// condensed to one line; the rest are left out.
+	SummaryExchanges int
+	// BranchReach: branches scoring at least −BranchReach show their leaf.
+	BranchReach int
+	// MaxBranches caps the branch conclusions of one prompt.
+	MaxBranches int
+}
+    FisheyeLimits shape the fisheye context. A message's score is its head
+    start (pinned, referenced, a card) minus how many exchanges back it is;
+    a branch's is its leaf's weight minus its distance in the tree.
+
+type FisheyeSelection struct {
+	Full        []Message
+	Condensed   []Message
+	Conclusions []FisheyeBranch
+	Items       []FisheyeItem
+	Tokens      int
+}
+    FisheyeSelection is the outcome: the verbatim and the condensed messages
+    (oldest first), the branch conclusions (highest score first), every item
+    (messages oldest first, then branches by score) and the tokens it costs.
+
+func SelectFisheye(in FisheyeInput) FisheyeSelection
+    SelectFisheye scores, levels and budgets the candidates.
+
+type Fold struct {
+	ID             string    `json:"id"`
+	LineID         string    `json:"lineId"`
+	FromMessageID  string    `json:"fromMessageId"`
+	ToMessageID    string    `json:"toMessageId"`
+	FromSeq        int64     `json:"fromSeq"`
+	ToSeq          int64     `json:"toSeq"`
+	Summary        string    `json:"summary"`
+	MessageCount   int       `json:"messageCount"`
+	TokensOriginal int       `json:"tokensOriginal"`
+	TokensSummary  int       `json:"tokensSummary"`
+	Status         string    `json:"status"`
+	AIDrafted      bool      `json:"aiDrafted"`
+	CreatedBy      string    `json:"createdBy"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+    Fold is a folded stretch of a line.
+
+type FoldLimits struct {
+	// SummaryMaxRunes caps a fold's summary.
+	SummaryMaxRunes int
+	// MinMessages and MaxMessages bound the messages one fold covers.
+	MinMessages int
+	MaxMessages int
+	// MaxActivePerLine caps the folds (drafting or active) of one line.
+	MaxActivePerLine int
+	// SuggestEvery: Suggest looks for a chapter to fold every this many
+	// replies of a line.
+	SuggestEvery int
+	// SuggestMinMessages and SuggestMinTokens: a chapter worth proposing
+	// has at least this many messages and tokens.
+	SuggestMinMessages int
+	SuggestMinTokens   int
+	// PromptTokenBudget bounds the messages a summary job quotes.
+	PromptTokenBudget int
+}
+    FoldLimits bound the folds of a line and the fold feature's jobs.
+
+type FoldSummaryInput struct {
+	Title        string
+	Messages     []Message
+	Budget       int
+	ExtraMarkers []string
+}
+    FoldSummaryInput is what a fold's summary is written from: the chapter's
+    title when a suggestion proposes it, the messages oldest first, and the
+    tokens they may take in the prompt.
+
+type FolderSummary struct {
+	Folder   string `json:"folder"`
+	Active   int    `json:"active"`
+	Archived int    `json:"archived"`
+}
+    FolderSummary is one folder of TenantOrganization.
+
+type Goal struct {
+	RootLineID string `json:"rootLineId"`
+	Text       string `json:"text"`
+	// Source is manual (the operator wrote it) or ai (accepted or written
+	// by the model).
+	Source    string    `json:"source"`
+	UpdatedBy string    `json:"updatedBy"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+    Goal is a conversation's goal.
+
+type GoalLimits struct {
+	// TextMaxRunes caps the one-line goal.
+	TextMaxRunes int
+	// DriftEvery: the drift check runs after every that many replies of
+	// the main line.
+	DriftEvery int
+}
+    GoalLimits bound a conversation's goal and its drift check.
+
+type GoalProposeInput struct {
+	Title        string
+	Messages     []Message
+	ExtraMarkers []string
+}
+    GoalProposeInput is what a goal proposal reads: the conversation's title and
+    its first exchanges.
+
+type Group struct {
+	ID            string    `json:"id"`
+	RootLineID    string    `json:"rootLineId"`
+	Title         string    `json:"title"`
+	Summary       string    `json:"summary"`
+	SummaryStatus string    `json:"summaryStatus"`
+	Status        string    `json:"status"`
+	MemberLineIDs []string  `json:"memberLineIds"`
+	CreatedBy     string    `json:"createdBy"`
+	CreatedAt     time.Time `json:"createdAt"`
+	UpdatedAt     time.Time `json:"updatedAt"`
+}
+    Group is a group of branches.
+
+type GroupCandidate struct {
+	Key     string
+	Purpose string
+	Ended   bool
+	Leaf    string
+}
+    GroupCandidate is a branch a suggestion job sees.
+
+type GroupLimits struct {
+	TitleMaxRunes    int
+	SummaryMaxRunes  int
+	MaxMembers       int
+	MaxActivePerTree int
+	// CombineTokenBudget bounds what a combined branch's pack carries from
+	// the branches it combines.
+	CombineTokenBudget int
+}
+    GroupLimits bound the groups of a conversation and combining branches.
+
+type GroupMemberInput struct {
+	Purpose  string
+	LeafKind string
+	Leaf     string
+	Body     string
+}
+    GroupMemberInput is a member as the summary job reads it.
+
+type GroupProposal struct {
+	Title     string                  `json:"title"`
+	Members   []string                `json:"members"`
+	Conflicts []GroupProposalConflict `json:"conflicts"`
+}
+    GroupProposal is one proposed group.
+
+func ParseGroupSuggestions(output string, known map[string]bool, l GroupLimits) ([]GroupProposal, error)
+    ParseGroupSuggestions reads a group_suggest reply: groups with a title
+    and 2 or more known members (each once), conflicts only between members,
+    at most three groups.
+
+type GroupProposalConflict struct {
+	Branch      string `json:"branch"`
+	Other       string `json:"other"`
+	BranchClaim string `json:"branchClaim"`
+	OtherClaim  string `json:"otherClaim"`
+}
+    GroupProposalConflict is a conflict between two proposed members.
+
+type GroupRelation struct {
+	From, To, Label string
+}
+    GroupRelation is a relation between two candidates.
+
+type GroupSuggestInput struct {
+	Candidates   []GroupCandidate
+	Relations    []GroupRelation
+	ExtraMarkers []string
+}
+    GroupSuggestInput is a tree's candidates and the relations among them.
+
+type GroupSummaryInput struct {
+	Title        string
+	Members      []GroupMemberInput
+	Settled      []string
+	ExtraMarkers []string
+}
+    GroupSummaryInput is what a group summary is written from; Settled are
+    claims the operator adopted when the group was made.
+
+type HistoryLimits struct {
+	// TokenBudget bounds the verbatim history of a prompt.
+	TokenBudget int
+	// MessageTokenCap bounds one verbatim message in the prompt.
+	MessageTokenCap int
+	// SummaryTriggerTokens is the unsummarized token count after which a
+	// rolling summary is due.
+	SummaryTriggerTokens int
+}
+    HistoryLimits bounds the conversation history of a turn prompt and decides
+    when a rolling summary is due.
+
+type HistorySelection struct {
+	Full      []Message
+	Condensed []Message
+}
+    HistorySelection is the history a selector chose: the verbatim messages and
+    the ones condensed to a line each, both oldest first.
+
+type IbisCandidate struct {
+	Key     string
+	Role    string
+	Content string
+}
+    IbisCandidate is a message an ibis_tag job sees under a short key.
+
+type IbisLimits struct {
+	// BatchMax caps the messages one ibis_tag job tags.
+	BatchMax int
+	// MessageRunes caps each message as the job quotes it.
+	MessageRunes int
+	// Every: Suggest and Auto tag a line every this many replies.
+	Every int
+}
+    IbisLimits bound the ibis feature's tagging jobs.
+
+type IbisTagInput struct {
+	Context      string
+	Messages     []IbisCandidate
+	MessageRunes int
+	ExtraMarkers []string
+}
+    IbisTagInput is what one tagging job reads: the line's context (its branch
+    purpose or title) and the untagged messages, oldest first.
+
+type IbisTagProposal struct {
+	Message string `json:"message"`
+	Kind    string `json:"kind"`
+}
+    IbisTagProposal is one tag the model proposed for a message key.
+
+func ParseIbisTags(output string, known map[string]bool) ([]IbisTagProposal, error)
+    ParseIbisTags reads an ibis_tag reply: entries with an unknown key or kind
+    are left out, a key tagged twice keeps its first kind.
+
+type ImportAnalyzeEvalSample struct {
+	Name   string                  `json:"name"`
+	Source string                  `json:"source,omitempty"`
+	Draft  bool                    `json:"draft,omitempty"`
+	Title  string                  `json:"title,omitempty"`
+	Units  []ImportAnalyzeUnit     `json:"units"`
+	Gold   []ImportAnalyzeGoldNode `json:"gold"`
+}
+    ImportAnalyzeEvalSample is one hand-labelled conversation: the analysis
+    input and the plan it should give. Where the units came from is Source.
+    Draft marks a converted export whose gold nobody has labelled yet (one node
+    per unit); an evaluation refuses it.
+
+func (s ImportAnalyzeEvalSample) Input() ImportAnalyzeInput
+    Input is the sample as an analysis input.
+
+type ImportAnalyzeGoldNode struct {
+	UnitKeys []string `json:"unitKeys"`
+	Role     string   `json:"role,omitempty"`
+	Note     string   `json:"note,omitempty"`
+}
+    ImportAnalyzeGoldNode is one node of a hand-labelled plan: its units in
+    order, its role (optional) and why the labeller grouped them (optional).
+
+type ImportAnalyzeInput struct {
+	Title string              `json:"title,omitempty"`
+	Units []ImportAnalyzeUnit `json:"units"`
+}
+    ImportAnalyzeInput is what one analysis reads.
+
+func NormalizeImportAnalyzeInput(in ImportAnalyzeInput) (ImportAnalyzeInput, error)
+    NormalizeImportAnalyzeInput checks an analysis input and returns it cleaned:
+    1 to ImportAnalyzeMaxUnits units with unique, non-empty keys (trimmed,
+    at most ImportAnalyzeKeyRunes), texts flattened and cut (questions and
+    answers to ImportAnalyzeTextRunes, titles to ImportAnalyzeTitleRunes),
+    message counts 0 to ImportAnalyzeMaxUnitMessages and start times RFC 3339
+    when given. A refusal is invalid_input naming the field.
+
+type ImportAnalyzeNode struct {
+	// Key is the primary unit key (the earliest unit in UnitKeys).
+	Key string `json:"key"`
+	// UnitKeys lists all input unit keys threaded into this topic node (in chronological order, e.g. ["u1", "u3", "u5"] for A->B->A->C->A).
+	UnitKeys []string `json:"unitKeys"`
+	// Title is the synthesized topic title (<= 60 runes).
+	Title string `json:"title"`
+	// Role is "chapter", "merged_branch", "open_branch", or "standalone".
+	Role string `json:"role"`
+	// AttachToKey is the key of the "chapter" node this branch hangs under (only when Role is merged_branch or open_branch).
+	AttachToKey string `json:"attachToKey,omitempty"`
+	// AttachAfterUnitKey is the specific unit key inside AttachToKey right before this branch forked (optional; defaults to the latest unit of AttachToKey before this branch).
+	AttachAfterUnitKey string `json:"attachAfterUnitKey,omitempty"`
+	// Conclusion is the drafted branch card conclusion (when Role is merged_branch).
+	Conclusion string `json:"conclusion,omitempty"`
+	// Reason explains briefly why these units were threaded or assigned this role (e.g. "跨段縫合 #1、#3、#5 的同主題問答").
+	Reason string `json:"reason,omitempty"`
+}
+    ImportAnalyzeNode is one synthesized topic node in the proposed tree.
+
+type ImportAnalyzePlan struct {
+	// Mode is the recommended assembly mode ("tree", "timeline", or "batch").
+	Mode string `json:"mode"`
+	// Source is "model" when the AI runner produced the plan, or "heuristic" when the deterministic analyzer produced it.
+	Source string `json:"source"`
+	// Summary is a human-readable 1-line summary of the analysis.
+	Summary string `json:"summary"`
+	// Nodes are the proposed tree nodes in order; every input unit Key appears in exactly one node's UnitKeys.
+	Nodes []ImportAnalyzeNode `json:"nodes"`
+}
+    ImportAnalyzePlan is the proposed tree.
+
+func AnalyzeImportDeterministic(in ImportAnalyzeInput) (ImportAnalyzePlan, error)
+    AnalyzeImportDeterministic threads the units by their topic words and
+    assigns roles, without a model (Source "heuristic"); in is checked first
+    (NormalizeImportAnalyzeInput).
+
+    Threading, unit by unit: a unit stays with the previous unit's node when
+    that node has no reply yet, when the question opens like a follow-up (那, 如果,
+    為什麼, what about…) or names no topic word. Otherwise it joins the node (the
+    previous one included) whose questions share the most topic words with its
+    question, counting only words in one node's questions (the previous node on
+    a tie, else the most recent); when none shares any, the B21 rule keeps it
+    with the previous node if it shares a word with that node or the previous
+    unit's answer, else it starts a node.
+
+    Roles, node by node in order of their first unit: the first is a chapter;
+    a node whose first unit falls strictly inside a chapter's span (between
+    its first and last unit) is a detour and becomes a merged branch of the
+    innermost such chapter, hung after that chapter's last unit before it;
+    any other node of two or more units (or four or more messages) is a chapter;
+    what is left is a conversation of its own. A role the import has no room for
+    moves as the client's tree defaults do (withinTreeLimits).
+
+func ParseImportAnalyzeOutput(raw string, in ImportAnalyzeInput) (ImportAnalyzePlan, error)
+    ParseImportAnalyzeOutput reads a model's analysis reply for in (normalized
+    first; its refusal is returned as is). The reply is one JSON object,
+    optionally in a ```json fence. The plan is checked strictly and repaired
+    where it can be: units are named by their prompt id (U1…) or their key;
+    unknown and repeated ones are dropped; a missing unit joins the node of
+    the unit just before it (else just after); an unknown role is a chapter;
+    a branch's attachToKey must name a chapter node (else the chapter it started
+    in, else the latest before it, else the first) and attachAfterUnitKey a
+    unit of it before the branch; the limits of an import move roles as the
+    tree's defaults do; texts are flattened and cut. A reply that is not such
+    an object, has no usable node or leaves out more than half the units is
+    ErrImportAnalyzeOutput (the caller then uses AnalyzeImportDeterministic).
+
+type ImportAnalyzeScore struct {
+	Hits, Extras, Misses int
+	RoleHits, RoleTotal  int
+	Nodes, GoldNodes     int
+}
+    ImportAnalyzeScore is a plan's agreement with a gold: unit pairs the plan
+    and the gold both put in one node (Hits), pairs only the plan joins (Extras:
+    over-merging), pairs only the gold joins (Misses: over-splitting),
+    and the gold nodes whose first unit the plan gave the gold's role (RoleHits
+    of RoleTotal, counting gold nodes with a role).
+
+func ScoreImportAnalyzePlan(plan ImportAnalyzePlan, gold []ImportAnalyzeGoldNode) ImportAnalyzeScore
+    ScoreImportAnalyzePlan compares plan with gold over the gold's units:
+    a unit the plan leaves out is alone, a unit the gold leaves out is ignored.
+
+func (s ImportAnalyzeScore) Add(o ImportAnalyzeScore) ImportAnalyzeScore
+    Add is the score of both together (pairs and roles summed).
+
+func (s ImportAnalyzeScore) F1() float64
+    F1 is the harmonic mean of precision and recall.
+
+func (s ImportAnalyzeScore) Precision() float64
+    Precision is the share of the plan's pairs the gold has; 1 without any.
+
+func (s ImportAnalyzeScore) Recall() float64
+    Recall is the share of the gold's pairs the plan has; 1 without any.
+
+func (s ImportAnalyzeScore) RoleAccuracy() float64
+    RoleAccuracy is the share of the gold's roles the plan gave; 1 without any.
+
+type ImportAnalyzeUnit struct {
+	Key          string `json:"key"`
+	Title        string `json:"title,omitempty"`
+	Question     string `json:"question"`
+	Answer       string `json:"answer"`
+	MessageCount int    `json:"messageCount"`
+	StartAt      string `json:"startAt,omitempty"`
+}
+    ImportAnalyzeUnit is one Q&A round (or pre-cut segment) to be threaded and
+    organized into a tree.
+
+type ImportBranch struct {
+	AnchorExternalID string          `json:"anchorExternalId"`
+	Purpose          string          `json:"purpose"`
+	Kind             string          `json:"kind"`
+	Status           string          `json:"status"`
+	Card             *BranchCard     `json:"card,omitempty"`
+	CreatedAt        *time.Time      `json:"createdAt,omitempty"`
+	Messages         []ImportMessage `json:"messages"`
+}
+    ImportBranch is one imported branch, hanging on the main-line message
+    named by AnchorExternalID. Kind is investigate or alternative (default
+    alternative), Status open, discarded (the default) or merged; a merged
+    branch carries the conclusion Card it left on the main line, and only a
+    merged one does. CreatedAt, when set, is when the branch started.
+
+type ImportChapterCut struct {
+	AnchorExternalID string `json:"anchorExternalId"`
+	Title            string `json:"title"`
+}
+    ImportChapterCut is a milestone to set on the main-line message named by
+    AnchorExternalID (B19).
+
+type ImportDates struct {
+	CreatedAt      time.Time
+	LastActivityAt time.Time
+}
+    ImportDates are the dates a line of an import is written with: when it
+    started and its last activity (its last message).
+
+type ImportInput struct {
+	Title       string
+	Provider    string
+	Model       string
+	Folder      string
+	Tags        []string
+	Source      string
+	CreatedAt   *time.Time
+	Messages    []ImportMessage
+	Branches    []ImportBranch
+	ChapterCuts []ImportChapterCut
+}
+    ImportInput is a whole imported conversation. An empty Title is taken from
+    the first operator message. Source names where it came from (a label,
+    at most ImportSourceMaxRunes; not stored). CreatedAt, when set, is when the
+    conversation started; ChapterCuts are milestones on main-line messages.
+
+type ImportMessage struct {
+	ExternalID string     `json:"externalId"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content"`
+	CreatedAt  *time.Time `json:"createdAt,omitempty"`
+}
+    ImportMessage is one imported message. ExternalID is the source's id,
+    used only to hang branches and chapter cuts on it. CreatedAt, when set,
+    is when the source wrote it (B19).
+
+type ImportPlan struct {
+	Title       string
+	Source      string
+	Dates       *ImportDates
+	Messages    []ImportMessage
+	Branches    []ImportPlanBranch
+	ChapterCuts []ImportPlanCut
+}
+    ImportPlan is a checked import: cleaned messages and branches whose anchor
+    is an index into Messages. Dates is nil when the import carries no date
+    at all (everything is written at the time of the import, as before B19);
+    otherwise every message of the plan has its CreatedAt.
+
+func PlanImport(in ImportInput, l Limits, extraMarkers []string, now time.Time) (ImportPlan, error)
+    PlanImport checks an import and cleans its text. Message content is cleaned
+    like a host system message (CleanSystemText: line breaks normalised,
+    control characters and protocol markers removed, code fences kept), must not
+    be empty and is at most l.Text.MessageMaxRunes (too_long). Roles are user or
+    assistant. Every other refusal is invalid_input naming the field.
+
+    Dates (B19) are UTC between ImportEarliest and now + ImportFutureSlack (see
+    planImportDates for how missing ones are filled); ChapterCuts and a merged
+    branch's card are checked by planImportCuts and planImportCard.
+
+type ImportPlanBranch struct {
+	AnchorIndex int
+	Purpose     string
+	Kind        string
+	Status      string
+	Card        *BranchCard
+	CardContent string
+	Dates       *ImportDates
+	Messages    []ImportMessage
+}
+    ImportPlanBranch is a checked branch of an import. Card (with CardContent,
+    its rendering) is set for a merged branch only. Dates is set when the import
+    carries dates.
+
+type ImportPlanCut struct {
+	AnchorIndex int
+	Title       string
+}
+    ImportPlanCut is a checked chapter cut: a milestone on
+    Messages[AnchorIndex].
+
+type JobError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+    JobError says why a background job failed.
+
+func JobErrorFor(text string) JobError
+    JobErrorFor names the failure a job ended with (its stored error text).
+
+type Leaf struct {
+	LineID     string `json:"lineId"`
+	RootLineID string `json:"rootLineId"`
+	Kind       string `json:"kind"`
+	Line       string `json:"line"`
+	Body       string `json:"body"`
+	Status     string `json:"status"`
+	// AIDrafted marks a leaf a leaf_draft job wrote that the operator has not
+	// rewritten since.
+	AIDrafted bool      `json:"aiDrafted"`
+	CreatedBy string    `json:"createdBy"`
+	CreatedAt time.Time `json:"createdAt"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+    Leaf is a branch's closing note.
+
+type LeafDraftError struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
+}
+    LeafDraftError says why the newest leaf draft of a branch failed.
+
+func LeafDraftErrorFor(jobError string) LeafDraftError
+    LeafDraftErrorFor names the failure a leaf_draft job ended with.
+
+type LeafDraftInput struct {
+	Purpose string
+	// Status and Origin are the branch's (an ended branch, the previous main
+	// line after a promotion).
+	Status       string
+	Origin       string
+	Messages     []Message
+	ExtraMarkers []string
+}
+    LeafDraftInput is what a leaf draft is written from.
+
+type LeafInput struct {
+	Kind string `json:"kind"`
+	Line string `json:"line"`
+	Body string `json:"body"`
+}
+    LeafInput is a leaf as an operator, a card or a draft gives it.
+
+func DeadEndLeaf(m ComparisonMatrix, lineID, chosenID string, texts LeafTexts, l Limits) LeafInput
+    DeadEndLeaf is the leaf of a branch that was not chosen: what was chosen
+    instead (texts.NotChosen), and its own column of the matrix.
+
+func DecisionLeaf(m ComparisonMatrix, chosenID, line string, l Limits) LeafInput
+    DecisionLeaf is the chosen branch's leaf: the operator's line, else the
+    recommendation's reason when it chose the recommended option, else the
+    option's label; the body is its column of the matrix.
+
+func LeafFromCard(card BranchCard, l LeafLimits) LeafInput
+    LeafFromCard is the conclusion leaf a merged card leaves: the card's
+    conclusion as the line, its question and key points (evidence notes,
+    open items) as the body, both cut to the limits.
+
+func ParseLeafDraft(output string, l LeafLimits) (LeafInput, error)
+    ParseLeafDraft reads a leaf draft reply: exactly one marker followed by one
+    JSON object with only kind, line and body; the result is normalised and must
+    be a valid leaf.
+
+type LeafLimits struct {
+	// LineMaxRunes caps the one-line leaf.
+	LineMaxRunes int
+	// BodyMaxRunes caps the optional detail.
+	BodyMaxRunes int
+}
+    LeafLimits bounds a branch's leaf (its closing note).
+
+type LeafProblem struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+    LeafProblem names one refused field of a leaf.
+
+type LeafSummary struct {
+	Kind   string `json:"kind"`
+	Line   string `json:"line"`
+	Status string `json:"status"`
+}
+    LeafSummary is BranchView.Leaf: what the outline and the map show.
+
+type LeafTexts struct {
+	NotChosen string
+}
+    LeafTexts are the templates of the leaves the library writes itself, in the
+    server's language (like NoteSourceLabels): NotChosen is the dead-end line
+    of a branch a decision did not choose, {title} the chosen one's purpose.
+    Empty fields take the default (Traditional Chinese) ones.
+
+func DefaultLeafTexts() LeafTexts
+    DefaultLeafTexts are the Traditional Chinese texts of the product.
+
+func EnglishLeafTexts() LeafTexts
+    EnglishLeafTexts are the English texts of the reference UI.
+
+type Limits struct {
+	Branch   BranchLimits
+	Pack     PackLimits
+	Notes    NoteLimits
+	Chapters ChapterLimits
+	History  HistoryLimits
+	Text     TextLimits
+	// Leaf, Parking and Suggestions bound the P1 features (leaf, parking)
+	// and the suggestion inbox.
+	Leaf        LeafLimits
+	Parking     ParkingLimits
+	Suggestions SuggestionLimits
+	Spinoff     SpinoffLimits
+	Rebalance   RebalanceLimits
+	// Goal, Relations and OpenLoops bound the P2 features (goal, relations,
+	// open_loops).
+	Goal      GoalLimits
+	Relations RelationLimits
+	OpenLoops OpenLoopLimits
+	// Context is the prompt's shared token budget; Fisheye bounds the
+	// fisheye history selection (B9 part B).
+	Context ContextLimits
+	Fisheye FisheyeLimits
+	// Group bounds groups and combined branches (B9 part C).
+	Group GroupLimits
+	// Ibis and Fold bound the P3 features of B10 part A.
+	Ibis IbisLimits
+	Fold FoldLimits
+	// Diverge bounds diverging and converging (B10 part B).
+	Diverge DivergeLimits
+	// Memory bounds memories and their recall (B10 part C).
+	Memory MemoryLimits
+	// Memo bounds the memos of a conversation (B13).
+	Memo MemoLimits
+	// HistoryScan is how many messages of a line one turn reads when the
+	// line has no rolling summary; past it, a summary is due.
+	HistoryScan int
+}
+    Limits holds every tunable bound of lines, branches, packs, notes, chapters
+    and the prompt history. DefaultLimits returns 宿主's values; a host
+    may change them through the engine. A field that is zero (or negative) means
+    its default, field by field.
+
+func DefaultLimits() Limits
+    DefaultLimits returns 宿主's limits.
+
+func (l Limits) Validate() error
+    Validate reports the first limit that cannot work: a negative bound (zero
+    means the default), or a soft depth beyond the hard one once defaults are
+    applied. Code that uses limits never fails on them either way: every field
+    that is not positive is replaced by its default at use.
+
+func (l Limits) WithDefaults() Limits
+    WithDefaults replaces every field that is not positive with its default.
+
+type Line struct {
+	ID           string `json:"id"`
+	TenantID     string `json:"tenantId"`
+	Title        string `json:"title"`
+	Status       string `json:"status"`
+	StatusDetail string `json:"statusDetail"`
+	// Provider and Model are hints for the runner; both may be empty.
+	Provider string `json:"provider"`
+	Model    string `json:"model"`
+	// Folder groups a main line in the conversation list (B18; "" when
+	// unfiled, always "" on a branch).
+	Folder string `json:"folder"`
+	// Tags are topic labels on a main line (B18; always a non-nil slice,
+	// empty on a branch).
+	Tags   []string `json:"tags"`
+	Unread int      `json:"unread"`
+	// Summary is the rolling digest; always an object.
+	Summary Summary `json:"summary"`
+	// SummaryUptoSeq is the seq of the newest message the summary covers;
+	// 0 when there is none (internal).
+	SummaryUptoSeq int64 `json:"-"`
+	// NotesRevision counts changes of the tree's notes (main line only);
+	// NotesRevisionSent is the revision the last finished turn carried.
+	NotesRevision     int `json:"notesRevision"`
+	NotesRevisionSent int `json:"-"`
+	// Usage is the accumulated usage of the line's turns (cache buckets are
+	// only kept per message).
+	Usage          Usage           `json:"usage"`
+	HostMeta       json.RawMessage `json:"hostMeta"`
+	LastActivityAt time.Time       `json:"lastActivityAt"`
+	ArchivedAt     *time.Time      `json:"archivedAt"`
+	CreatedBy      string          `json:"createdBy"`
+	CreatedAt      time.Time       `json:"createdAt"`
+	UpdatedAt      time.Time       `json:"updatedAt"`
+	// SpunOffFrom is where a spun-off main line came from (spinoff); nil
+	// otherwise.
+	SpunOffFrom *SpunOffRef `json:"spunOffFrom"`
+	// Capsule is a spun-off main line's origin capsule (internal: the prompt
+	// carries it).
+	Capsule *OriginCapsule `json:"-"`
+}
+    Line is one conversation line as the API shows it.
+
+type LineOrganization struct {
+	Folder string
+	Tags   []string
+}
+    LineOrganization is a main line's folder and tags, normalised.
+
+func NormalizeOrganization(folder *string, tags *[]string) (LineOrganization, error)
+    NormalizeOrganization normalises an optional folder and optional tags (nil
+    leaves each as given: "" and no tags).
+
+type LineView struct {
+	Line
+	// ConversationBranch is nil for a main line.
+	ConversationBranch *BranchRef   `json:"conversationBranch"`
+	BranchCounts       BranchCounts `json:"branchCounts"`
+	BranchUnread       int          `json:"branchUnread"`
+	// AwaitingReview counts the open branches below the line whose
+	// conclusion card draft is ready for the operator to review.
+	AwaitingReview int `json:"awaitingReview"`
+	// OpenSuggestions and OpenSeeds count the conversation's open
+	// suggestions (the inbox) and open parked thoughts, on the main line
+	// only (0 on a branch). They count stored rows whatever the features'
+	// state; clients show them when /capabilities says the feature is on.
+	OpenSuggestions int `json:"openSuggestions"`
+	OpenSeeds       int `json:"openSeeds"`
+	// StaleBranches counts the conversation's open branches idle longer
+	// than Limits.OpenLoops.StaleAfter (open loops), on the main line only;
+	// it is computed when read, so time passing alone sends no event.
+	StaleBranches int `json:"staleBranches"`
+}
+    LineView is a line with its place in the tree: the branch record when it is
+    a side line, its direct branches counted by status and the unread messages
+    of every open branch below it.
+
+func (v LineView) IsMainLine() bool
+    IsMainLine reports whether the view is the root of its tree.
+
+type Link struct {
+	ID            string `json:"id"`
+	Kind          string `json:"kind"`
+	FromLineID    string `json:"fromLineId"`
+	FromMessageID string `json:"fromMessageId"`
+	ToLineID      string `json:"toLineId"`
+	ToMessageID   string `json:"toMessageId"`
+	Label         string `json:"label"`
+	// RelationKind is a relation's kind (B15): related, supports,
+	// contradicts or depends_on; empty (and left out) on a spinoff link.
+	RelationKind string    `json:"relationKind,omitempty"`
+	FromTitle    string    `json:"fromTitle"`
+	ToTitle      string    `json:"toTitle"`
+	CreatedBy    string    `json:"createdBy"`
+	CreatedAt    time.Time `json:"createdAt"`
+}
+    Link is one link between two places of the tenant's conversations.
+
+type Memo struct {
+	ID         string `json:"id"`
+	RootLineID string `json:"rootLineId"`
+	// LineID is the node it was written on; "" once that line is gone
+	// (the memo stays, named by SourceLabel).
+	LineID string `json:"lineId"`
+	// SourceLabel is the node's name when the memo was written (the notes'
+	// rules: "主線", "查證・purpose"…); a snapshot that a rename leaves alone.
+	SourceLabel string    `json:"sourceLabel"`
+	Text        string    `json:"text"`
+	CreatedBy   string    `json:"createdBy"`
+	CreatedAt   time.Time `json:"createdAt"`
+	UpdatedAt   time.Time `json:"updatedAt"`
+}
+    Memo is one memo, written on a node (a line) of a conversation.
+
+type MemoLimits struct {
+	// TextMaxRunes caps the text of one memo.
+	TextMaxRunes int
+	// MaxPerTree caps the memos of one conversation.
+	MaxPerTree int
+}
+    MemoLimits bounds the memos (not sent to the AI) of a conversation.
+
+type Memory struct {
+	ID           string       `json:"id"`
+	Kind         string       `json:"kind"`
+	Text         string       `json:"text"`
+	Status       string       `json:"status"`
+	SupersededBy string       `json:"supersededBy"`
+	Importance   int          `json:"importance"`
+	ValidUntil   *time.Time   `json:"validUntil"`
+	Source       MemorySource `json:"source"`
+	AIDrafted    bool         `json:"aiDrafted"`
+	CreatedBy    string       `json:"createdBy"`
+	CreatedAt    time.Time    `json:"createdAt"`
+	UpdatedAt    time.Time    `json:"updatedAt"`
+}
+    Memory is one remembered item of a tenant.
+
+type MemoryCandidate struct {
+	Memory     Memory
+	Similarity float64
+}
+    MemoryCandidate is a memory with its cosine similarity to a query.
+
+type MemoryConsolidation struct {
+	Action     string `json:"action"`
+	Kind       string `json:"kind"`
+	Text       string `json:"text"`
+	Importance int    `json:"importance"`
+	Reason     string `json:"reason"`
+}
+    MemoryConsolidation is a consolidation's verdict: merge or conflict with the
+    statement that supersedes both, or keep.
+
+func ParseMemoryConsolidate(output string, l Limits) (MemoryConsolidation, error)
+    ParseMemoryConsolidate reads a memory_consolidate reply.
+
+type MemoryExtractSource struct {
+	Kind    string
+	Context string
+	Text    string
+}
+    MemoryExtractSource is what settled: its kind, its context (the branch's
+    purpose or the conversation's title) and its text.
+
+type MemoryInput struct {
+	Kind       string     `json:"kind"`
+	Text       string     `json:"text"`
+	Importance int        `json:"importance"`
+	ValidUntil *time.Time `json:"validUntil"`
+}
+    MemoryInput is a memory as written.
+
+func NormalizeMemory(in MemoryInput, l MemoryLimits) (MemoryInput, error)
+    NormalizeMemory trims the kind, flattens the text to one line and fills the
+    importance (1–10; 0 is the default).
+
+type MemoryLimits struct {
+	TextMaxRunes      int
+	DefaultImportance int
+	// TopK is how many memories a turn's prompt recalls at most; Candidates
+	// how many of the most similar are ranked; MinSimilarityPct the least
+	// cosine similarity (in percent) worth recalling.
+	TopK             int
+	Candidates       int
+	MinSimilarityPct int
+	// HalfLife halves a memory's recency weight (from 1 down to 0.5).
+	HalfLife time.Duration
+	// TokenBudget caps the recalled block of one prompt.
+	TokenBudget int
+	// ExtractMax caps the memories one extraction proposes; RelatedMax the
+	// existing ones it is shown.
+	ExtractMax int
+	RelatedMax int
+	// DuplicatePct is the similarity (percent) from which consolidation
+	// looks at a pair; ConsolidatePairs caps the pairs one sweep starts.
+	DuplicatePct     int
+	ConsolidatePairs int
+	// SearchMax caps a search's results.
+	SearchMax int
+}
+    MemoryLimits bound memories and their recall.
+
+type MemoryProposal struct {
+	Action     string `json:"action"`
+	Target     string `json:"target,omitempty"`
+	Kind       string `json:"kind"`
+	Text       string `json:"text"`
+	Importance int    `json:"importance"`
+}
+    MemoryProposal is one memory an extraction proposes: add, or update
+    (supersede) the memory under Target.
+
+func ParseMemoryExtract(output string, known map[string]bool, l Limits) ([]MemoryProposal, error)
+    ParseMemoryExtract reads a memory_extract reply: noops and entries that
+    would not be stored (an unknown kind or target, an empty text) are left out,
+    at most ExtractMax.
+
+type MemorySource struct {
+	LineID     string `json:"lineId"`
+	MessageID  string `json:"messageId"`
+	LeafLineID string `json:"leafLineId"`
+	NoteID     string `json:"noteId"`
+	Label      string `json:"label"`
+}
+    MemorySource is where a memory came from: the line and message, the leaf
+    (its branch line) or the note, and a text label written with it (the source
+    may be gone later).
+
+type Message struct {
+	ID       string          `json:"id"`
+	Seq      int64           `json:"seq"`
+	LineID   string          `json:"lineId"`
+	Role     string          `json:"role"`
+	Kind     string          `json:"kind"`
+	Content  string          `json:"content"`
+	Status   string          `json:"status"`
+	Meta     MessageMeta     `json:"meta"`
+	HostMeta json.RawMessage `json:"hostMeta"`
+	// Pinned marks a message the operator wants kept in view (the fisheye
+	// context gives it a head start).
+	Pinned bool `json:"pinned"`
+	// Tag is the message's argument tag (the ibis feature); absent without
+	// one. Stored tags show even while the feature is off.
+	Tag       *MessageTag `json:"tag,omitempty"`
+	CreatedAt time.Time   `json:"createdAt"`
+}
+    Message is one transcript entry. Seq is global and increasing; ordering
+    within a line is always by Seq.
+
+func FoldMessage(f Fold, replaced int) Message
+    FoldMessage is the history entry a fold stands as, standing for replaced
+    messages.
+
+func HistoryBeforeTurn(history []Message, pendingID, userMessageID string) []Message
+    HistoryBeforeTurn is the history a new turn's prompt shows: the line's
+    messages in seq order without the pending ones, the turn's pending assistant
+    message and the operator's current message, both named by id.
+
+func SortBySeq(messages []Message) []Message
+    SortBySeq returns a copy of messages ordered by seq.
+
+func SummaryInputUpTo(messages []Message, uptoSeq int64) []Message
+    SummaryInputUpTo keeps the messages through the one the summary covers up
+    to, in seq order; uptoSeq 0 keeps them all.
+
+func (m Message) IsCard() bool
+    IsCard reports whether the message is a branch conclusion card.
+
+func (m Message) IsFold() bool
+    IsFold reports whether the message is a fold's history entry.
+
+type MessageMeta struct {
+	Provider   string `json:"provider,omitempty"`
+	Model      string `json:"model,omitempty"`
+	Usage      *Usage `json:"usage,omitempty"`
+	DurationMs int64  `json:"durationMs,omitempty"`
+	Error      string `json:"error,omitempty"`
+	// Cancelled marks a turn the operator cancelled; the partial content that
+	// already streamed is kept.
+	Cancelled bool `json:"cancelled,omitempty"`
+	// Card is the structured conclusion on a branch_card message; BranchLineID
+	// is the branch it came from.
+	Card         *BranchCard `json:"card,omitempty"`
+	BranchLineID string      `json:"branchLineId,omitempty"`
+	// Delivered is set once a turn of the parent that carried this card
+	// finished without failing.
+	Delivered bool `json:"delivered,omitempty"`
+	// EditedAt, on a branch_card message, is when the card was last edited
+	// after its merge (B17.1); nil when it has never been edited.
+	EditedAt *time.Time `json:"editedAt,omitempty"`
+	// DeliversCards, on a pending assistant message, lists the branch cards
+	// that turn's prompt carried.
+	DeliversCards []string `json:"deliversCards,omitempty"`
+	// NotesRevision, on a pending assistant message, is the notes revision that
+	// turn's prompt carried; a turn that finishes without failing records it
+	// as sent.
+	NotesRevision int `json:"notesRevision,omitempty"`
+	// Suggestions are the side lines the assistant proposed in this reply; the
+	// marker lines are removed from the stored content.
+	Suggestions []BranchSuggestion `json:"suggestions,omitempty"`
+	// Actor is who started the turn (on the pending assistant message).
+	Actor string `json:"actor,omitempty"`
+	// StreamSeq, on a pending assistant message, is the delta seq its saved
+	// partial content covers: a client shows the content, then the deltas
+	// after StreamSeq. Cleared when the turn finishes.
+	StreamSeq int64 `json:"streamSeq,omitempty"`
+	// SpunOffTo, on the marker a spinoff leaves on its source line, names the
+	// new main line (lineId, title) and the message it grew from
+	// (messageId).
+	SpunOffTo *SpunOffRef `json:"spunOffTo,omitempty"`
+	// Folded, on a fold's history entry (never stored), is how many
+	// messages it stands for.
+	Folded int `json:"folded,omitempty"`
+}
+    MessageMeta is the library-owned part of a message's meta JSON. Hosts keep
+    their own data in Message.HostMeta.
+
+type MessageTag struct {
+	Kind      string    `json:"kind"`
+	Source    string    `json:"source"`
+	Status    string    `json:"status"`
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+    MessageTag is a message's argument tag.
+
+type Note struct {
+	ID      string `json:"id"`
+	Section string `json:"section"`
+	Text    string `json:"text"`
+	Status  string `json:"status"`
+	// Sources are all optional: the line (branch or main line), the message
+	// and the conclusion card the note came from.
+	SourceLineID        string `json:"sourceLineId"`
+	SourceMessageID     string `json:"sourceMessageId"`
+	SourceCardMessageID string `json:"sourceCardMessageId"`
+	// SourceLabel is a text snapshot of the source taken when the note was
+	// written (NoteSourceLabels); empty for notes without a source and for
+	// notes written before it existed.
+	SourceLabel string `json:"sourceLabel,omitempty"`
+	// CopiedFromNoteID is the note of another conversation this one copies
+	// (a spinoff with copyNotes); its sources point into that conversation.
+	CopiedFromNoteID string `json:"copiedFromNoteId,omitempty"`
+	// SupersededBy is the note that replaced this one.
+	SupersededBy string    `json:"supersededBy"`
+	CreatedBy    string    `json:"createdBy"`
+	CreatedAt    time.Time `json:"createdAt"`
+	UpdatedAt    time.Time `json:"updatedAt"`
+}
+    Note is one line of the notes page.
+
+type NoteChange struct {
+	Op string `json:"op"`
+	// NoteID is the note to replace (supersede only).
+	NoteID          string `json:"noteId,omitempty"`
+	Section         string `json:"section,omitempty"`
+	Text            string `json:"text"`
+	SourceLineID    string `json:"sourceLineId,omitempty"`
+	SourceMessageID string `json:"sourceMessageId,omitempty"`
+}
+    NoteChange is one proposed change of the notes: add a note, or replace one.
+
+func SanitizeDraftNoteChanges(changes []NoteChange, c DraftNoteContext) ([]NoteChange, []string)
+    SanitizeDraftNoteChanges keeps the proposals a merge would accept: at most
+    Limits.MaxChangesPerMerge, each a valid add or a supersede of an active
+    note, with neutralised text within the limit and not repeating an earlier
+    proposal. Every kept proposal's source line is the branch; a source message
+    that is not a branch message is cleared. Warnings name what was dropped.
+    The result is never nil.
+
+type NoteLimits struct {
+	// TokenBudget bounds the notes block of one prompt.
+	TokenBudget int
+	// MaxRunes bounds the text of one note.
+	MaxRunes int
+	// MaxActive bounds the active notes of one conversation.
+	MaxActive int
+	// MaxTotal bounds all notes of a conversation, superseded ones included.
+	MaxTotal int
+	// MaxChangesPerMerge bounds the note changes of one merge.
+	MaxChangesPerMerge int
+}
+    NoteLimits bounds the conversation notes.
+
+type NoteProblem struct {
+	Field   string `json:"field"`
+	Message string `json:"message"`
+}
+    NoteProblem names one refused field of a note request.
+
+func CheckNoteText(field, text string, maxRunes int) (string, *NoteProblem)
+    CheckNoteText neutralises text and checks it is non-empty and within
+    maxRunes; it returns the stored form.
+
+type NoteSourceFacts struct {
+	// HasLine: the note has a source line (otherwise it has no label).
+	HasLine bool
+	// OnRoot: the source line is the main line; MainNumber is the 1-based
+	// place of the source message among the main line's chat messages (0
+	// when there is no such message).
+	OnRoot     bool
+	MainNumber int
+	// Card: the note came with a conclusion card of the source branch.
+	Card bool
+	// The source branch.
+	BranchKind    string
+	BranchPurpose string
+	BranchOrigin  string
+}
+    NoteSourceFacts is what is known about a note's source when it is written.
+
+type NoteSourceLabels struct {
+	MainMessage      string
+	MainLine         string
+	Card             string
+	Branch           string
+	PreviousMainLine string
+	Kinds            map[string]string
+}
+    NoteSourceLabels are the label templates; {n}, {kind} and {title} are
+    replaced. Empty fields take the default (Traditional Chinese) ones.
+
+func DefaultNoteSourceLabels() NoteSourceLabels
+    DefaultNoteSourceLabels are the Traditional Chinese labels of the product.
+
+func EnglishNoteSourceLabels() NoteSourceLabels
+    EnglishNoteSourceLabels are the English labels of the reference UI.
+
+func (l NoteSourceLabels) Render(f NoteSourceFacts) string
+    Render is the label of a source; "" when the note has none.
+
+type OpenLoopLimits struct {
+	// StaleAfter: an open branch idle this long is an open loop.
+	StaleAfter time.Duration
+	// MaxPerKind caps the items listed of each kind (the totals are exact).
+	MaxPerKind int
+}
+    OpenLoopLimits bound the open-loops listing.
+
+type OriginCapsule struct {
+	Mode string     `json:"mode"`
+	From SpunOffRef `json:"from"`
+	// Rendered is the exact block every prompt of the line starts with.
+	Rendered      string `json:"rendered"`
+	TokenEstimate int    `json:"tokenEstimate"`
+	TokenBudget   int    `json:"tokenBudget"`
+	// Truncated is true when the background or the path was cut to fit.
+	Truncated bool `json:"truncated"`
+}
+    OriginCapsule is the stored start of a spun-off main line.
+
+func BuildOriginCapsule(in OriginCapsuleInput) OriginCapsule
+    BuildOriginCapsule renders the capsule. Over the budget, the background is
+    left out first, then what remains is cut.
+
+type OriginCapsuleInput struct {
+	Mode         string
+	From         SpunOffRef
+	Background   string
+	Path         string
+	Leaf         *Leaf
+	TokenBudget  int
+	ExtraMarkers []string
+}
+    OriginCapsuleInput is what a capsule is built from. Background is the source
+    branch's stored pack (detach, or fresh from a branch); Path is the source
+    line's own conversation up to the message (fresh); Leaf the branch's leaf
+    when it has one.
+
+type PackLimits struct {
+	// RecentMessages is how many main-line messages the pack quotes.
+	RecentMessages int
+	// AsideRecentMessages is the same for an aside (it needs less).
+	AsideRecentMessages int
+	// TokenBudget bounds the whole pack.
+	TokenBudget int
+	// MessageTokenCap bounds one quoted message.
+	MessageTokenCap int
+	// HistoryScan is how many main-line messages the pack builder reads.
+	HistoryScan int
+	// LaterScan is how many main-line messages after the anchor the "later
+	// developments" section reads.
+	LaterScan int
+	// LaterTokenBudget bounds the "later developments" section; it shrinks
+	// first when the whole pack would exceed TokenBudget.
+	LaterTokenBudget int
+	// LaterRecentMessages is how many of the latest messages after the anchor
+	// are quoted whole (the rest are one-line digests).
+	LaterRecentMessages int
+	// LaterMessageTokenCap bounds one quoted message of that section.
+	LaterMessageTokenCap int
+}
+    PackLimits bounds the background pack of a new branch.
+
+type ParentMovedError struct {
+	MovedMessages int
+	MovedCards    int
+}
+    ParentMovedError refuses a merge because the parent got new messages since
+    the operator last looked (the tip they saw is no longer the newest).
+
+func (e *ParentMovedError) Error() string
+
+type ParkingLimits struct {
+	// TextMaxRunes caps the text of one seed.
+	TextMaxRunes int
+	// MaxOpenPerTree caps the open seeds of one conversation.
+	MaxOpenPerTree int
+}
+    ParkingLimits bounds the parked thoughts (seeds) of a conversation.
+
+type Prompt struct {
+	// Sections are the system blocks in order: built-in ones and the host's.
+	Sections []PromptSection `json:"sections"`
+	// Trailing are system blocks rendered after the summary (a caller that
+	// orders blocks for prompt caching moves the ones that change most, such
+	// as the card notice, here). BuildPrompt leaves it empty.
+	Trailing []PromptSection `json:"trailing,omitempty"`
+	// Summary is the rolling summary that stands for the messages it covers;
+	// nil when none is used.
+	Summary *Summary `json:"summary"`
+	// Earlier is the condensed paragraph of older messages that did not fit
+	// the history budget; "" when everything fit.
+	Earlier string `json:"earlier"`
+	// History are the recent finished messages, oldest first. User and
+	// assistant entries carry the message text; a system entry carries its
+	// full rendering (a framed card, or "system: …").
+	History []ChatMessage `json:"history"`
+	// UserMessage is the operator's message of this turn.
+	UserMessage string `json:"userMessage"`
+	// NotesChanged: the notes moved since the last finished turn, so a resumed
+	// prompt carries them again.
+	NotesChanged bool `json:"notesChanged"`
+}
+    Prompt is a turn prompt before rendering.
+
+func BuildImportAnalyzePrompt(in ImportAnalyzeInput) Prompt
+    BuildImportAnalyzePrompt is the prompt of one import analysis:
+    the instructions as the system part, the units as the operator's message,
+    each with its id (U1…), message count, title, question and the start of
+    its answer quoted as untrusted data. in is normalized first; an input
+    NormalizeImportAnalyzeInput refuses gives a prompt of no units.
+
+func BuildPrompt(in PromptInput) Prompt
+    BuildPrompt assembles the structured turn prompt.
+
+func (p Prompt) Chat() (string, []ChatMessage)
+    Chat renders the prompt for chat APIs: every section, the summary and the
+    condensed older history (quoted, as data) in the system string; the recent
+    history and the operator's message as messages. System entries are sent as
+    user messages, neighbouring messages of one role are merged and the list
+    always starts with a user message, as chat APIs require.
+
+func (p Prompt) ChatBlocks() (stable, volatile string, messages []ChatMessage)
+    ChatBlocks is Chat with the system split in two: stable is the sections
+    (rules, pack, notes, host sections: the cacheable prefix), volatile is the
+    summary, the trailing sections and the condensed older history. When both
+    are set, stable + "\n\n" + volatile equals Chat's system string.
+
+func (p Prompt) ResumeText() string
+    ResumeText renders the short prompt for a resumed provider session: the
+    undelivered cards, the notes when they changed (or a notice that they were
+    cleared), the reply-line rules of this turn and the operator's message. Host
+    sections are not repeated; a host that must resend one prepends it itself.
+
+func (p Prompt) Text() string
+    Text renders the full single-text prompt.
+
+type PromptInput struct {
+	// Instructions, AgentName and Role describe the assistant; all optional.
+	Instructions string
+	AgentName    string
+	Role         string
+	// History is the line's messages before this turn (HistoryBeforeTurn);
+	// it is ordered by seq here.
+	History     []Message
+	UserMessage string
+	// Branch is set for a branch line: its purpose and stored pack.
+	Branch *BranchPromptInfo
+	// Goal is the conversation's goal ("" without one), rendered after the
+	// rules.
+	Goal string
+	// OriginCapsule is a spun-off main line's capsule text (fixed once the
+	// line exists).
+	OriginCapsule string
+	// Cards are the confirmed conclusion cards no turn has carried yet; they
+	// open both the full and the resume prompt.
+	Cards []BranchCardNoticeItem
+	// NotesBlock is the rendered conversation notes ("" when none are active).
+	// A resume prompt carries it only when NotesChanged.
+	NotesBlock   string
+	NotesChanged bool
+	// Summary stands for every message up to SummaryUptoSeq; those leave the
+	// history. A summary without a cursor is not used.
+	Summary        Summary
+	SummaryUptoSeq int64
+	// Selection, when set, is a history selector's choice (the fisheye):
+	// Full verbatim and Condensed as the condensed paragraph, in place of the
+	// budget split of History; the rolling summary still stands for what it
+	// covers (the selector left those messages out).
+	Selection *HistorySelection
+	// BranchConclusions is the fisheye's rendered block of other branches'
+	// leaves ("" without one).
+	BranchConclusions string
+	// MemoryBlock is the recalled memories' block (the memory feature; ""
+	// without one).
+	MemoryBlock string
+	// HostSections are the host's blocks, placed after the built-in rules. A
+	// host key that collides with a built-in one is renamed "host:<key>".
+	HostSections []PromptSection
+	// ExtraMarkers are host protocol markers removed from every
+	// library-rendered block (cards, rules, notes, pack, summary, condensed
+	// history). Host sections and verbatim history are left as they are.
+	ExtraMarkers []string
+	// Limits bounds the history; zero means DefaultLimits().History.
+	Limits HistoryLimits
+	// OmitBranchSuggestRules leaves the [BRANCH-SUGGEST] rule out of the
+	// rules (the host does not parse suggestions).
+	OmitBranchSuggestRules bool
+	// RequestTopicSummary asks for a [TOPIC] line (the line's first turn,
+	// WantsTopicSummary); AllowChapterCut allows a [CHAPTER] line (the
+	// chapters feature, main line only). Their rules form the trailing
+	// SectionReplyLines, not the stable rules.
+	RequestTopicSummary bool
+	AllowChapterCut     bool
+}
+    PromptInput is everything the prompt builder needs.
+
+type PromptSection struct {
+	Key      string `json:"key"`
+	Title    string `json:"title"`
+	Body     string `json:"body"`
+	Trailing bool   `json:"trailing,omitempty"`
+}
+    PromptSection is one block of the system part of a prompt. Title, when set,
+    is rendered as a "## Title" heading (flattened to one line) before Body;
+    the built-in sections carry their headings in Body and leave Title empty.
+    Body is trusted prompt text: a host that puts untrusted data in it quotes
+    that data with QuoteUntrusted or FlattenUntrusted. The built-in keys
+    (Section*) are reserved; BuildPrompt renames a host section that uses one.
+
+    Trailing, set by a host on its own section, places it among the trailing
+    sections (after the summary, outside the cacheable prefix of ChatBlocks)
+    instead of after the notes: for host data that changes every turn,
+    which would otherwise invalidate the prompt cache of everything after it.
+    The engine honours it when it arranges a turn prompt; BuildPrompt keeps
+    every section in Sections.
+
+type RebalanceLimits struct {
+	// MinBranchTurns is the fewest finished replies a branch needs.
+	MinBranchTurns int
+	// ShareFactor: the branch's replies since the fork must be at least
+	// this many times the parent's since then.
+	ShareFactor int
+	// RecentTurns: that many latest replies of the tree all in the branch
+	// also make it due.
+	RecentTurns int
+}
+    RebalanceLimits are the thresholds of the rebalance hint.
+
+type RebalanceSignals struct {
+	// BranchTurns counts the branch's finished replies; ParentTurns the
+	// parent's finished replies after the fork.
+	BranchTurns int `json:"branchTurns"`
+	ParentTurns int `json:"parentTurns"`
+	// RecentInBranch: the tree's last RecentTurns finished replies are all
+	// this branch's.
+	RecentInBranch bool `json:"recentInBranch"`
+}
+    RebalanceSignals is what is measured of a branch after one of its turns.
+
+type RecalledMemory struct {
+	Memory     Memory  `json:"memory"`
+	Similarity float64 `json:"similarity"`
+	Score      float64 `json:"score"`
+}
+    RecalledMemory is a memory a recall chose, with its similarity and score.
+
+func BuildMemoryBlock(recalled []RecalledMemory, budget int, extraMarkers []string) (string, []RecalledMemory)
+    BuildMemoryBlock renders the recalled memories that fit the budget,
+    in order, each with its source; it returns the block ("" without any) and
+    the memories it carried.
+
+func RankMemories(cands []MemoryCandidate, now time.Time, k int, l MemoryLimits) []RecalledMemory
+    RankMemories keeps the candidates similar enough and still valid, best score
+    first (then the most similar, the newest), at most k.
+
+type RelatedLine struct {
+	LineID     string   `json:"lineId"`
+	Title      string   `json:"title"`
+	Folder     string   `json:"folder"`
+	SharedTags []string `json:"sharedTags"`
+}
+    RelatedLine is another conversation of the tenant sharing a tag or the
+    folder.
+
+type RelatedMemory struct {
+	Key    string
+	Memory Memory
+}
+    RelatedMemory is an existing memory an extraction is shown under a key.
+
+type RelationCandidate struct {
+	Key     string
+	Purpose string
+	Leaf    string
+}
+    RelationCandidate is a branch a relation job sees: a short key the model
+    answers with, its purpose and its leaf.
+
+type RelationLimits struct {
+	// LabelMaxRunes caps the relation's label.
+	LabelMaxRunes int
+	// MaxPerTree caps the relations touching one conversation.
+	MaxPerTree int
+}
+    RelationLimits bound the relations drawn between places of a conversation.
+
+type RelationProposal struct {
+	To    string `json:"to"`
+	Label string `json:"label"`
+	Kind  string `json:"kind,omitempty"`
+}
+    RelationProposal is one proposed relation from the branch to another.
+    Kind is one of RelationKinds (B15); the parser forgives case, "-" and spaces
+    and makes a missing or unknown one related.
+
+func ParseRelationSuggestions(output string, known map[string]bool, l RelationLimits) ([]RelationProposal, error)
+    ParseRelationSuggestions reads a relation_suggest reply: the proposals to
+    known keys, the first one per key, at most three, labels flattened and cut
+    to the limit.
+
+type RelationSuggestInput struct {
+	Branch       RelationCandidate
+	Others       []RelationCandidate
+	ExtraMarkers []string
+}
+    RelationSuggestInput is a branch that ended and the other branches of its
+    tree.
+
+type SearchHit struct {
+	LineID     string      `json:"lineId"`
+	RootLineID string      `json:"rootLineId"`
+	Kind       string      `json:"kind"`
+	MessageID  string      `json:"messageId,omitempty"`
+	Seq        int64       `json:"seq,omitempty"`
+	Role       string      `json:"role,omitempty"`
+	Snippet    string      `json:"snippet"`
+	Highlights []TextRange `json:"highlights"`
+	Score      float64     `json:"score"`
+	// RootTitle is the title of the hit's conversation; Purpose the purpose
+	// of the branch it is in ("" on a main line).
+	RootTitle string    `json:"rootTitle"`
+	Purpose   string    `json:"purpose"`
+	At        time.Time `json:"at"`
+}
+    SearchHit is one match. MessageID, Seq and Role are set for message hits
+    only. Snippet is plain text (never HTML); Highlights mark the query in it.
+    Score is the similarity of the matched text to the query (0..1), and At the
+    time of the hit (the message, or the line's last activity), which orders
+    hits of equal score.
+
+type Seed struct {
+	ID         string `json:"id"`
+	RootLineID string `json:"rootLineId"`
+	// AnchorMessageID is where the thought came up (the message it was
+	// parked at, or the newest message of the line it was parked on); empty
+	// when that line had none.
+	AnchorMessageID string `json:"anchorMessageId"`
+	// AnchorLineID is the line the anchor message is on now ("" without an
+	// anchor or once it is gone); SourceLabel the text snapshot of where the
+	// seed was parked, taken when it was (the notes' rules: "主線 #n",
+	// "查證・purpose"…; "" without an anchor).
+	AnchorLineID string `json:"anchorLineId"`
+	SourceLabel  string `json:"sourceLabel"`
+	Text         string `json:"text"`
+	Status       string `json:"status"`
+	// ExpandedLineID is the branch an expanded seed became; NoteID the note
+	// a noted seed became.
+	ExpandedLineID string    `json:"expandedLineId"`
+	NoteID         string    `json:"noteId"`
+	CreatedBy      string    `json:"createdBy"`
+	CreatedAt      time.Time `json:"createdAt"`
+	UpdatedAt      time.Time `json:"updatedAt"`
+}
+    Seed is one parked thought.
+
+type SeedCandidate struct {
+	MessageID string `json:"messageId"`
+	Text      string `json:"text"`
+	Reason    string `json:"reason"`
+}
+    SeedCandidate is an open item or a closing question of a reply that could be
+    parked.
+
+type SpinoffLimits struct {
+	// CapsuleTokenBudget bounds the origin capsule of a spun-off main line.
+	CapsuleTokenBudget int
+}
+    SpinoffLimits bounds spinning a conversation off.
+
+type SpunOffRef struct {
+	LineID    string `json:"lineId"`
+	MessageID string `json:"messageId,omitempty"`
+	Title     string `json:"title"`
+	// Available says, when read, whether that line still exists (the other
+	// conversation may have been deleted since).
+	Available bool `json:"available"`
+}
+    SpunOffRef points at where a conversation was spun off: LineView.SpunOffFrom
+    on the new main line (the source line, the message it grew from, the
+    source's title then) and MessageMeta.SpunOffTo on the marker the source line
+    keeps (the new main line and its title).
+
+type Suggestion struct {
+	ID         string `json:"id"`
+	RootLineID string `json:"rootLineId"`
+	// LineID is the line the suggestion is about; when it is a branch that
+	// ends, the suggestion expires.
+	LineID    string          `json:"lineId"`
+	Feature   string          `json:"feature"`
+	Kind      string          `json:"kind"`
+	TargetKey string          `json:"targetKey"`
+	Payload   json.RawMessage `json:"payload"`
+	Status    string          `json:"status"`
+	CreatedAt time.Time       `json:"createdAt"`
+	DecidedAt *time.Time      `json:"decidedAt"`
+}
+    Suggestion is one entry of the inbox.
+
+type SuggestionLimits struct {
+	// DismissCooldown is how long after a dismissal the same suggestion
+	// (same feature, kind and target) is not raised again.
+	DismissCooldown time.Duration
+	// PayloadMaxBytes caps the payload a feature stores with a suggestion.
+	PayloadMaxBytes int
+}
+    SuggestionLimits bounds the suggestion inbox.
+
+type Summary struct {
+	Topic             string           `json:"topic"`
+	Decisions         []string         `json:"decisions"`
+	OpenQuestions     []string         `json:"openQuestions"`
+	Files             []string         `json:"files"`
+	SuggestedLandings []SummaryLanding `json:"suggestedLandings"`
+	UpdatedAt         string           `json:"updatedAt"`
+}
+    Summary is the structured rolling digest of a line.
+
+func CleanSummary(s Summary, extraMarkers ...string) Summary
+    CleanSummary neutralises model-written summary text and caps it: every
+    field is flattened to one marker-free line and cut, every list bounded,
+    empty entries dropped. extraMarkers are host markers removed as well.
+
+func NormalizeSummary(s Summary) Summary
+    NormalizeSummary never returns nil slices, so the JSON is stable.
+
+func ParseSummary(content string) (Summary, bool)
+    ParseSummary extracts the [SESSION-SUMMARY] JSON object from a summarizer
+    reply.
+
+func ParseSummaryWithCut(content string) (Summary, string, bool)
+    ParseSummaryWithCut is ParseSummary plus the message id the model says the
+    current topic starts at (empty when it gave none). The id is untrusted
+    until TopicCutMessage accepts it. The summary comes back cleaned and capped
+    (CleanSummary).
+
+func (s Summary) HasContent() bool
+    HasContent reports whether the summary has anything a prompt renders (topic,
+    decisions, open questions or files). Landings alone render nothing, so a
+    summary with only landings must not stand in for messages.
+
+func (s Summary) IsEmpty() bool
+    IsEmpty reports whether the summary carries nothing worth showing.
+
+type SummaryLanding struct {
+	Kind string `json:"kind"`
+	Text string `json:"text"`
+}
+    SummaryLanding is a suggested landing action (note or decision).
+
+type TagDraft struct {
+	LineID    string     `json:"lineId"`
+	MessageID string     `json:"messageId"`
+	Seq       int64      `json:"seq"`
+	Role      string     `json:"role"`
+	Content   string     `json:"content"`
+	Tag       MessageTag `json:"tag"`
+}
+    TagDraft is a message whose tag waits for the operator (B15): the tree's
+    drafts are listed for review in one read; Content is a snippet of at most
+    TagDraftContentRunes.
+
+type TagSummary struct {
+	Tag   string `json:"tag"`
+	Count int    `json:"count"`
+}
+    TagSummary is one tag of TenantOrganization: Count unarchived main lines
+    carry it.
+
+type TenantOrganization struct {
+	// Folders are the non-empty folders by name (code point order), with
+	// the main lines in each: active and archived counted apart.
+	Folders []FolderSummary `json:"folders"`
+	// Tags are the tags of unarchived main lines, most used first, then by
+	// name.
+	Tags []TagSummary `json:"tags"`
+}
+    TenantOrganization is the tenant's folders and tags over all its main lines
+    (B18.1: GET /lines/organization), so a list that shows one page or one
+    filter still names every folder and tag with its real counts.
+
+type TextLimits struct {
+	// TitleMaxRunes caps a line title.
+	TitleMaxRunes int
+	// ModelMaxRunes caps a provider or model name.
+	ModelMaxRunes int
+	// MessageMaxRunes caps the operator's message of a turn.
+	MessageMaxRunes int
+}
+    TextLimits bounds the free text a caller sends (counted in runes).
+
+type TextRange struct {
+	Start int `json:"start"`
+	End   int `json:"end"`
+}
+    TextRange is a highlighted range of a snippet, in UTF-16 code units (the
+    offsets JavaScript strings use): Start inclusive, End exclusive.
+
+func SearchSnippet(text, query string, width int) (string, []TextRange)
+    SearchSnippet cuts text to about width runes centred on the first
+    case-insensitive match of query (never inside a grapheme), marks every match
+    inside it and puts an ellipsis at each cut end. Line breaks and tabs show as
+    spaces. A text without a match keeps its start and has no highlights.
+
+type TurnOutcome struct {
+	Status       string
+	StatusDetail string
+	Content      string
+	Failed       bool
+}
+    TurnOutcome is what a finished turn does to the line and its message.
+
+func ResolveTurnOutcome(content, runErr string) TurnOutcome
+    ResolveTurnOutcome maps a runner's result onto the line status, its detail
+    and the content stored on the assistant message.
+
+type Usage struct {
+	InputTokens      int64   `json:"inputTokens"`
+	OutputTokens     int64   `json:"outputTokens"`
+	CostUSD          float64 `json:"costUsd"`
+	CacheReadTokens  int64   `json:"cacheReadTokens,omitempty"`
+	CacheWriteTokens int64   `json:"cacheWriteTokens,omitempty"`
+}
+    Usage is the token usage and cost of one turn. InputTokens counts every
+    prompt token, the prompt-cache reads and writes included; the cache buckets
+    say how many of them were read from or written to the cache.
+
+func (u Usage) TotalTokens() int64
+    TotalTokens sums the token buckets.
+

@@ -1,0 +1,578 @@
+[
+ {
+  "title": "Postgres Autovacuum 調校筆記",
+  "create_time": 1761000000,
+  "update_time": 1761000500,
+  "conversation_id": "conv-vacuum",
+  "mapping": {
+   "root": {
+    "id": "root",
+    "parent": null,
+    "children": [
+     "a1"
+    ],
+    "message": null
+   },
+   "a1": {
+    "id": "a1",
+    "parent": "root",
+    "children": [
+     "a2"
+    ],
+    "message": {
+     "id": "a1",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "Postgres autovacuum 要怎麼調？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "a2": {
+    "id": "a2",
+    "parent": "a1",
+    "children": [
+     "a3"
+    ],
+    "message": {
+     "id": "a2",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "先看 autovacuum_vacuum_scale_factor，寫入量大的表調低到 0.05。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "a3": {
+    "id": "a3",
+    "parent": "a2",
+    "children": [
+     "a4"
+    ],
+    "message": {
+     "id": "a3",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "那 autovacuum_naptime 呢？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "a4": {
+    "id": "a4",
+    "parent": "a3",
+    "children": [],
+    "message": {
+     "id": "a4",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "預設 1 分鐘通常夠用，表很多時再調。"
+      ]
+     },
+     "metadata": {}
+    }
+   }
+  },
+  "current_node": "a4"
+ },
+ {
+  "title": "Postgres MVCC 與索引設計",
+  "create_time": 1761800000,
+  "update_time": 1761810000,
+  "conversation_id": "conv-mvcc",
+  "mapping": {
+   "root": {
+    "id": "root",
+    "parent": null,
+    "children": [
+     "sys"
+    ],
+    "message": null
+   },
+   "sys": {
+    "id": "sys",
+    "parent": "root",
+    "children": [
+     "m1"
+    ],
+    "message": {
+     "id": "sys",
+     "author": {
+      "role": "system"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       ""
+      ]
+     },
+     "metadata": {
+      "is_visually_hidden_from_conversation": true
+     }
+    }
+   },
+   "m1": {
+    "id": "m1",
+    "parent": "sys",
+    "children": [
+     "m2"
+    ],
+    "message": {
+     "id": "m1",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "幫我設計一個多租戶 SaaS 的事件表，Postgres 要怎麼規劃？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m2": {
+    "id": "m2",
+    "parent": "m1",
+    "children": [
+     "m3old",
+     "m3"
+    ],
+    "message": {
+     "id": "m2",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "先決定隔離方式：共用表加 tenant_id，或每個租戶一個 schema。共用表比較好維護，備份也簡單。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m3": {
+    "id": "m3",
+    "parent": "m2",
+    "children": [
+     "m4"
+    ],
+    "message": {
+     "id": "m3",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "共用表。那 Postgres 的 MVCC 對寫入量大的表有什麼影響？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m4": {
+    "id": "m4",
+    "parent": "m3",
+    "children": [
+     "m5"
+    ],
+    "message": {
+     "id": "m4",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "每次 UPDATE 都會產生新版本的資料列，舊版本要等 VACUUM 清掉，所以寫入量大的表要注意膨脹。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m5": {
+    "id": "m5",
+    "parent": "m4",
+    "children": [
+     "m6"
+    ],
+    "message": {
+     "id": "m5",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "那索引要怎麼設計？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m6": {
+    "id": "m6",
+    "parent": "m5",
+    "children": [
+     "m7"
+    ],
+    "message": {
+     "id": "m6",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "索引先建在 (tenant_id, created_at)，大部分查詢都會用到這組。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m7": {
+    "id": "m7",
+    "parent": "m6",
+    "children": [
+     "m8"
+    ],
+    "message": {
+     "id": "m7",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "為什麼容器連不上宿主機的 Postgres？出現 connection refused 錯誤"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m8": {
+    "id": "m8",
+    "parent": "m7",
+    "children": [
+     "m9"
+    ],
+    "message": {
+     "id": "m8",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "容器裡的 localhost 指的是容器自己，不是你的電腦。改連 host.docker.internal 就能連到宿主機。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m9": {
+    "id": "m9",
+    "parent": "m8",
+    "children": [
+     "m10"
+    ],
+    "message": {
+     "id": "m9",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "pg_hba.conf 也得改嗎？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m10": {
+    "id": "m10",
+    "parent": "m9",
+    "children": [
+     "m11"
+    ],
+    "message": {
+     "id": "m10",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "改用 host.docker.internal 就能解決，另外放行 172.17.0.0/16 這個網段。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m11": {
+    "id": "m11",
+    "parent": "m10",
+    "children": [
+     "m12old",
+     "m12"
+    ],
+    "message": {
+     "id": "m11",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "回到正題：MVCC 下長交易會讓表膨脹嗎？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m12": {
+    "id": "m12",
+    "parent": "m11",
+    "children": [
+     "m13"
+    ],
+    "message": {
+     "id": "m12",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "會。長交易讓 VACUUM 不能回收它之後產生的舊版本，表和索引都會膨脹。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m13": {
+    "id": "m13",
+    "parent": "m12",
+    "children": [
+     "m14"
+    ],
+    "message": {
+     "id": "m13",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "要怎麼監控膨脹？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m14": {
+    "id": "m14",
+    "parent": "m13",
+    "children": [
+     "m15"
+    ],
+    "message": {
+     "id": "m14",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "看 pg_stat_user_tables 的 n_dead_tup，或用 pgstattuple 估算膨脹比例。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m15": {
+    "id": "m15",
+    "parent": "m14",
+    "children": [
+     "m16"
+    ],
+    "message": {
+     "id": "m15",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "另外，即時通知要用 WebSocket 還是 SSE？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m16": {
+    "id": "m16",
+    "parent": "m15",
+    "children": [
+     "m17"
+    ],
+    "message": {
+     "id": "m16",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "單向推播用 SSE 就夠了，瀏覽器會自動重連；需要雙向才用 WebSocket。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m17": {
+    "id": "m17",
+    "parent": "m16",
+    "children": [
+     "m18"
+    ],
+    "message": {
+     "id": "m17",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "SSE 斷線時怎麼補送？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m18": {
+    "id": "m18",
+    "parent": "m17",
+    "children": [],
+    "message": {
+     "id": "m18",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "用 Last-Event-ID 記住最後一筆，伺服器從那之後補送。\n- 要不要用 Redis pub/sub 做多台廣播？\n- 事件保留多久，待確認\n你想看程式碼範例嗎？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m3old": {
+    "id": "m3old",
+    "parent": "m2",
+    "children": [
+     "m4old"
+    ],
+    "message": {
+     "id": "m3old",
+     "author": {
+      "role": "user"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "共用表。MVCC 會不會影響讀取？"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m4old": {
+    "id": "m4old",
+    "parent": "m3old",
+    "children": [],
+    "message": {
+     "id": "m4old",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "讀取不會被寫入擋住，這是 MVCC 的好處。"
+      ]
+     },
+     "metadata": {}
+    }
+   },
+   "m12old": {
+    "id": "m12old",
+    "parent": "m11",
+    "children": [],
+    "message": {
+     "id": "m12old",
+     "author": {
+      "role": "assistant"
+     },
+     "recipient": "all",
+     "content": {
+      "content_type": "text",
+      "parts": [
+       "長交易本身不會讓表膨脹。"
+      ]
+     },
+     "metadata": {}
+    }
+   }
+  },
+  "current_node": "m18"
+ }
+]

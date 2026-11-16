@@ -1,0 +1,166 @@
+/*
+ * Tangent design tokens v3 (final for handoff). Superset of web/packages/react/src/styles.css:
+ * every original token keeps its name and value; new tokens follow the same --tg-* naming.
+ * Themes: light / dark via light-dark(); data-theme="host" = dark embedding host theme.
+ * Fonts are self-hosted (OFL): IBM Plex Sans / Mono (@ibm/plex-sans, @ibm/plex-mono), IBM Plex Sans TC (@ibm/plex-sans-tc),
+ * Source Serif 4, Noto Sans TC / Noto Serif TC as fallback for missing glyphs or weights. Host uses Geist / Geist Mono (OFL).
+ * Rule: --tg-primary is a FILL colour (buttons, selected tab rule, icons ≥3:1). Text and links use --tg-primary-text.
+ */
+:root { color-scheme: light dark; }
+[data-theme="light"] { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+[data-theme="host"] { color-scheme: dark; }
+
+:root, [data-theme] {
+  --tg-background: light-dark(#f7f5f0, #111214);
+  --tg-surface: light-dark(#fffdf8, #17181b);
+  --tg-surface-raised: light-dark(#ffffff, #1d1f23);
+  --tg-surface-sunken: light-dark(#efece4, #0c0d0f);
+  --tg-foreground: light-dark(#1d1b16, #e8e6e1);
+  --tg-foreground-strong: light-dark(#0d0c09, #f7f5f0);
+  --tg-muted: light-dark(#5c574d, #a39f96);
+  --tg-subtle: light-dark(#706a5e, #8a867d);
+  --tg-border: light-dark(#e2ddd1, #2a2c31);
+  --tg-border-strong: light-dark(#cfc8b8, #3a3d44);
+  --tg-border-input: light-dark(#8a8273, #706d66);
+  --tg-primary: light-dark(#0f766e, #2dd4bf);
+  --tg-primary-hover: light-dark(#0b5f58, #5eead4);
+  --tg-primary-text: light-dark(#0f766e, #2dd4bf);
+  --tg-primary-foreground: light-dark(#f4fffd, #04201d);
+  --tg-primary-soft: light-dark(#d5f0ec, #123a36);
+  --tg-accent: light-dark(#ece8dd, #24262b);
+  --tg-ring: light-dark(#0d9488, #5eead4);
+  --tg-destructive: light-dark(#b42318, #f87171);
+  --tg-destructive-soft: light-dark(#fde7e4, #3a1714);
+  --tg-warning: light-dark(#a15c07, #fbbf24);
+  --tg-success: light-dark(#157347, #4ade80);
+  --tg-branch-open: light-dark(#0f766e, #2dd4bf);
+  --tg-branch-merged: light-dark(#4f46e5, #a5b4fc);
+  --tg-branch-discarded: light-dark(#706a5e, #8a867d);
+  --tg-branch-promoted: light-dark(#b45309, #fbbf24);
+  --tg-card: light-dark(#f1eefb, #1e1c33);
+  --tg-card-border: light-dark(#c9c2f2, #3f3a72);
+  --tg-status-thinking: light-dark(#0e7490, #67e8f9);
+  --tg-status-error: light-dark(#b42318, #f87171);
+  --tg-scrim: light-dark(rgba(29, 27, 22, 0.4), rgba(0, 0, 0, 0.6));
+  --tg-shadow:
+    0 1px 2px light-dark(rgba(29, 27, 22, 0.06), rgba(0, 0, 0, 0.4)),
+    0 8px 24px -12px light-dark(rgba(29, 27, 22, 0.18), rgba(0, 0, 0, 0.7));
+
+  /* New (v2) */
+  --tg-warning-soft: light-dark(#fbefd9, #33260d);
+  --tg-success-soft: light-dark(#dcf1e5, #12301f);
+  --tg-highlight: light-dark(#fbe7a6, #4a3b0c);
+  --tg-suggestion: light-dark(#6b4fa0, #c4b5fd);
+  --tg-suggestion-soft: light-dark(#efe9f8, #251f36);
+  --tg-leaf-conclusion: light-dark(#4f46e5, #a5b4fc);
+  --tg-leaf-decision: light-dark(#157347, #4ade80);
+  --tg-leaf-answer: light-dark(#0e7490, #67e8f9);
+  --tg-leaf-deadend: light-dark(#8a3b2a, #f0a08c);
+  --tg-leaf-pending: light-dark(#a15c07, #fbbf24);
+  --tg-arg-question: light-dark(#0e7490, #67e8f9);
+  --tg-arg-idea: light-dark(#6b4fa0, #c4b5fd);
+  --tg-arg-pro: light-dark(#157347, #4ade80);
+  --tg-arg-con: light-dark(#b42318, #f87171);
+  --tg-arg-decision: light-dark(#0f766e, #2dd4bf);
+  --tg-shadow-overlay:
+    0 2px 6px light-dark(rgba(29, 27, 22, 0.08), rgba(0, 0, 0, 0.5)),
+    0 24px 48px -16px light-dark(rgba(29, 27, 22, 0.28), rgba(0, 0, 0, 0.8));
+
+  --tg-radius: 0.625rem;
+  --tg-radius-sm: calc(var(--tg-radius) * 0.6);
+  --tg-radius-lg: calc(var(--tg-radius) * 1.4);
+  --tg-radius-full: 999px;
+  --tg-font-sans: "IBM Plex Sans", "IBM Plex Sans TC", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;
+  --tg-font-serif: "Source Serif 4", "Noto Serif TC", ui-serif, Georgia, serif;
+  --tg-font-mono: "IBM Plex Mono", "IBM Plex Sans TC", "Noto Sans TC", ui-monospace, Menlo, Consolas, monospace;
+  --tg-text-xs: 0.75rem;
+  --tg-text-sm: 0.8125rem;
+  --tg-text-base: 0.875rem;
+  --tg-text-md: 1rem;
+  --tg-text-lg: 1.125rem;
+  --tg-text-xl: 1.375rem;
+  --tg-text-reading: 1.0625rem;
+  --tg-leading-reading: 1.75;
+  --tg-reading-width: 46rem;
+  --tg-duration-fast: 120ms;
+  --tg-duration-normal: 220ms;
+  --tg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Host theme: embedding host (dark). Host-given values are marked [host]; the rest are derived to pass WCAG AA on #090a0f / #12141d. */
+[data-theme="host"] {
+  --tg-background: #090a0f;          /* [host] background */
+  --tg-surface: #12141d;             /* [host] card */
+  --tg-surface-raised: #1a1d2b;      /* [host] muted */
+  --tg-surface-sunken: #06070a;
+  --tg-accent: #1a1d2b;              /* [host] muted */
+  --tg-foreground: #e6e8ef;          /* [host] */
+  --tg-foreground-strong: #f1f2f6;   /* [host] */
+  --tg-muted: #9aa0b4;               /* [host] muted-foreground */
+  --tg-subtle: #868ca3;
+  --tg-border: rgba(255, 255, 255, 0.10);         /* [host] */
+  --tg-border-strong: rgba(255, 255, 255, 0.18);  /* [host] */
+  --tg-border-input: #646a82;
+  --tg-primary: #5458e8;             /* [host] fill only: 3.7:1 on background */
+  --tg-primary-hover: #4a4edb;       /* [host] */
+  --tg-primary-text: #a5b4fc;        /* [host] primary-text */
+  --tg-primary-foreground: #ffffff;  /* 5.3:1 on primary */
+  --tg-primary-soft: #1b1d3a;
+  --tg-ring: #a5b4fc;                /* [host] */
+  --tg-destructive: #f87171;
+  --tg-destructive-soft: #2e1a1c;
+  --tg-warning: #fbbf24;
+  --tg-warning-soft: #2e2410;
+  --tg-success: #4ade80;
+  --tg-success-soft: #122a1d;
+  --tg-highlight: #3a3212;
+  --tg-branch-open: #a5b4fc;
+  --tg-branch-merged: #d8b4fe;
+  --tg-branch-discarded: #8b91a7;
+  --tg-branch-promoted: #fbbf24;
+  --tg-card: #1e1838;
+  --tg-card-border: #3f3470;
+  --tg-status-thinking: #67e8f9;
+  --tg-status-error: #f87171;
+  --tg-suggestion: #f9a8d4;
+  --tg-suggestion-soft: #2c1a2a;
+  --tg-leaf-conclusion: #d8b4fe;
+  --tg-leaf-decision: #4ade80;
+  --tg-leaf-answer: #67e8f9;
+  --tg-leaf-deadend: #fdba8c;
+  --tg-leaf-pending: #fbbf24;
+  --tg-arg-question: #67e8f9;
+  --tg-arg-idea: #f9a8d4;
+  --tg-arg-pro: #4ade80;
+  --tg-arg-con: #f87171;
+  --tg-arg-decision: #a5b4fc;
+  --tg-scrim: rgba(0, 0, 0, 0.6);
+  --tg-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.8);
+  --tg-shadow-overlay: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 48px -16px rgba(0, 0, 0, 0.9);
+  --tg-radius: 0.5rem;
+  --tg-font-sans: "Geist", "IBM Plex Sans TC", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif;  /* [host] */
+  --tg-font-serif: var(--tg-font-sans);
+  --tg-font-mono: "Geist Mono", "IBM Plex Sans TC", "Noto Sans TC", ui-monospace, Menlo, monospace;  /* [host] */
+  --tg-text-reading: 0.9375rem;
+  --tg-leading-reading: 1.65;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root, [data-theme] { --tg-duration-fast: 0ms; --tg-duration-normal: 0ms; }
+}
+
+@keyframes tg-caret { 0%, 100% { opacity: 1; } 50% { opacity: 0.15; } }
+@keyframes tg-spin { to { transform: rotate(360deg); } }
+@keyframes tg-shimmer { 0% { opacity: 0.45; } 50% { opacity: 0.9; } 100% { opacity: 0.45; } }
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+:focus-visible { outline: 2px solid var(--tg-ring); outline-offset: 2px; }
+a { color: var(--tg-primary-text); }
+a:hover { color: var(--tg-primary-hover); }
+::selection { background: var(--tg-highlight); }
+
+/* Added from web/packages/react/src/styles.css (implementation tokens missing from the prototype copy). */
+:root, [data-theme] { --tg-control-height: 2rem; --tg-control-height-sm: 1.75rem; --tg-hit-target: 2rem; }
+@media (pointer: coarse) { :root, [data-theme] { --tg-control-height: 2.75rem; --tg-control-height-sm: 2.75rem; --tg-hit-target: 2.75rem; } }

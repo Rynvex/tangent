@@ -1,0 +1,21 @@
+{
+  "method": "POST",
+  "path": "/api/seeds/00000000-0000-4000-8000-000000000001/drop",
+  "response": {
+    "seed": {
+      "anchorLineId": "00000000-0000-4000-8000-000000000002",
+      "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "expandedLineId": "",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "noteId": "",
+      "rootLineId": "00000000-0000-4000-8000-000000000002",
+      "sourceLabel": "主線 #8",
+      "status": "dropped",
+      "text": "Maybe Osaka too",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

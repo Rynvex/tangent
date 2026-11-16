@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>body { margin: 0; }</style>
+</helmet>
+<div data-theme="light" style="min-height:100vh;background:var(--tg-background);color:var(--tg-foreground);font-family:var(--tg-font-sans);font-size:var(--tg-text-base);line-height:1.55">
+<div style="max-width:1180px;margin:0 auto;padding:40px 24px 96px;display:flex;flex-direction:column;gap:32px">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">Tangent・元件規格 v1</span>
+    <h1 style="margin:0;font-size:var(--tg-text-xl);font-weight:600;color:var(--tg-foreground-strong)">元件、狀態與快捷鍵</h1>
+    <p style="margin:0;color:var(--tg-muted);max-width:720px">「套件」＝ <code style="font-family:var(--tg-font-mono)">@tangent/react</code>，會嵌進宿主 app，只能用 --tg-* token；「demo」＝只在 Tangent 自己的 app。間距以 4px 為單位。</p>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">按鈕的七種狀態</h2>
+    <div style="overflow:auto;border:1px solid var(--tg-border);border-radius:var(--tg-radius);background:var(--tg-surface)">
+      <div style="display:grid;grid-template-columns:120px repeat(7,minmax(110px,1fr));gap:12px;align-items:center;padding:14px;min-width:960px">
+        <span></span><sc-for list="{{ states }}" as="st"><span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ st }}</span></sc-for>
+        <sc-for list="{{ btnRows }}" as="r">
+          <span style="font-size:var(--tg-text-xs);font-family:var(--tg-font-mono)">{{ r.name }}</span>
+          <sc-for list="{{ r.cells }}" as="c">
+            <span style="display:inline-flex;align-items:center;justify-content:center;gap:6px;height:32px;padding:0 12px;border:{{ c.border }};border-radius:var(--tg-radius-sm);background:{{ c.bg }};color:{{ c.color }};font-size:var(--tg-text-sm);font-weight:500;opacity:{{ c.op }};outline:{{ c.outline }};outline-offset:2px;justify-self:start">{{ c.label }}</span>
+          </sc-for>
+        </sc-for>
+      </div>
+    </div>
+    <p style="margin:0;font-size:var(--tg-text-xs);color:var(--tg-muted)">focus 一律 2px --tg-ring 外框、偏移 2px；停用為 45% 不透明並移除 hover；載入中保留寬度、文字換成「處理中…」；錯誤只用在破壞性動作的確認。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">元件清單</h2>
+    <div style="overflow:auto;border:1px solid var(--tg-border);border-radius:var(--tg-radius);background:var(--tg-surface)">
+      <table style="width:100%;min-width:1000px;border-collapse:collapse;font-size:var(--tg-text-sm)">
+        <thead><tr><sc-for list="{{ heads }}" as="h"><th style="text-align:left;padding:10px 12px;background:var(--tg-surface-sunken);color:var(--tg-muted);font-weight:500;font-size:var(--tg-text-xs);white-space:nowrap">{{ h }}</th></sc-for></tr></thead>
+        <tbody>
+          <sc-for list="{{ comps }}" as="c">
+            <tr>
+              <td style="padding:10px 12px;border-top:1px solid var(--tg-border);vertical-align:top"><span style="display:block;font-weight:500">{{ c.name }}</span><span style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ c.code }}</span></td>
+              <td style="padding:10px 12px;border-top:1px solid var(--tg-border);vertical-align:top"><span style="display:inline-flex;height:22px;align-items:center;padding:0 8px;border-radius:var(--tg-radius-full);background:{{ c.pkgBg }};color:{{ c.pkgColor }};font-size:var(--tg-text-xs);white-space:nowrap">{{ c.pkg }}</span></td>
+              <td style="padding:10px 12px;border-top:1px solid var(--tg-border);vertical-align:top;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ c.size }}</td>
+              <td style="padding:10px 12px;border-top:1px solid var(--tg-border);vertical-align:top;font-size:var(--tg-text-xs)">{{ c.space }}</td>
+              <td style="padding:10px 12px;border-top:1px solid var(--tg-border);vertical-align:top;font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ c.states }}</td>
+              <td style="padding:10px 12px;border-top:1px solid var(--tg-border);vertical-align:top;font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ c.screens }}</td>
+            </tr>
+          </sc-for>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">寬度策略</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+      <sc-for list="{{ widths }}" as="w">
+        <div style="display:flex;flex-direction:column;gap:6px;padding:12px;border:1px solid var(--tg-border);border-radius:var(--tg-radius);background:var(--tg-surface)">
+          <span style="font-family:var(--tg-font-mono);font-weight:600;color:var(--tg-foreground-strong)">{{ w.w }}</span>
+          <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ w.ctx }}</span>
+          <span style="font-size:var(--tg-text-sm)">{{ w.rule }}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:12px">
+    <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">鍵盤快捷鍵</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:2px 24px;padding:12px 16px;border:1px solid var(--tg-border);border-radius:var(--tg-radius);background:var(--tg-surface)">
+      <sc-for list="{{ keys }}" as="k">
+        <div style="display:flex;align-items:center;gap:12px;padding:7px 0;border-bottom:1px solid var(--tg-border)">
+          <span style="flex:1;font-size:var(--tg-text-sm)">{{ k.label }}</span>
+          <span style="display:flex;gap:4px"><sc-for list="{{ k.combo }}" as="c"><kbd style="min-width:24px;height:24px;padding:0 6px;display:inline-grid;place-items:center;border:1px solid var(--tg-border-strong);border-bottom-width:2px;border-radius:5px;background:var(--tg-surface-raised);font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ c }}</kbd></sc-for></span>
+          <span style="width:52px;text-align:right;font-size:11px;color:{{ k.scColor }}">{{ k.status }}</span>
+        </div>
+      </sc-for>
+    </div>
+    <p style="margin:0;font-size:var(--tg-text-xs);color:var(--tg-muted)">嵌入宿主時，宿主可以重新指定或停用任何快捷鍵；與宿主衝突時以宿主為準，命令面板永遠可用。</p>
+  </section>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const BTN = {
+  primary: { bg: 'var(--tg-primary)', color: 'var(--tg-primary-foreground)', border: '0', hover: 'var(--tg-primary-hover)' },
+  secondary: { bg: 'var(--tg-surface)', color: 'var(--tg-foreground)', border: '1px solid var(--tg-border-strong)', hover: 'var(--tg-surface-raised)' },
+  ghost: { bg: 'transparent', color: 'var(--tg-muted)', border: '0', hover: 'var(--tg-accent)' }
+};
+const STATES = ['一般', 'hover', 'focus', '選取', '停用', '錯誤', '載入中'];
+const COMPS = [
+  ['路徑麵包屑', 'Breadcrumb', 1, 'h30・每段 max 320（嵌入 170）', '段內 8／段間 2', '一般、hover、目前頁、截斷', 'A2 A4'],
+  ['token 計量膠囊', 'UsageMeter', 1, 'h28・r full', 'x10', '一般、hover、接近上限（warning）', 'A11'],
+  ['訊息：使用者', 'UserMessage', 1, 'max-w 86%・r lg（右上 sm）', 'p 10/14', '一般、hover（顯示動作）、高亮', 'A2'],
+  ['訊息：AI', 'AssistantMessage', 1, '閱讀寬 46rem・serif 17/1.75', '區塊間 12', '串流中、完成、已停止、錯誤、高亮', 'A2'],
+  ['訊息動作列', 'MessageActions', 1, 'h28 按鈕', 'gap 2', 'hover／focus 才顯示；唯讀時隱藏；≤480 只剩圖示', 'A2'],
+  ['分岔點膠囊', 'ForkMarker', 1, 'h28・r full', 'x 6/10', '收合、展開、hover、有未讀', 'A2'],
+  ['結論卡（主線）', 'BranchCard', 1, 'r lg・--tg-card', 'p 14', '摺疊、展開、待告訴 AI、需要你決定、高亮', 'A5'],
+  ['結論卡審閱表單', 'BranchCardReview', 1, 'w 760（手機全螢幕）', '欄間 18', '起草中、草稿、空白（失敗）、主線已往前、結論缺漏（錯誤）', 'A5'],
+  ['支線條', 'BranchBar', 1, '最小 h 88', 'p 10/14', '進行中、唯讀結果、樹平衡提示、背景展開、已獨立', 'A4 B4'],
+  ['輸入框', 'Composer', 1, 'r lg・min h 88', 'p 12/14', '一般、focus、有輸入（顯示估算）、串流中（停止）、停用', 'A2'],
+  ['選取工具列', 'SelectionToolbar', 1, 'h36・深色', 'gap 2', '桌機在選取上方；手機在下方', 'A2'],
+  ['開支線表單', 'OpenBranchDialog', 1, 'w 560', '欄間 16', '一般、目的空白（停用送出）、層數警告、達上限、分岔點已不在', 'A3'],
+  ['支線種類選項', 'KindRadio', 1, 'min w 150', 'p 10/12', '一般、hover、選取、focus', 'A3'],
+  ['大綱列', 'OutlineRow', 1, 'min h 36・縮排 18/層', 'p 7/10', '一般、hover、你在這裡、未帶回（淡）、有未讀、多選', 'A8 C2'],
+  ['地圖', 'BranchMap', 1, '節點 188×60', '欄距 236・列距 78', '縮放 50–160%、全幅、圖層開關；≤480 不提供', 'A8 C1–C3 D2'],
+  ['收尾', 'Leaf', 1, '一行・圖示 12', 'gap 4', '五種類型、草稿（虛線）、已確認', 'B1'],
+  ['紀要條目', 'NoteItem', 1, 'p 8/10', 'gap 4', '有效、完成、被取代、新增（新）', 'A9'],
+  ['停車場種子', 'SeedCard', 1, 'p 10', 'gap 6', '待處理、已展開、已記進紀要、已丟掉', 'B3'],
+  ['建議卡', 'SuggestionCard', 1, '虛線 --tg-suggestion', 'p 10', '待決定、已接受、已忽略', 'B5'],
+  ['送出前預覽', 'TurnPreview', 1, 'w 400 抽屜', '列 h 40', '收合、展開區塊、魚眼程度標籤', 'A11 C1'],
+  ['全域狀態列', 'StatusBanner', 1, '全寬・p 10/16', 'gap 10', '重連、AI 錯誤（倒數重試）、唯讀、上限', 'A14'],
+  ['記憶提示', 'MemoryRecall', 1, '虛線卡', 'p 12', '提示、已帶入、已忽略', 'D1'],
+  ['比較表', 'CompareTable', 1, '最小欄 120', 'p 8/12', '草稿、可改分數、建議欄高亮', 'D3'],
+  ['折疊區塊', 'FoldBlock', 1, 'r・p 10/12', 'gap 10', '收合、展開原文', 'D4'],
+  ['對話清單', 'ConversationList', 0, 'w 264', '列 p 8/10', '一般、目前、搜尋結果、空、載入中、封存', 'A1'],
+  ['設定頁', 'SettingsDialog', 0, 'w 600', '列 h 44', '功能模式（手動／建議／自動）、宿主鎖定（唯讀）', 'A13'],
+  ['回顧畫面', 'ReviewBoard', 0, '4 欄卡片', 'gap 12', '有待辦、全部處理完', 'C5'],
+  ['記憶庫頁', 'MemoryLibrary', 0, '主欄＋側欄', 'gap 16', '篩選、被取代歷史', 'D1'],
+  ['宿主示意外框', 'HostFrame', 0, '—', '—', '僅示範嵌入情境', '—']
+];
+const KEYS = [
+  ['命令面板', ['⌘', 'K'], 0], ['開支線（掛在最後一則或選取處）', ['⌘', 'B'], 1], ['停車（輸入框內容或選取文字）', ['⌘', '⇧', 'S'], 0],
+  ['記進紀要（選取文字）', ['⌘', '⇧', 'N'], 0], ['回上一層／關閉對話框', ['Esc'], 1], ['回主線', ['⌘', '['], 0],
+  ['切換側欄', ['⌘', '.'], 1], ['切換大綱／地圖', ['⌘', '⇧', 'M'], 0], ['送出前預覽', ['⌘', '⇧', 'P'], 1],
+  ['送出', ['Enter'], 1], ['換行', ['⇧', 'Enter'], 1], ['停止回覆', ['Esc'], 0],
+  ['結束並帶回（在支線裡）', ['⌘', 'Enter'], 0], ['上一則／下一則訊息', ['↑', '↓'], 0], ['大綱：展開／收合', ['←', '→'], 0],
+  ['大綱：進入支線', ['Enter'], 0], ['地圖：放大／縮小／符合畫面', ['+', '−', '0'], 0], ['地圖：從選取節點拉關聯', ['R'], 0]
+];
+class Component extends DCLogic {
+  renderVals() {
+    const cell = (v, st) => ({
+      label: st === '載入中' ? '處理中…' : '帶回主線',
+      bg: st === 'hover' || st === '選取' ? (v === 'ghost' && st === '選取' ? 'var(--tg-primary-soft)' : BTN[v].hover) : st === '錯誤' && v !== 'ghost' ? (v === 'primary' ? 'var(--tg-destructive)' : 'var(--tg-destructive-soft)') : BTN[v].bg,
+      color: st === '錯誤' ? (v === 'primary' ? '#fff' : 'var(--tg-destructive)') : (v === 'ghost' && st === '選取' ? 'var(--tg-primary)' : BTN[v].color),
+      border: st === '錯誤' && v === 'secondary' ? '1px solid var(--tg-destructive)' : BTN[v].border,
+      op: st === '停用' ? 0.45 : (st === '載入中' ? 0.8 : 1), outline: st === 'focus' ? '2px solid var(--tg-ring)' : '0 solid transparent'
+    });
+    return {
+      states: STATES,
+      btnRows: Object.keys(BTN).map(v => ({ name: v, cells: STATES.map(st => cell(v, st)) })),
+      heads: ['元件', '歸屬', '尺寸', '間距', '狀態', '畫面'],
+      comps: COMPS.map(([name, code, kit, size, space, states, screens]) => ({ name, code, pkg: kit ? '套件' : 'demo', pkgBg: kit ? 'var(--tg-primary-soft)' : 'var(--tg-accent)', pkgColor: kit ? 'var(--tg-primary)' : 'var(--tg-muted)', size, space, states, screens })),
+      widths: [
+        { w: '1440', ctx: '完整 app', rule: '三欄：清單 264、對話彈性（閱讀寬 46rem）、側欄 360。' },
+        { w: '1024', ctx: '筆電／平板橫向', rule: '清單預設收合（頂端按鈕叫出）；側欄改成覆蓋式抽屜。' },
+        { w: '768', ctx: '平板直向', rule: '只有對話；側欄覆蓋式，三個分頁切換；目標膠囊隱藏。' },
+        { w: '420', ctx: '嵌入宿主側欄', rule: '對話＋支線條；大綱從頂端按鈕叫出，蓋住對話；沒有地圖；套宿主主題。' },
+        { w: '375', ctx: '手機', rule: '對話全螢幕；側欄是底部抽屜；審閱與對話框全螢幕；觸控 ≥ 44px；選取工具列在下方。' }
+      ],
+      keys: KEYS.map(([label, combo, done]) => ({ label, combo, status: done ? '原型可用' : '規格', scColor: done ? 'var(--tg-primary)' : 'var(--tg-subtle)' }))
+    };
+  }
+}
+</script>
+</body>
+</html>

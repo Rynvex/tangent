@@ -1,0 +1,48 @@
+packages:
+  - "packages/*"
+  - "apps/*"
+  - "e2e"
+
+# Shared versions, aligned workspace dependency ranges (DESIGN §8), so
+# components move between the two code bases without dependency drift.
+catalog:
+  react: 19.2.3
+  react-dom: 19.2.3
+  "@tanstack/react-query": ^5.96.2
+  zustand: ^5.0.0
+  "@base-ui/react": ^1.3.0
+  lucide-react: ^1.0.1
+  tailwindcss: ^4.1.0
+  "@tailwindcss/vite": ^4.1.0
+  vite: ^7.1.0
+  "@vitejs/plugin-react": ^5.0.0
+  vitest: ^4.1.0
+  jsdom: ^29.0.1
+  "@testing-library/react": ^16.3.2
+  "@testing-library/jest-dom": ^6.9.1
+  typescript: ^5.9.3
+  "@types/react": ^19.2.0
+  "@types/react-dom": ^19.2.0
+  "@types/node": ^22.18.0
+  "@testing-library/user-event": ^14.6.1
+  # Self-hosted fonts (OFL), bundled through @tangent/react/fonts.css (F0).
+  "@ibm/plex-sans": ^1.1.0
+  "@ibm/plex-mono": ^2.5.0
+  "@ibm/plex-sans-tc": ^1.1.1
+  "@fontsource/source-serif-4": ^5.3.1
+  "@fontsource/noto-sans-tc": ^5.3.1
+  "@fontsource/noto-serif-tc": ^5.3.1
+  "@fontsource/geist-sans": ^5.3.0
+  "@fontsource/geist-mono": ^5.3.0
+  # Markdown (F1), aligned markdown renderer dependency ranges.
+  react-markdown: ^10.1.0
+  remark-gfm: ^4.0.1
+  remark-math: ^6.0.0
+  katex: ^0.19.0
+  lowlight: ^3.3.0
+  highlight.js: ^11.12.0
+  "@types/hast": ^3.0.5
+  "@types/katex": ^0.16.8
+  # E2E: pinned to the release whose Chromium build (1208) is in the local Playwright cache.
+  "@playwright/test": 1.58.2
+  "@axe-core/playwright": ^4.10.2

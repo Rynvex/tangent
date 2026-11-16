@@ -1,0 +1,58 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/accept",
+  "request": {
+    "importance": 7
+  },
+  "response": {
+    "result": {
+      "memory": {
+        "aiDrafted": true,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "importance": 7,
+        "kind": "fact",
+        "source": {
+          "label": "Disks",
+          "leafLineId": "00000000-0000-4000-8000-000000000003",
+          "lineId": "00000000-0000-4000-8000-000000000004",
+          "messageId": "00000000-0000-4000-8000-000000000005",
+          "noteId": ""
+        },
+        "status": "active",
+        "supersededBy": "",
+        "text": "Remembered: Disks (fake runner)",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "validUntil": null
+      },
+      "superseded": []
+    },
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "feature": "memory",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "memory",
+      "lineId": "00000000-0000-4000-8000-000000000004",
+      "payload": {
+        "action": "add",
+        "importance": 6,
+        "jobId": "00000000-0000-4000-8000-000000000006",
+        "kind": "fact",
+        "source": {
+          "label": "Disks",
+          "leafLineId": "00000000-0000-4000-8000-000000000003",
+          "lineId": "00000000-0000-4000-8000-000000000004",
+          "messageId": "00000000-0000-4000-8000-000000000005",
+          "noteId": ""
+        },
+        "text": "Remembered: Disks (fake runner)"
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "accepted",
+      "targetKey": "memory:00000000-0000-4000-8000-000000000006:0"
+    }
+  },
+  "status": 200
+}

@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@400;600&display=swap">
+<style>body { margin: 0; }</style>
+</helmet>
+<div data-theme="light" style="min-height:100vh;background:var(--tg-background);color:var(--tg-foreground);font-family:var(--tg-font-sans);font-size:var(--tg-text-base);line-height:1.65">
+<div style="max-width:820px;margin:0 auto;padding:48px 24px 80px;display:flex;flex-direction:column;gap:28px">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">Tangent・設計決定 v2・2026-10-15</span>
+    <h1 style="margin:0;font-size:var(--tg-text-xl);font-weight:600;color:var(--tg-foreground-strong)">§9 設計問題的答案</h1>
+    <p style="margin:0;color:var(--tg-muted)">每題：建議、理由、在原型裡的位置。檔案：<a href="Tangent 原型.dc.html">原型（A–D）</a>・<a href="Tangent C-D 畫面.dc.html">C、D 畫面</a>・<a href="Tangent 色票.dc.html">色票</a>・<a href="Tangent 元件規格.dc.html">元件規格與快捷鍵</a>・<a href="Tangent 互動規格.dc.html">互動規格</a>・<a href="handoff/README.md">交接文件</a>。</p>
+  </header>
+
+  <section style="display:flex;flex-direction:column;gap:8px;padding:16px 18px;border:1px solid var(--tg-border-strong);border-radius:var(--tg-radius);background:var(--tg-surface)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">定案（10/15 確認）</h2>
+    <p style="margin:0;font-size:var(--tg-text-sm);color:var(--tg-muted)">以下覆蓋本頁後面的「建議」。</p>
+    <ol style="margin:0;padding-left:1.4em;display:flex;flex-direction:column;gap:5px;font-size:var(--tg-text-sm)">
+      <li>字體：IBM Plex Sans / Mono；中文 IBM Plex Sans TC，缺字或缺字重時退到 Noto Sans TC。</li>
+      <li>AI 長篇回答用 Source Serif 4 / Noto Serif TC，介面一律無襯線；宿主主題全部無襯線。</li>
+      <li>宿主主題改用宿主深色值，字體 Geist / Geist Mono。新增 <code>--tg-primary-text</code>：<code>--tg-primary</code> 只當填色。支線狀態色、收尾類型色在 #090a0f 上全部達 AA（見色票）。</li>
+      <li>側欄三頁「結構、紀要、待處理」。待處理標籤一直顯示數量（停車場＋建議＋開太久的支線）；關掉的功能分頁直接消失，只開核心時只剩「結構」；記憶放紀要底部，標明「跨對話」。</li>
+      <li>v1 不做並排。支線條加「預覽分岔點」浮層：主線那則與前後各一則。</li>
+      <li>順口問不提醒清除；一直顯示「7 天後清除」，並提供「記進紀要」「停車」兩種保存方式。</li>
+      <li>不開放略過審閱；審閱畫面的「全部接受並帶回」只需一次點擊。後端驗證卡片內容。</li>
+      <li>預設只顯示 token，金額收在預覽裡；單輪預估超過使用者設定的門檻（設定頁）才主動顯示金額。</li>
+      <li>魚眼程度與分數由後端組 prompt 時回傳，前端只顯示。</li>
+      <li>不新增狀態：資料是「未帶回」＋ <code>mergedIntoLineId</code>，前端顯示成「已合併到…」並連到新支線。</li>
+      <li>新對話帶 <code>spunOffFrom</code>（來源對話、來源訊息、標題）；原支線或訊息帶 <code>spunOffTo</code>。</li>
+      <li>重試：串流事件帶 <code>attempt</code>、<code>maxAttempts</code>、<code>nextRetryAt</code>；只有 429 與伺服器錯誤自動重試。</li>
+      <li>記憶只在開新對話與開支線時主動提示；每一輪自動帶入的記憶只在送出前預覽裡看得到。</li>
+      <li>四項未做的互動留給實作；地圖拉關聯線與大綱鍵盤操作見<a href="Tangent 互動規格.dc.html">互動規格</a>。</li>
+      <li>原型加入情境二（學習 Rust），D1–D4 可在原型裡走完：對話清單點「學習 Rust 的所有權與借用」。</li>
+      <li>交接文件：<code>handoff/</code>（Markdown），不做 PDF。</li>
+    </ol>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">1. 側欄分頁太多</h2>
+    <p style="margin:0"><b>建議：三個分頁</b>——「結構」（大綱 / 地圖 / 章節，用切換鈕）、「紀要」（紀要；D 階段把記憶放在同一頁下半部）、「待處理」（停車場 + 建議匣 + 回顧入口，分頁上顯示總數）。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：依「看結構 / 看已定下的事 / 看還沒處理的事」分，而不是依資料類型分。七個分頁在 360px 裡放不下也記不住；三個分頁的數字只有「待處理」有，注意力只被一個地方拉。章節同時存在於訊息流的分隔線，側欄只是索引。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">2. 進入支線</h2>
+    <p style="margin:0"><b>建議：所有寬度都是「整個對話區換成支線」</b>，頂端固定支線條，主線的分岔點以連結與背景摘要呈現。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：並排會讓兩條線同時爭取閱讀，正好違反「不被岔題帶偏」；1440 寬並排後每欄都低於舒適閱讀寬度。需要對照主線時，支線條上的「從主線 #19 岔出」一鍵回到分岔點並高亮，Esc 返回。之後若要並排，建議只在 ≥1600 寬以「釘住主線」的唯讀窄欄提供。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">3. 分岔點標示</h2>
+    <p style="margin:0"><b>建議：訊息正文結束後的一顆膠囊</b>：「⑂ 2 條支線 ●● 1 進行中・1 未帶回」，點開是內嵌清單（種類、目的、狀態、收尾、未讀）。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：放在正文之後，讀完才看到，不切斷句子；不用左側邊線或行內標記，避免與選取、程式碼區塊衝突。狀態點用支線狀態色，色盲時仍有文字摘要。420 嵌入也能用同一個元件，不需要額外欄寬。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">4. 結論卡與收尾的關係</h2>
+    <p style="margin:0"><b>建議：收尾是結論卡的「標題列」，結論卡是收尾的「展開」。</b>兩者共用收尾類型的圖示與顏色（結論 = 旗標 + 靛色）。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：使用者在主線看到卡片的那一行粗體結論，就是大綱、地圖末端顯示的那一句；同一句話在兩處長得一樣，就不用解釋兩者的關係。結論卡用紫色卡片底（--tg-card）區分「系統訊息」，收尾只是一行文字。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">5. AI 介入的強度分級</h2>
+    <ol style="margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px">
+      <li><b>標記</b>（最輕）：地圖、大綱上的虛線、待確認徽章。不需要回應。</li>
+      <li><b>內嵌提示</b>：AI 回覆下方的虛線膠囊（建議開支線、偏題）。每輪最多一則，跟著那則回覆，捲走就消失；可以一鍵忽略。</li>
+      <li><b>建議匣</b>：跨訊息、需要決定的事（樹平衡、群組、記進紀要）。只有數字，不彈出。</li>
+    </ol>
+    <p style="margin:0;color:var(--tg-muted)">規則：建議永不搶 focus、不開對話框；同一件事只出現在一個層級（樹平衡例外：在支線條內嵌一次，同時進建議匣）。建議一律用 --tg-suggestion 紫色虛線框，「虛線 = 還沒被你確認」。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">6. token 與費用</h2>
+    <p style="margin:0"><b>建議：三層</b>——頂端灰色小膠囊只顯示這條線的累計 token（定案：不顯示金額）；輸入框的眼睛圖示在有輸入時才顯示「這一輪約 7.6k」；點任何一個才打開預覽抽屜。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：累計數字用來建立信任，不需要每一秒更新顏色；不用紅黃綠警示，只有接近上限時才變成警告色。預覽抽屜同時顯示「若送完整歷史約 38k」，讓人看到省下來的部分，而不是只看到花費。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">7. 地圖的資訊層</h2>
+    <p style="margin:0"><b>建議：結構與狀態永遠顯示；群組、關聯、魚眼、論證類型是可疊加的圖層開關。</b>顏色只表達一件事：節點邊框 = 路徑與狀態；論證類型以小標籤呈現，不改邊框色。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：同時用顏色表達三種分類就無法讀。外框（群組）、虛線（關聯、待確認）、透明度（魚眼「看不到」）、標籤（類型）分別用不同的視覺通道，可以同時開而不打架。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">8. 只開核心時</h2>
+    <p style="margin:0"><b>建議：側欄的分頁列換成標題「結構」</b>，下方直接是大綱 / 地圖切換；訊息動作只剩「開支線、複製」；輸入框只剩「開支線、預覽」；章節分隔線、建議膠囊、目標整列不渲染。</p>
+    <p style="margin:0;color:var(--tg-muted)">理由：被關閉的功能是「不存在」而不是灰掉，所以每個容器都要能在少一個子元件時仍然對齊（工具列用 gap 排列、側欄只有一個分頁時不顯示分頁列）。原型右側 Tweaks 的 features = core 可切換對照。</p>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">其他決定</h2>
+    <ul style="margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px">
+      <li>字體：介面 IBM Plex Sans、AI 長文 Source Serif 4、程式碼 IBM Plex Mono，中文 IBM Plex Sans TC（缺字退 Noto Sans TC）/ Noto Serif TC，全部 OFL。換掉 Inter，因為 Plex 的數字與中文搭配時的字重較接近，而且有同家族的等寬字。</li>
+      <li>使用者訊息是靠右的淺底塊；AI 回覆不加框、用襯線字，像筆記本上的正文。結論卡是唯一帶底色與邊框的訊息。</li>
+      <li>結論卡審閱的主按鈕寫「全部接受並帶回」，旁邊是「依勾選帶回」，沒有「下一步」；AI 起草的欄位標「AI 草稿・待你確認」；結論空白時無法送出。</li>
+      <li>新 token（見 tangent-tokens.css）：warning-soft、success-soft、highlight、suggestion / suggestion-soft、leaf-*（5）、arg-*（5）、shadow-overlay、radius-sm / lg / full、text-* 字級、reading-width、leading-reading。</li>
+      <li>宿主主題只覆寫 token：#5458e8 主色只當填色、文字用 --tg-primary-text #a5b4fc、Geist / Geist Mono、AI 回覆改用無襯線。</li>
+    </ul>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">鍵盤（完整表見元件規格）</h2>
+    <ul style="margin:0;padding-left:1.3em;font-family:var(--tg-font-mono);font-size:var(--tg-text-sm)">
+      <li>⌘/Ctrl B　開支線（掛在最後一則）</li>
+      <li>Esc　關閉對話框 → 回上一層</li>
+      <li>⌘/Ctrl .　切換側欄</li>
+      <li>⌘/Ctrl ⇧ P　送出前預覽</li>
+      <li>Enter 送出・Shift+Enter 換行</li>
+      <li>⌘/Ctrl K　命令面板・⌘/Ctrl [　回主線・⌘/Ctrl ⇧ S　停車・⌘/Ctrl ⇧ M　大綱／地圖</li>
+    </ul>
+  </section>
+
+  <section style="display:flex;flex-direction:column;gap:6px;padding-top:20px;border-top:1px solid var(--tg-border)">
+    <h2 style="margin:0;font-size:var(--tg-text-md);font-weight:600;color:var(--tg-foreground-strong)">§5 沒提到、需要確認的資料或行為</h2>
+    <ul style="margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px">
+      <li>結論卡草稿要記錄「草稿產生時主線的最後一則」，才能算出「主線多了 3 則」與哪一則可能相關。</li>
+      <li>「這一輪約 N token」需要前端可呼叫的估算 API（不送出）。</li>
+      <li>對話清單「1 條等你」：需要定義「等你」＝支線有未讀，或結論卡草稿待審。</li>
+      <li>紀要條目的「新」標記需要 created-at 與使用者最後檢視時間。</li>
+      <li>釘選訊息（C1）需要在訊息物件上加欄位。</li>
+      <li><span style="color:var(--tg-success)">已定：</span>魚眼程度與分數由後端組 prompt 時回傳，前端只顯示。</li>
+      <li><span style="color:var(--tg-success)">已定：</span>合併：資料是「未帶回」＋ mergedIntoLineId，前端顯示「已合併到…」。矛盾項的使用者選擇仍需欄位（待確認）。</li>
+      <li>搬移（A7）後，從被搬訊息岔出的支線要改掛到新支線；需要後端一併更新 parent。</li>
+      <li><span style="color:var(--tg-success)">已定：</span>獨立：新對話帶 spunOffFrom（來源對話、來源訊息、標題），原支線或訊息帶 spunOffTo。</li>
+      <li><span style="color:var(--tg-success)">已定：</span>重試：串流事件帶 attempt、maxAttempts、nextRetryAt；只有 429 與伺服器錯誤自動重試。</li>
+      <li>建議（B5）需要「已忽略、不再提醒」的持久化，樹平衡的「維持」也一樣。</li>
+      <li>比較表（D3）產生的「決定」收尾，同時要讓其他兄弟支線變成「未帶回」：需要一次性的批次操作。</li>
+      <li><span style="color:var(--tg-success)">已定：</span>記憶提示只在開新對話與開支線時；每輪自動帶入的只在預覽裡看得到。比對方式仍待後端定義。</li>
+    </ul>
+  </section>
+</div>
+</div>
+</x-dc>
+</body>
+</html>

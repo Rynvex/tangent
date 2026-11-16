@@ -1,0 +1,23 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branch/merge",
+  "request": {
+    "card": {
+      "conclusion": "x",
+      "extra": 1,
+      "question": ""
+    },
+    "parentTipMessageId": "00000000-0000-4000-8000-000000000002"
+  },
+  "response": {
+    "code": "invalid_card",
+    "error": "the conclusion card is not acceptable: card json: unknown field \"extra\"",
+    "problems": [
+      {
+        "field": "card",
+        "message": "json: unknown field \"extra\""
+      }
+    ]
+  },
+  "status": 422
+}

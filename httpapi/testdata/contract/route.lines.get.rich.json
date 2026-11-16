@@ -1,0 +1,50 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001",
+  "response": {
+    "archivedAt": null,
+    "awaitingReview": 1,
+    "branchCounts": {
+      "discarded": 0,
+      "merged": 1,
+      "open": 1,
+      "promoted": 0
+    },
+    "branchUnread": 1,
+    "conversationBranch": null,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "createdBy": "tester",
+    "folder": "",
+    "hostMeta": {},
+    "id": "00000000-0000-4000-8000-000000000001",
+    "lastActivityAt": "2026-01-01T00:00:00Z",
+    "model": "fake-1",
+    "notesRevision": 1,
+    "openSeeds": 0,
+    "openSuggestions": 0,
+    "provider": "fake",
+    "spunOffFrom": null,
+    "staleBranches": 0,
+    "status": "error",
+    "statusDetail": "the model run failed",
+    "summary": {
+      "decisions": [],
+      "files": [],
+      "openQuestions": [],
+      "suggestedLandings": [],
+      "topic": "",
+      "updatedAt": ""
+    },
+    "tags": [],
+    "tenantId": "tenant-a",
+    "title": "Rich",
+    "unread": 5,
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "usage": {
+      "costUsd": 0.002129,
+      "inputTokens": 1893,
+      "outputTokens": 118
+    }
+  },
+  "status": 200
+}

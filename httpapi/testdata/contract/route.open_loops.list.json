@@ -1,0 +1,118 @@
+{
+  "method": "GET",
+  "path": "/api/open-loops",
+  "response": {
+    "rootLineId": "",
+    "seeds": {
+      "items": [],
+      "total": 0
+    },
+    "staleBranches": {
+      "items": [
+        {
+          "anchorMessageId": "00000000-0000-4000-8000-000000000001",
+          "archived": false,
+          "cardMessageId": "",
+          "closedAt": null,
+          "conclusionLine": "",
+          "createdAt": "2026-01-01T00:00:00Z",
+          "depth": 1,
+          "draftStatus": "none",
+          "excerpt": "",
+          "kind": "investigate",
+          "lastActivityAt": "2026-01-01T00:00:00Z",
+          "leaf": null,
+          "lineId": "00000000-0000-4000-8000-000000000002",
+          "lineStatus": "idle",
+          "mergedIntoLineId": "",
+          "messageCount": 0,
+          "model": "fake-1",
+          "origin": "button",
+          "parentLineId": "00000000-0000-4000-8000-000000000003",
+          "provider": "fake",
+          "purpose": "Book the ryokan",
+          "rootLineId": "00000000-0000-4000-8000-000000000003",
+          "rootTitle": "Trip to Kyoto",
+          "status": "open",
+          "unread": 0
+        }
+      ],
+      "total": 1
+    },
+    "staleDays": 3,
+    "suggestions": {
+      "items": [
+        {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "decidedAt": null,
+          "feature": "suggestion_probe",
+          "id": "00000000-0000-4000-8000-000000000004",
+          "kind": "probe",
+          "lineId": "00000000-0000-4000-8000-000000000003",
+          "payload": {
+            "reason": "the reply asked for a probe suggestion"
+          },
+          "rootLineId": "00000000-0000-4000-8000-000000000003",
+          "rootTitle": "Trip to Kyoto",
+          "status": "open",
+          "targetKey": "line:00000000-0000-4000-8000-000000000003"
+        }
+      ],
+      "total": 1
+    },
+    "toConfirm": {
+      "items": [
+        {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000005",
+          "rootLineId": "00000000-0000-4000-8000-000000000003",
+          "rootTitle": "Trip to Kyoto",
+          "section": "to_confirm",
+          "sourceCardMessageId": "",
+          "sourceLineId": "",
+          "sourceMessageId": "",
+          "status": "active",
+          "supersededBy": "",
+          "text": "Is the ryokan refundable?",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        },
+        {
+          "copiedFromNoteId": "00000000-0000-4000-8000-000000000006",
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000007",
+          "rootLineId": "00000000-0000-4000-8000-000000000008",
+          "rootTitle": "Kyoto, the short version",
+          "section": "to_confirm",
+          "sourceCardMessageId": "",
+          "sourceLabel": "主線 #8",
+          "sourceLineId": "00000000-0000-4000-8000-000000000003",
+          "sourceMessageId": "00000000-0000-4000-8000-000000000009",
+          "status": "active",
+          "supersededBy": "",
+          "text": "Check the visa rules",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        },
+        {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000006",
+          "rootLineId": "00000000-0000-4000-8000-000000000003",
+          "rootTitle": "Trip to Kyoto",
+          "section": "to_confirm",
+          "sourceCardMessageId": "",
+          "sourceLabel": "主線 #8",
+          "sourceLineId": "00000000-0000-4000-8000-000000000003",
+          "sourceMessageId": "00000000-0000-4000-8000-000000000009",
+          "status": "active",
+          "supersededBy": "",
+          "text": "Check the visa rules",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "total": 3
+    }
+  },
+  "status": 200
+}

@@ -1,0 +1,15 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/folds",
+  "request": {
+    "fromMessageId": "00000000-0000-4000-8000-000000000002",
+    "summary": "x",
+    "toMessageId": "00000000-0000-4000-8000-000000000003"
+  },
+  "response": {
+    "code": "fold_overlap",
+    "error": "this range overlaps another fold of the line",
+    "foldId": "00000000-0000-4000-8000-000000000004"
+  },
+  "status": 409
+}

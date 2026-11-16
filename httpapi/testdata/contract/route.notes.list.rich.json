@@ -1,0 +1,31 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/notes",
+  "response": {
+    "limits": {
+      "maxActive": 200,
+      "maxChangesPerMerge": 10,
+      "maxRunes": 400,
+      "maxTotal": 1000,
+      "tokenBudget": 2000
+    },
+    "notes": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "section": "to_confirm",
+        "sourceCardMessageId": "00000000-0000-4000-8000-000000000003",
+        "sourceLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceMessageId": "00000000-0000-4000-8000-000000000004",
+        "status": "active",
+        "supersededBy": "",
+        "text": "Daily budget",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "revision": 1,
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 200
+}

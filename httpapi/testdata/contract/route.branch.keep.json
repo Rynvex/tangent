@@ -1,0 +1,37 @@
+{
+  "method": "PUT",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branch/keep",
+  "request": {
+    "keep": true
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "archived": false,
+      "cardMessageId": "",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "keptAt": "2026-01-01T00:00:00Z",
+      "kind": "aside",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": null,
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "button",
+      "parentLineId": "00000000-0000-4000-8000-000000000003",
+      "provider": "fake",
+      "purpose": "quick check",
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "status": "discarded",
+      "unread": 1
+    }
+  },
+  "status": 200
+}

@@ -1,0 +1,24 @@
+{
+  "method": "GET",
+  "path": "/api/lines/organization",
+  "response": {
+    "folders": [
+      {
+        "active": 1,
+        "archived": 0,
+        "folder": "Databases"
+      }
+    ],
+    "tags": [
+      {
+        "count": 2,
+        "tag": "postgres"
+      },
+      {
+        "count": 1,
+        "tag": "mvcc"
+      }
+    ]
+  },
+  "status": 200
+}

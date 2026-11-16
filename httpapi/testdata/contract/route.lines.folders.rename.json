@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/lines/folders/rename",
+  "request": {
+    "from": "資料庫研究",
+    "to": "Databases"
+  },
+  "response": {
+    "updated": 1
+  },
+  "status": 200
+}

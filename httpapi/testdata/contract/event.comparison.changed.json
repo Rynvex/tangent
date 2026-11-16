@@ -1,0 +1,30 @@
+{
+  "data": {
+    "comparison": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "criteria": [
+        "Safety",
+        "Speed"
+      ],
+      "decidedAt": null,
+      "decidedBy": "",
+      "decidedLineId": "",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lineIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003"
+      ],
+      "matrix": null,
+      "parentLineId": "00000000-0000-4000-8000-000000000004",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "drafting",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000004"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000004",
+  "rootLineId": "00000000-0000-4000-8000-000000000004",
+  "tenant": "tenant-a",
+  "type": "comparison.changed"
+}

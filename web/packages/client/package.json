@@ -1,0 +1,21 @@
+{
+  "name": "@tangent/client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Typed HTTP/SSE client and pure branch logic for Tangent. No React.",
+  "exports": {
+    ".": "./src/index.ts",
+    "./testing": "./src/testing/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "jsdom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

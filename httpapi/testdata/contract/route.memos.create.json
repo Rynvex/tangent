@@ -1,0 +1,21 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/memos",
+  "request": {
+    "lineId": "00000000-0000-4000-8000-000000000002",
+    "text": "Ask the landlord about the router\nbefore Friday"
+  },
+  "response": {
+    "memo": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "sourceLabel": "查證・Compare ryokan and business hotels",
+      "text": "Ask the landlord about the router\nbefore Friday",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 201
+}

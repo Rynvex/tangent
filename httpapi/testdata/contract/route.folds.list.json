@@ -1,0 +1,51 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/folds",
+  "response": {
+    "folds": [
+      {
+        "aiDrafted": true,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "fromMessageId": "00000000-0000-4000-8000-000000000002",
+        "fromSeq": 1,
+        "id": "00000000-0000-4000-8000-000000000003",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageCount": 4,
+        "status": "active",
+        "summary": "This stretch of the conversation is folded (fake runner).",
+        "toMessageId": "00000000-0000-4000-8000-000000000004",
+        "toSeq": 4,
+        "tokensOriginal": 47,
+        "tokensSummary": 15,
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "aiDrafted": true,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "fromMessageId": "00000000-0000-4000-8000-000000000005",
+        "fromSeq": 5,
+        "id": "00000000-0000-4000-8000-000000000006",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageCount": 2,
+        "status": "active",
+        "summary": "This stretch of the conversation is folded (fake runner).",
+        "toMessageId": "00000000-0000-4000-8000-000000000007",
+        "toSeq": 6,
+        "tokensOriginal": 20,
+        "tokensSummary": 15,
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "limits": {
+      "maxActivePerLine": 50,
+      "maxMessages": 200,
+      "minMessages": 2,
+      "summaryMaxRunes": 1000
+    },
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 200
+}

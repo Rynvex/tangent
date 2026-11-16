@@ -1,0 +1,9 @@
+{
+  "data": {
+    "dropped": 3
+  },
+  "lineId": "",
+  "rootLineId": "",
+  "tenant": "tenant-a",
+  "type": "stream.lagged"
+}

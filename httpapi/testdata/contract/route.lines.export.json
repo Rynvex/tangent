@@ -1,0 +1,188 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/export",
+  "response": {
+    "branches": [
+      {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+        "archived": false,
+        "cardMessageId": "",
+        "closedAt": null,
+        "conclusionLine": "",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "depth": 1,
+        "draftStatus": "none",
+        "excerpt": "",
+        "kind": "alternative",
+        "lastActivityAt": "2026-01-01T00:00:00Z",
+        "leaf": null,
+        "lineId": "00000000-0000-4000-8000-000000000003",
+        "lineStatus": "idle",
+        "mergedIntoLineId": "",
+        "messageCount": 0,
+        "model": "fake-1",
+        "origin": "diverge",
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "provider": "fake",
+        "purpose": "Queue design · fake-1",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "unread": 0
+      },
+      {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+        "archived": false,
+        "cardMessageId": "",
+        "closedAt": null,
+        "conclusionLine": "",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "depth": 1,
+        "draftStatus": "none",
+        "excerpt": "",
+        "kind": "alternative",
+        "lastActivityAt": "2026-01-01T00:00:00Z",
+        "leaf": null,
+        "lineId": "00000000-0000-4000-8000-000000000004",
+        "lineStatus": "idle",
+        "mergedIntoLineId": "",
+        "messageCount": 0,
+        "model": "claude-haiku-4-5",
+        "origin": "diverge",
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "provider": "anthropic",
+        "purpose": "The cheap take",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "unread": 0
+      }
+    ],
+    "chapters": [
+      {
+        "branchIds": [
+          "00000000-0000-4000-8000-000000000003",
+          "00000000-0000-4000-8000-000000000004"
+        ],
+        "cardMessageIds": [],
+        "endAt": "2026-01-01T00:00:00Z",
+        "endMessageId": "00000000-0000-4000-8000-000000000002",
+        "index": 0,
+        "kind": "start",
+        "messageCount": 2,
+        "milestoneId": "",
+        "startAt": "2026-01-01T00:00:00Z",
+        "startMessageId": "00000000-0000-4000-8000-000000000005",
+        "title": "2026-01-01 00:00",
+        "titleSource": "time"
+      }
+    ],
+    "comparisons": [],
+    "exportedAt": "2026-01-01T00:00:00Z",
+    "foldsByLine": {},
+    "goal": null,
+    "links": [],
+    "memos": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000006",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceLabel": "主線",
+        "text": "Ask the team which one they know",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ],
+    "messagesByLine": {
+      "00000000-0000-4000-8000-000000000001": [
+        {
+          "content": "Ring buffer or linked list for the event queue?",
+          "createdAt": "2026-01-01T00:00:00Z",
+          "hostMeta": {},
+          "id": "00000000-0000-4000-8000-000000000005",
+          "kind": "chat",
+          "lineId": "00000000-0000-4000-8000-000000000001",
+          "meta": {},
+          "pinned": false,
+          "role": "user",
+          "seq": 62,
+          "status": "done"
+        },
+        {
+          "content": "Fake reply to: Ring buffer or linked list for the event queue?",
+          "createdAt": "2026-01-01T00:00:00Z",
+          "hostMeta": {},
+          "id": "00000000-0000-4000-8000-000000000002",
+          "kind": "chat",
+          "lineId": "00000000-0000-4000-8000-000000000001",
+          "meta": {
+            "actor": "tester",
+            "durationMs": 42,
+            "model": "fake-1",
+            "provider": "fake",
+            "usage": {
+              "costUsd": 0.000237,
+              "inputTokens": 205,
+              "outputTokens": 16
+            }
+          },
+          "pinned": false,
+          "role": "assistant",
+          "seq": 63,
+          "status": "done"
+        }
+      ],
+      "00000000-0000-4000-8000-000000000003": [],
+      "00000000-0000-4000-8000-000000000004": []
+    },
+    "notes": [],
+    "rootLine": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 0,
+        "open": 2,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": null,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 2,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": null,
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "Event queue",
+      "unread": 1,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0.000237,
+        "inputTokens": 205,
+        "outputTokens": 16
+      }
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "terms": [],
+    "truncated": false
+  },
+  "status": 200
+}

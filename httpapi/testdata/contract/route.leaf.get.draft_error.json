@@ -1,0 +1,12 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/leaf",
+  "response": {
+    "draftError": {
+      "code": "run_failed",
+      "message": "the leaf draft run failed"
+    },
+    "leaf": null
+  },
+  "status": 200
+}

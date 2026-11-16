@@ -1,0 +1,28 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/suggestions",
+  "response": {
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "suggestions": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": null,
+        "feature": "goal",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "drift",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "payload": {
+          "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+          "goal": "Plan a Kyoto trip",
+          "kind": "investigate",
+          "purpose": "Follow the side topic (fake runner)",
+          "reason": "It moved away from the goal (fake runner)."
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "targetKey": "drift:00000000-0000-4000-8000-000000000003"
+      }
+    ]
+  },
+  "status": 200
+}

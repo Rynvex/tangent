@@ -1,0 +1,99 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/accept",
+  "request": {},
+  "response": {
+    "result": {
+      "memory": {
+        "aiDrafted": true,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "importance": 6,
+        "kind": "fact",
+        "source": {
+          "label": "Home server",
+          "leafLineId": "",
+          "lineId": "00000000-0000-4000-8000-000000000003",
+          "messageId": "",
+          "noteId": ""
+        },
+        "status": "active",
+        "supersededBy": "",
+        "text": "One memory for both (fake runner).",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "validUntil": null
+      },
+      "superseded": [
+        {
+          "aiDrafted": false,
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000004",
+          "importance": 5,
+          "kind": "preference",
+          "source": {
+            "label": "Home server",
+            "leafLineId": "",
+            "lineId": "00000000-0000-4000-8000-000000000003",
+            "messageId": "",
+            "noteId": ""
+          },
+          "status": "superseded",
+          "supersededBy": "00000000-0000-4000-8000-000000000002",
+          "text": "Quiet fans for the server",
+          "updatedAt": "2026-01-01T00:00:00Z",
+          "validUntil": null
+        },
+        {
+          "aiDrafted": false,
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000005",
+          "importance": 5,
+          "kind": "preference",
+          "source": {
+            "label": "Home server",
+            "leafLineId": "",
+            "lineId": "00000000-0000-4000-8000-000000000003",
+            "messageId": "",
+            "noteId": ""
+          },
+          "status": "superseded",
+          "supersededBy": "00000000-0000-4000-8000-000000000002",
+          "text": "quiet fans for the server",
+          "updatedAt": "2026-01-01T00:00:00Z",
+          "validUntil": null
+        }
+      ]
+    },
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "feature": "memory",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "memory_consolidate",
+      "lineId": "00000000-0000-4000-8000-000000000003",
+      "payload": {
+        "action": "merge",
+        "importance": 6,
+        "jobId": "00000000-0000-4000-8000-000000000006",
+        "kind": "fact",
+        "memoryIds": [
+          "00000000-0000-4000-8000-000000000004",
+          "00000000-0000-4000-8000-000000000005"
+        ],
+        "reason": "They say the same (fake runner).",
+        "text": "One memory for both (fake runner).",
+        "texts": [
+          "Quiet fans for the server",
+          "quiet fans for the server"
+        ]
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000003",
+      "status": "accepted",
+      "targetKey": "memory_pair:00000000-0000-4000-8000-000000000004:00000000-0000-4000-8000-000000000005"
+    }
+  },
+  "status": 200
+}

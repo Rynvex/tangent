@@ -1,0 +1,20 @@
+{
+  "cooling": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "roles": 1
+  },
+  "mvcc": {
+    "precision": 1,
+    "recall": 1,
+    "f1": 1,
+    "roles": 0.667
+  },
+  "pgpool": {
+    "precision": 0.907,
+    "recall": 0.907,
+    "f1": 0.907,
+    "roles": 0.667
+  }
+}

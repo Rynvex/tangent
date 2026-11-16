@@ -1,0 +1,464 @@
+/*
+ * Tangent design tokens v3 (docs/design/prototype-v2/handoff/tokens.css plus
+ * the review fixes). Components use only these semantic tokens, never palette
+ * values. Every token is prefixed `--tg-` so an embedding host's own variables
+ * never collide (DESIGN §12); the Tailwind 4 theme below exposes them as
+ * `bg-tg-surface`, `text-tg-muted`, `border-tg-border-input`, `text-tg-sm`, …
+ *
+ * Usage (in the host's Tailwind entry CSS):
+ *   @import "tailwindcss";
+ *   @import "@tangent/react/styles.css";
+ * and, unless the host brings its own fonts, the `@tangent/fonts` entries.
+ *
+ * Scope: every rule lives under `[data-tg-root]` (set by `TangentRoot`), so
+ * nothing here restyles the host page; only the @keyframes (tg- prefixed)
+ * and the Tailwind @theme mapping are global. Tokens exist only inside a
+ * root; popups portal into the root and inherit them.
+ *
+ * Theme: each colour is defined once as `light-dark(light, dark)`. The OS
+ * preference picks the side (`color-scheme: light dark`);
+ * `data-tg-theme="light"` or `"dark"` on the root (or on any container inside
+ * it) forces one, and `data-tg-theme="host"` applies the host
+ * theme. A themed container re-declares the tokens, so derived values (radii)
+ * re-resolve too. `data-tg-density="compact"` tightens control heights.
+ *
+ * Rules: `--tg-primary` is a fill colour (buttons, selected rules, icons);
+ * text and links use `--tg-primary-text`. Form controls draw their edge with
+ * `--tg-border-input` (≥ 3:1 on every surface, WCAG 1.4.11); `--tg-border`
+ * and `--tg-border-strong` are decorative only.
+ *
+ * Contrast (WCAG 2.2, checked by styles.test.ts): text tokens 4.5:1 and
+ * `--tg-ring` / `--tg-border-input` 3:1 against the background surfaces in
+ * all three themes. `--tg-subtle` reaches 4.5:1 only on background, surface,
+ * sunken and raised; on `--tg-accent` and the `*-soft` fills (hover, selected,
+ * banners) use `--tg-muted`.
+ */
+
+[data-tg-root] {
+  color-scheme: light dark;
+}
+
+[data-tg-root][data-tg-theme="light"],
+[data-tg-root] [data-tg-theme="light"] {
+  color-scheme: light;
+}
+
+[data-tg-root][data-tg-theme="dark"],
+[data-tg-root] [data-tg-theme="dark"] {
+  color-scheme: dark;
+}
+
+[data-tg-root],
+[data-tg-root] [data-tg-theme] {
+  --tg-background: light-dark(#f7f5f0, #111214);
+  --tg-surface: light-dark(#fffdf8, #17181b);
+  --tg-surface-raised: light-dark(#ffffff, #1d1f23);
+  --tg-surface-sunken: light-dark(#efece4, #0c0d0f);
+  --tg-foreground: light-dark(#1d1b16, #e8e6e1);
+  --tg-foreground-strong: light-dark(#0d0c09, #f7f5f0);
+  --tg-muted: light-dark(#5c574d, #a39f96);
+  --tg-subtle: light-dark(#706a5e, #8a867d);
+  --tg-border: light-dark(#e2ddd1, #2a2c31);
+  --tg-border-strong: light-dark(#cfc8b8, #3a3d44);
+  /* Review §2 #1: form control edges, ≥ 3:1 on background, surface, sunken and raised. */
+  --tg-border-input: light-dark(#8a8273, #706d66);
+  --tg-primary: light-dark(#0f766e, #2dd4bf);
+  --tg-primary-hover: light-dark(#0b5f58, #5eead4);
+  --tg-primary-text: light-dark(#0f766e, #2dd4bf);
+  --tg-primary-foreground: light-dark(#f4fffd, #04201d);
+  --tg-primary-soft: light-dark(#d5f0ec, #123a36);
+  --tg-accent: light-dark(#ece8dd, #24262b);
+  --tg-ring: light-dark(#0d9488, #5eead4);
+  --tg-destructive: light-dark(#b42318, #f87171);
+  --tg-destructive-soft: light-dark(#fde7e4, #3a1714);
+  --tg-warning: light-dark(#a15c07, #fbbf24);
+  --tg-warning-soft: light-dark(#fbefd9, #33260d);
+  --tg-success: light-dark(#157347, #4ade80);
+  --tg-success-soft: light-dark(#dcf1e5, #12301f);
+  --tg-highlight: light-dark(#fbe7a6, #4a3b0c);
+  --tg-suggestion: light-dark(#6b4fa0, #c4b5fd);
+  --tg-suggestion-soft: light-dark(#efe9f8, #251f36);
+
+  /* Branch states (outline, map, cards). */
+  --tg-branch-open: light-dark(#0f766e, #2dd4bf);
+  --tg-branch-merged: light-dark(#4f46e5, #a5b4fc);
+  --tg-branch-discarded: light-dark(#706a5e, #8a867d);
+  --tg-branch-promoted: light-dark(#b45309, #fbbf24);
+  --tg-card: light-dark(#f1eefb, #1e1c33);
+  --tg-card-border: light-dark(#c9c2f2, #3f3a72);
+
+  /* Leaf (ending) kinds and argument (IBIS) kinds. */
+  --tg-leaf-conclusion: light-dark(#4f46e5, #a5b4fc);
+  --tg-leaf-decision: light-dark(#157347, #4ade80);
+  --tg-leaf-answer: light-dark(#0e7490, #67e8f9);
+  --tg-leaf-deadend: light-dark(#8a3b2a, #f0a08c);
+  --tg-leaf-pending: light-dark(#a15c07, #fbbf24);
+  --tg-arg-question: light-dark(#0e7490, #67e8f9);
+  --tg-arg-idea: light-dark(#6b4fa0, #c4b5fd);
+  --tg-arg-pro: light-dark(#157347, #4ade80);
+  --tg-arg-con: light-dark(#b42318, #f87171);
+  --tg-arg-decision: light-dark(#0f766e, #2dd4bf);
+
+  /* Line status. */
+  --tg-status-thinking: light-dark(#0e7490, #67e8f9);
+  --tg-status-error: light-dark(#b42318, #f87171);
+
+  --tg-scrim: light-dark(rgba(29, 27, 22, 0.4), rgba(0, 0, 0, 0.6));
+  --tg-shadow:
+    0 1px 2px light-dark(rgba(29, 27, 22, 0.06), rgba(0, 0, 0, 0.4)),
+    0 8px 24px -12px light-dark(rgba(29, 27, 22, 0.18), rgba(0, 0, 0, 0.7));
+  --tg-shadow-overlay:
+    0 2px 6px light-dark(rgba(29, 27, 22, 0.08), rgba(0, 0, 0, 0.5)),
+    0 24px 48px -16px light-dark(rgba(29, 27, 22, 0.28), rgba(0, 0, 0, 0.8));
+
+  /* Shape, type and motion. Declared per theme so the host theme's radius re-derives the others. */
+  --tg-radius: 0.625rem;
+  --tg-radius-sm: calc(var(--tg-radius) * 0.6);
+  --tg-radius-lg: calc(var(--tg-radius) * 1.4);
+  --tg-radius-full: 999px;
+  /*
+   * F10 §1: installed modern faces first; the bundled Plex families follow. "Noto Sans TC" (our @font-face has
+   * only weight 400, a glyph fallback) stays after Plex so 500/600 text is never faux-bold. Reading text (AI
+   * answers, excerpts, cards) uses the same sans stack unless the reader picks serif (below).
+   */
+  --tg-font-sans: "Inter", "PingFang TC", "Noto Sans CJK TC", "Microsoft JhengHei", "IBM Plex Sans", "IBM Plex Sans TC", "Noto Sans TC", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  --tg-font-serif: var(--tg-font-sans);
+  --tg-font-mono: "IBM Plex Mono", "IBM Plex Sans TC", "Noto Sans TC", ui-monospace, Menlo, Consolas, monospace;
+  --tg-text-xs: 0.75rem;
+  --tg-text-sm: 0.8125rem;
+  --tg-text-base: 0.875rem;
+  --tg-text-md: 1rem;
+  --tg-text-lg: 1.125rem;
+  --tg-text-xl: 1.375rem;
+  --tg-text-reading: 1.0625rem;
+  --tg-leading-reading: 1.75;
+  --tg-reading-width: 46rem;
+  /* Control heights: comfortable by default; `data-tg-density="compact"` and coarse pointers adjust them. */
+  --tg-control-height: 2rem;
+  --tg-control-height-sm: 1.75rem;
+  --tg-hit-target: 2rem;
+  --tg-duration-fast: 120ms;
+  --tg-duration-normal: 220ms;
+  --tg-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Host theme: dark. Host-given values are marked [host]; the rest pass WCAG AA on #090a0f / #12141d. */
+[data-tg-root][data-tg-theme="host"],
+[data-tg-root] [data-tg-theme="host"] {
+  color-scheme: dark;
+  --tg-background: #090a0f; /* [host] background */
+  --tg-surface: #12141d; /* [host] card */
+  --tg-surface-raised: #1a1d2b; /* [host] muted */
+  --tg-surface-sunken: #06070a;
+  --tg-accent: #1a1d2b; /* [host] muted */
+  --tg-foreground: #e6e8ef; /* [host] */
+  --tg-foreground-strong: #f1f2f6; /* [host] */
+  --tg-muted: #9aa0b4; /* [host] muted-foreground */
+  --tg-subtle: #868ca3;
+  --tg-border: rgba(255, 255, 255, 0.1); /* [host] */
+  --tg-border-strong: rgba(255, 255, 255, 0.18); /* [host] */
+  --tg-border-input: #646a82;
+  --tg-primary: #5458e8; /* [host] fill only: 3.7:1 on background */
+  --tg-primary-hover: #4a4edb; /* [host] */
+  --tg-primary-text: #a5b4fc; /* [host] primary-text */
+  --tg-primary-foreground: #ffffff; /* 5.3:1 on primary */
+  --tg-primary-soft: #1b1d3a;
+  --tg-ring: #a5b4fc; /* [host] */
+  --tg-destructive: #f87171;
+  --tg-destructive-soft: #2e1a1c;
+  --tg-warning: #fbbf24;
+  --tg-warning-soft: #2e2410;
+  --tg-success: #4ade80;
+  --tg-success-soft: #122a1d;
+  --tg-highlight: #3a3212;
+  --tg-suggestion: #f9a8d4;
+  --tg-suggestion-soft: #2c1a2a;
+  --tg-branch-open: #a5b4fc;
+  --tg-branch-merged: #d8b4fe;
+  --tg-branch-discarded: #8b91a7;
+  --tg-branch-promoted: #fbbf24;
+  --tg-card: #1e1838;
+  --tg-card-border: #3f3470;
+  --tg-leaf-conclusion: #d8b4fe;
+  --tg-leaf-decision: #4ade80;
+  --tg-leaf-answer: #67e8f9;
+  --tg-leaf-deadend: #fdba8c;
+  --tg-leaf-pending: #fbbf24;
+  --tg-arg-question: #67e8f9;
+  --tg-arg-idea: #f9a8d4;
+  --tg-arg-pro: #4ade80;
+  --tg-arg-con: #f87171;
+  --tg-arg-decision: #a5b4fc;
+  --tg-status-thinking: #67e8f9;
+  --tg-status-error: #f87171;
+  --tg-scrim: rgba(0, 0, 0, 0.6);
+  --tg-shadow: 0 1px 2px rgba(0, 0, 0, 0.5), 0 8px 24px -12px rgba(0, 0, 0, 0.8);
+  --tg-shadow-overlay: 0 0 0 1px rgba(255, 255, 255, 0.08), 0 24px 48px -16px rgba(0, 0, 0, 0.9);
+  --tg-radius: 0.5rem;
+  --tg-font-sans: "Geist", "IBM Plex Sans TC", "Noto Sans TC", ui-sans-serif, system-ui, sans-serif; /* [host] */
+  --tg-font-serif: var(--tg-font-sans);
+  --tg-font-mono: "Geist Mono", "IBM Plex Sans TC", "Noto Sans TC", ui-monospace, Menlo, monospace; /* [host] */
+  --tg-text-reading: 0.9375rem;
+  --tg-leading-reading: 1.65;
+}
+
+/*
+ * Reading font: `data-tg-reading-font="serif"` on the root or any ancestor (the demo sets it on <html>) turns
+ * reading text into a book serif in every theme, the host theme included, since the reader chose it.
+ */
+[data-tg-root][data-tg-reading-font="serif"],
+[data-tg-root][data-tg-reading-font="serif"] [data-tg-theme],
+[data-tg-root]:is([data-tg-reading-font="serif"] *),
+[data-tg-root]:is([data-tg-reading-font="serif"] *) [data-tg-theme] {
+  --tg-font-serif: "Source Serif 4", "Noto Serif TC", "Songti TC", Georgia, serif;
+}
+
+[data-tg-root][data-tg-density="compact"],
+[data-tg-root] [data-tg-density="compact"] {
+  --tg-control-height: 1.75rem;
+  --tg-control-height-sm: 1.5rem;
+}
+
+/* Touch: controls and hit targets reach 44px (WCAG 2.5.5, handoff width rules for 375). */
+@media (pointer: coarse) {
+  [data-tg-root],
+  [data-tg-root][data-tg-density],
+  [data-tg-root] [data-tg-theme],
+  [data-tg-root] [data-tg-density] {
+    --tg-control-height: 2.75rem;
+    --tg-control-height-sm: 2.75rem;
+    --tg-hit-target: 2.75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-tg-root],
+  [data-tg-root][data-tg-theme],
+  [data-tg-root] [data-tg-theme] {
+    --tg-duration-fast: 0ms;
+    --tg-duration-normal: 0ms;
+  }
+}
+
+@keyframes tg-caret {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.15;
+  }
+}
+
+@keyframes tg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* A node that just appeared on the map (focus mode, FOCUS_MODE.md §6.1); skipped under reduced motion. */
+@keyframes tg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tg-shimmer {
+  0% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+
+/*
+ * Base rules are scoped to Tangent's root (`TangentRoot` sets data-tg-root)
+ * and sit in the base layer, so they never restyle the host's page and
+ * utilities still win.
+ */
+@layer base {
+  [data-tg-root] {
+    font-family: var(--tg-font-sans);
+    font-size: var(--tg-text-base);
+    line-height: 1.5;
+    color: var(--tg-foreground);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  [data-tg-root] :focus-visible {
+    outline: 2px solid var(--tg-ring);
+    outline-offset: 2px;
+  }
+
+  [data-tg-root] a {
+    color: var(--tg-primary-text);
+  }
+
+  [data-tg-root] a:hover {
+    color: var(--tg-primary-hover);
+  }
+
+  [data-tg-root] ::selection {
+    background: var(--tg-highlight);
+  }
+
+  /* Review §2 #2: long commands scroll sideways instead of being cut off on narrow screens. */
+  [data-tg-root] pre {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  /*
+   * Syntax colours of highlighted code (F1, Markdown). Code blocks sit on
+   * --tg-surface; every colour below reaches 4.5:1 there in all three themes
+   * (styles.test.ts). Reused semantic tokens, no new palette values.
+   */
+  [data-tg-root] .tg-md-code .hljs-keyword,
+  [data-tg-root] .tg-md-code .hljs-selector-tag,
+  [data-tg-root] .tg-md-code .hljs-literal,
+  [data-tg-root] .tg-md-code .hljs-meta .hljs-keyword {
+    color: var(--tg-leaf-conclusion);
+  }
+  [data-tg-root] .tg-md-code .hljs-string,
+  [data-tg-root] .tg-md-code .hljs-regexp,
+  [data-tg-root] .tg-md-code .hljs-addition {
+    color: var(--tg-success);
+  }
+  [data-tg-root] .tg-md-code .hljs-number,
+  [data-tg-root] .tg-md-code .hljs-symbol,
+  [data-tg-root] .tg-md-code .hljs-bullet {
+    color: var(--tg-warning);
+  }
+  [data-tg-root] .tg-md-code .hljs-comment,
+  [data-tg-root] .tg-md-code .hljs-quote,
+  [data-tg-root] .tg-md-code .hljs-doctag {
+    color: var(--tg-muted);
+    font-style: italic;
+  }
+  [data-tg-root] .tg-md-code .hljs-title.function_,
+  [data-tg-root] .tg-md-code .hljs-section,
+  [data-tg-root] .tg-md-code .hljs-selector-id {
+    color: var(--tg-primary-text);
+  }
+  [data-tg-root] .tg-md-code .hljs-type,
+  [data-tg-root] .tg-md-code .hljs-built_in,
+  [data-tg-root] .tg-md-code .hljs-title.class_ {
+    color: var(--tg-leaf-answer);
+  }
+  [data-tg-root] .tg-md-code .hljs-attr,
+  [data-tg-root] .tg-md-code .hljs-attribute,
+  [data-tg-root] .tg-md-code .hljs-selector-class,
+  [data-tg-root] .tg-md-code .hljs-name,
+  [data-tg-root] .tg-md-code .hljs-tag {
+    color: var(--tg-suggestion);
+  }
+  [data-tg-root] .tg-md-code .hljs-deletion {
+    color: var(--tg-destructive);
+  }
+  [data-tg-root] .tg-md-code .hljs-emphasis {
+    font-style: italic;
+  }
+  [data-tg-root] .tg-md-code .hljs-strong {
+    font-weight: 600;
+  }
+}
+
+@layer utilities {
+  /* Review §2 #3: keyboard hints ("Enter to send · ⌘B") are pointless on touch screens. */
+  @media (hover: none) {
+    [data-tg-root] .tg-kbd-hint {
+      display: none;
+    }
+  }
+
+  /* Loading placeholders pulse; with reduced motion they hold still. */
+  [data-tg-root] .tg-shimmer {
+    animation: tg-shimmer 1.6s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-tg-root] .tg-shimmer {
+      animation: none;
+    }
+  }
+}
+
+@theme inline {
+  --color-tg-background: var(--tg-background);
+  --color-tg-surface: var(--tg-surface);
+  --color-tg-surface-raised: var(--tg-surface-raised);
+  --color-tg-surface-sunken: var(--tg-surface-sunken);
+  --color-tg-foreground: var(--tg-foreground);
+  --color-tg-foreground-strong: var(--tg-foreground-strong);
+  --color-tg-muted: var(--tg-muted);
+  --color-tg-subtle: var(--tg-subtle);
+  --color-tg-border: var(--tg-border);
+  --color-tg-border-strong: var(--tg-border-strong);
+  --color-tg-border-input: var(--tg-border-input);
+  --color-tg-primary: var(--tg-primary);
+  --color-tg-primary-hover: var(--tg-primary-hover);
+  --color-tg-primary-text: var(--tg-primary-text);
+  --color-tg-primary-foreground: var(--tg-primary-foreground);
+  --color-tg-primary-soft: var(--tg-primary-soft);
+  --color-tg-accent: var(--tg-accent);
+  --color-tg-ring: var(--tg-ring);
+  --color-tg-destructive: var(--tg-destructive);
+  --color-tg-destructive-soft: var(--tg-destructive-soft);
+  --color-tg-warning: var(--tg-warning);
+  --color-tg-warning-soft: var(--tg-warning-soft);
+  --color-tg-success: var(--tg-success);
+  --color-tg-success-soft: var(--tg-success-soft);
+  --color-tg-highlight: var(--tg-highlight);
+  --color-tg-suggestion: var(--tg-suggestion);
+  --color-tg-suggestion-soft: var(--tg-suggestion-soft);
+  --color-tg-branch-open: var(--tg-branch-open);
+  --color-tg-branch-merged: var(--tg-branch-merged);
+  --color-tg-branch-discarded: var(--tg-branch-discarded);
+  --color-tg-branch-promoted: var(--tg-branch-promoted);
+  --color-tg-card: var(--tg-card);
+  --color-tg-card-border: var(--tg-card-border);
+  --color-tg-leaf-conclusion: var(--tg-leaf-conclusion);
+  --color-tg-leaf-decision: var(--tg-leaf-decision);
+  --color-tg-leaf-answer: var(--tg-leaf-answer);
+  --color-tg-leaf-deadend: var(--tg-leaf-deadend);
+  --color-tg-leaf-pending: var(--tg-leaf-pending);
+  --color-tg-arg-question: var(--tg-arg-question);
+  --color-tg-arg-idea: var(--tg-arg-idea);
+  --color-tg-arg-pro: var(--tg-arg-pro);
+  --color-tg-arg-con: var(--tg-arg-con);
+  --color-tg-arg-decision: var(--tg-arg-decision);
+  --color-tg-status-thinking: var(--tg-status-thinking);
+  --color-tg-status-error: var(--tg-status-error);
+  --color-tg-scrim: var(--tg-scrim);
+
+  --font-tg-sans: var(--tg-font-sans);
+  --font-tg-serif: var(--tg-font-serif);
+  --font-tg-mono: var(--tg-font-mono);
+
+  --text-tg-xs: var(--tg-text-xs);
+  --text-tg-sm: var(--tg-text-sm);
+  --text-tg-base: var(--tg-text-base);
+  --text-tg-md: var(--tg-text-md);
+  --text-tg-lg: var(--tg-text-lg);
+  --text-tg-xl: var(--tg-text-xl);
+  --text-tg-reading: var(--tg-text-reading);
+  --leading-tg-reading: var(--tg-leading-reading);
+  --container-tg-reading: var(--tg-reading-width);
+
+  --radius-tg-sm: var(--tg-radius-sm);
+  --radius-tg: var(--tg-radius);
+  --radius-tg-lg: var(--tg-radius-lg);
+  --radius-tg-full: var(--tg-radius-full);
+
+  --shadow-tg: var(--tg-shadow);
+  --shadow-tg-overlay: var(--tg-shadow-overlay);
+
+  --ease-tg-out: var(--tg-ease-out);
+}

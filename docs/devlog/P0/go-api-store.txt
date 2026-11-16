@@ -1,0 +1,2387 @@
+package store // import "github.com/Rynvex/tangent/store"
+
+Package store is tangent's Postgres layer: the embedded migrations, the sqlc
+queries and every transaction the engine runs. It keeps the invariants of
+docs/DESIGN.md §5 (lock order root → parent → child, sets in id order) and
+returns domain errors. It never publishes events: every write returns what
+changed so the caller can publish after commit.
+
+CONSTANTS
+
+const (
+	// JobKindDiverge proposes directions that become sibling branches.
+	JobKindDiverge = "diverge"
+	// JobKindConverge fills a comparison's matrix.
+	JobKindConverge = "converge"
+)
+    Jobs of the diverge feature.
+
+const (
+	JobPending    = "pending"
+	JobDone       = "done"
+	JobFailed     = "failed"
+	JobSuperseded = "superseded"
+)
+    Job statuses: pending → done | failed | superseded, one way.
+
+const (
+	JobKindCardDraft = "card_draft"
+	JobKindSummary   = "summary"
+)
+    Job kinds of the core features.
+
+const (
+	// StaleTurnDetail is the status detail of a turn FailStaleTurns ended.
+	StaleTurnDetail = "the turn timed out"
+	// StaleJobError is the error of a job FailStaleJobs ended.
+	StaleJobError = domain.JobTimedOutText
+
+	// DefaultSummaryJobTimeout is how long a summary job may stay pending.
+	DefaultSummaryJobTimeout = 5 * time.Minute
+)
+const (
+	// JobKindMemoryExtract proposes memories from what a write settled.
+	JobKindMemoryExtract = "memory_extract"
+	// JobKindMemoryConsolidate looks at two near-duplicate memories.
+	JobKindMemoryConsolidate = "memory_consolidate"
+)
+    JobKinds of the memory feature.
+
+const (
+	// DefaultMessagePage is the transcript page size when no limit is given.
+	DefaultMessagePage = 100
+	// MaxMessagePage caps one transcript page.
+	MaxMessagePage = 500
+)
+const FeatureCore = "core"
+    FeatureCore is the feature of the core's own jobs.
+
+const JobKindFoldSummary = "fold_summary"
+    JobKindFoldSummary writes the summary of a drafting fold.
+
+const JobKindGroupSummary = "group_summary"
+    JobKindGroupSummary is the group feature's summary job (its input names the
+    group).
+
+const JobKindIbisTag = "ibis_tag"
+    JobKindIbisTag tags a line's newest untagged messages (the ibis feature).
+
+const OutlineCap = 500
+    OutlineCap bounds the rows of one outline (ListBranches).
+
+const SearchCandidates = 200
+    SearchCandidates bounds how many of the newest matches of each kind (titles,
+    purposes, messages) are ranked; the best Limit of them are returned.
+    It keeps a common word in a large tenant cheap.
+
+const SearchWindow = 4000
+    SearchWindow is how many of a tenant's newest messages a search walks first.
+    Walking stops at the candidate cap, so a common query is answered from them;
+    only when they hold fewer candidates are the older messages searched,
+    through the trigram index (a query of three characters or more) or by
+    walking on (a shorter one, which has no trigram).
+
+const TagDraftsMax = 500
+    TagDraftsMax bounds the drafts one listing returns (Truncated beyond).
+
+const TreeComparisonCap = 500
+    TreeComparisonCap bounds the comparisons one export reads.
+
+
+VARIABLES
+
+var FeatureMigrationsFS embed.FS
+    FeatureMigrationsFS holds the migrations of the features that need a
+    database extension (DESIGN §11): features/<feature>/NNN_name.up.sql
+    and .down.sql. They run only for features a host enables, through
+    MigrateFeatures; every other feature's tables come with the core migrations.
+
+var MigrationsFS embed.FS
+    MigrationsFS holds the core migrations, migrations/NNN_name.up.sql and
+    .down.sql. A host with its own migrator can apply these files instead of
+    calling Migrate.
+
+
+FUNCTIONS
+
+func CheckFeatures(ctx context.Context, pool *pgxpool.Pool, features ...string) error
+    CheckFeatures reports, with an error that says what to run, a feature whose
+    extension is missing or not on the search_path, or whose migrations were not
+    applied. tangent.New calls it for the features it is given.
+
+func ExpireSuggestions(ctx context.Context, tx Tx, lineIDs []string) ([]domain.Suggestion, error)
+    ExpireSuggestions expires, inside a write's transaction, the open
+    suggestions about the given lines.
+
+func ExpireSuggestionsOfKind(ctx context.Context, tx Tx, rootLineID, feature, kind string) ([]domain.Suggestion, error)
+    ExpireSuggestionsOfKind expires, inside a write's transaction (a TxHook that
+    holds the conversation's main line), the open suggestions of one feature and
+    kind in the conversation.
+
+func FeatureExtension(feature string) (extension string, ok bool)
+    FeatureExtension names the extension of a feature that brings its own
+    migrations; ok is false for every other feature (nothing to migrate).
+
+func MarkNotesRevisionSent(ctx context.Context, tx Tx, lineID string, revision int) error
+    MarkNotesRevisionSent records, inside a write's transaction (a TxHook),
+    the notes revision a finished turn carried. It never moves backwards.
+
+func MarkSuggestionAccepted(ctx context.Context, tx Tx, id string) (domain.Suggestion, error)
+    MarkSuggestionAccepted accepts an open suggestion inside another write's
+    transaction (a TxHook), after that write's own locks; ErrSuggestionNotOpen
+    rolls the write back.
+
+func Migrate(ctx context.Context, pool *pgxpool.Pool) error
+    Migrate applies every pending core migration in order, each in its own
+    transaction, recording it in tangent_schema_migrations. A Postgres advisory
+    lock makes concurrent processes wait for each other instead of racing.
+    Tables are created unqualified, in the first schema of the connection's
+    search_path.
+
+func MigrateDown(ctx context.Context, pool *pgxpool.Pool, target int) error
+    MigrateDown reverts the applied core migrations newer than target, newest
+    first; target 0 removes every core table (the version table stays). Feature
+    migrations build on the core tables, so when any core step is reverted every
+    applied feature migration is reverted first (as MigrateFeaturesDown does);
+    a later MigrateFeatures applies them again.
+
+func MigrateFeatures(ctx context.Context, pool *pgxpool.Pool, features ...string) error
+    MigrateFeatures installs what the named features need: their extension
+    (CREATE EXTENSION IF NOT EXISTS, which needs the right to create it)
+    and their pending migrations, each in its own transaction, recorded in
+    tangent_feature_migrations. It runs under the same advisory lock as Migrate,
+    after it. A feature without migrations is an error, so a typo never passes
+    silently.
+
+    The extension is created without a schema, so it lands in the first schema
+    of the connection's search_path, like tangent's tables. A host that wants it
+    in a shared schema installs it there beforehand (CREATE EXTENSION ... SCHEMA
+    ...); an installed extension is then only checked to be on the search_path.
+
+func MigrateFeaturesDown(ctx context.Context, pool *pgxpool.Pool, features ...string) error
+    MigrateFeaturesDown reverts every applied migration of the named features,
+    newest first. Extensions stay installed.
+
+func ReconcileFolds(ctx context.Context, tx Tx, lineIDs []string) ([]domain.Fold, error)
+    ReconcileFolds, inside a write that moved messages between the lines (a
+    move, a promotion), moves each drafting or active fold of the lines to the
+    line both its ends are on now, and removes one whose ends were split or are
+    gone. It returns the folds it changed.
+
+func RecordCoreMigration(ctx context.Context, tx Tx, version int) (recorded bool, err error)
+    RecordCoreMigration records that core migration version was applied.
+
+func RecordFeatureMigration(ctx context.Context, tx Tx, feature string, version int) (recorded bool, err error)
+    RecordFeatureMigration records that version of feature's migrations was
+    applied (feature as in FeatureMigrationsFS, for example "search").
+
+func WithInboxFeatures(ctx context.Context, features []string) context.Context
+    WithInboxFeatures makes the line views read with ctx count only the open
+    suggestions of these features (the ones on for the caller); without it they
+    count every open suggestion.
+
+
+TYPES
+
+type AITag struct {
+	MessageID string
+	Kind      string
+}
+    AITag is a tag a model proposed for a message.
+
+type AITagged struct {
+	Job        Job
+	RootLineID string
+	Messages   []domain.Message
+}
+    AITagged is a finished ibis_tag job and the messages it tagged (with their
+    tags).
+
+type AppendedSystemMessage struct {
+	Line    domain.LineView
+	Message domain.Message
+	Written bool
+}
+    AppendedSystemMessage is what AppendSystemMessage did. Written is false when
+    SkipRepeat left the message out: nothing was written (the hooks did not run)
+    and Line and Message are empty.
+
+type ApplyNotesInput struct {
+	Tenant  string
+	LineID  string
+	Changes []domain.NoteChange
+	Actor   string
+}
+    ApplyNotesInput is a set of note changes to write in one transaction.
+
+type AttachInput struct {
+	Tenant          string
+	TargetLineID    string
+	SourceLineID    string
+	AnchorMessageID string
+	Purpose         string
+	Kind            string
+	Status          string
+	Card            *domain.BranchCard
+	Leaf            bool
+	ConfirmDeeper   bool
+	CreatedBy       string
+	BuildPack       func(base MovePackBase, purpose string) domain.BranchPack
+}
+    AttachInput attaches SourceLineID under TargetLineID. Kind and Status are
+    already normalized (domain.NormalizeAttachKind / NormalizeAttachStatus).
+    AnchorMessageID empty picks the anchor under the locks (the newest
+    anchorable message of the target dated no later than the source's start,
+    else its newest). Purpose empty defaults per domain.AttachPurpose. Card
+    (status merged) is checked under the locks; Leaf writes it as the branch's
+    confirmed leaf (the leaf feature is on). BuildPack builds the pack once the
+    anchor and the purpose are known.
+
+type AttachMoved struct {
+	Notes       int64
+	Memos       int64
+	Seeds       int64
+	Leaves      int64
+	ChapterCuts int64
+	Suggestions int64
+}
+    AttachMoved counts the rows that moved to the target tree.
+
+type AttachedLine struct {
+	TargetLine    domain.LineView
+	Branch        domain.BranchView
+	BranchLine    domain.LineView
+	CardMessage   *domain.Message
+	Reparented    []string
+	RootLineID    string
+	OldRootLineID string
+	Leaf          *domain.Leaf
+	Moved         AttachMoved
+	// Groups are the source tree's groups, now in the target tree.
+	Groups []domain.Group
+	// ExpiredSuggestions are the source tree's open suggestions the target
+	// tree already had open (one open per feature, kind and target).
+	ExpiredSuggestions []domain.Suggestion
+	// DroppedGoal reports that the source conversation's goal was removed
+	// (a branch has none; the target keeps its own).
+	DroppedGoal bool
+	// NotesRevision is the target's notes revision after moved notes (0
+	// when none moved).
+	NotesRevision int
+}
+    AttachedLine is what an attach changed. TargetLine is the line the source
+    now hangs on, Branch its new outline row and BranchLine the source line as
+    a branch; CardMessage the conclusion card left on the target (merged only);
+    Reparented the source's branches, now in the target tree. RootLineID is the
+    target's main line, OldRootLineID the source's former one (its own id).
+
+type BeginTurnInput struct {
+	Tenant   string
+	LineID   string
+	Content  string
+	HostMeta json.RawMessage
+	// Actor is who started the turn; it is kept on the pending message.
+	Actor string
+}
+    BeginTurnInput is the operator's message that starts a turn.
+
+type BegunTurn struct {
+	Line              domain.LineView
+	User              domain.Message
+	Pending           domain.Message
+	Cards             []domain.Message
+	RootLineID        string
+	NotesRevision     int
+	NotesRevisionSent int
+}
+    BegunTurn is a started turn: the line (now thinking), the operator's
+    message, the pending assistant message whose id is the turn id,
+    the conclusion cards this turn's prompt carries (oldest first, at most
+    NoticeMaxPerTurn) and the notes revisions of the line's conversation.
+
+type CancelledTurn struct {
+	Line      domain.LineView
+	Message   domain.Message
+	Cancelled bool
+}
+    CancelledTurn is what cancelling found: Cancelled is false when the line had
+    no pending turn.
+
+type ChapterChange struct {
+	RootLineID string
+	Cut        domain.ChapterCut
+}
+    ChapterChange is a stored cut and the conversation it belongs to.
+
+type ChaptersView struct {
+	LineID     string
+	RootLineID string
+	Chapters   []domain.Chapter
+	Milestones []domain.ChapterCut
+}
+    ChaptersView is the chapters of one line of a conversation and the
+    milestones that sit on a message of that line.
+
+type CombineInput struct {
+	Tenant          string
+	ParentLineID    string
+	LineIDs         []string
+	AnchorMessageID string
+	Purpose         string
+	Kind            string
+	Pack            domain.BranchPack
+	Notes           []domain.NoteChange
+	Actor           string
+}
+    CombineInput combines open sibling branches into one new branch of their
+    parent (origin merge), anchored on AnchorMessageID with the pack the caller
+    built; Notes are written in the same transaction.
+
+type CombinedBranches struct {
+	Created      CreatedBranch
+	Combined     []domain.BranchView
+	Reparented   []string
+	Notes        NotesWrite
+	ParentLineID string
+	RootLineID   string
+}
+    CombinedBranches is what a combine changed: the new branch, the branches it
+    took (discarded, pointing at it), their open children now hanging on the new
+    branch (Reparented, in id order) and the notes it wrote.
+
+type ComparisonList struct {
+	LineID      string
+	RootLineID  string
+	Comparisons []domain.Comparison
+}
+    ComparisonList is the comparisons of branches of one line.
+
+type ComparisonResult struct {
+	Comparison domain.Comparison
+	RootLineID string
+	Job        Job
+	Written    bool
+}
+    ComparisonResult is a finished converge job: Written is false when the
+    comparison no longer waited on it.
+
+type ComparisonWrite struct {
+	Comparison domain.Comparison
+	RootLineID string
+	Job        *Job
+}
+    ComparisonWrite is a comparison after a write, its conversation and the
+    converge job started for it (nil unless one was).
+
+type CompleteTurnInput struct {
+	TurnID      string
+	Outcome     domain.TurnOutcome
+	Usage       *domain.Usage
+	DurationMs  int64
+	Suggestions []domain.BranchSuggestion
+	Provider    string
+	Model       string
+	// SkipNotesRevision leaves notes_revision_sent alone; the caller records
+	// it itself (MarkNotesRevisionSent in a hook) when the turn carried notes.
+	SkipNotesRevision bool
+	// Notices are host system messages written right after the reply, in
+	// order, in the same transaction (a failed reply gets them too).
+	Notices []SystemNotice
+}
+    CompleteTurnInput is the result of a turn. Outcome comes from
+    domain.ResolveTurnOutcome; Suggestions are the branch suggestions parsed out
+    of the content. Provider and Model, when set, name what actually ran.
+
+type CompletedTurn struct {
+	Tenant           string
+	Line             domain.LineView
+	Message          domain.Message
+	RootLineID       string
+	EndedAsideLineID string
+	// DeliveredCards are the conclusion cards this turn delivered, as they
+	// are now (meta.delivered true), in seq order.
+	DeliveredCards []domain.Message
+	// Notices are the host system messages written after the reply, in seq
+	// order (those SkipRepeat left out are not here).
+	Notices []domain.Message
+}
+    CompletedTurn is a finished turn. EndedAsideLineID is set when the turn was
+    an aside's one answer and ended it.
+
+type CreateBranchInput struct {
+	Tenant          string
+	ParentLineID    string
+	AnchorMessageID string
+	Purpose         string
+	Excerpt         string
+	Kind            string
+	Origin          string
+	Provider        string
+	Model           string
+	CreatedBy       string
+	// ConfirmDeeper accepts a depth beyond the soft limit.
+	ConfirmDeeper bool
+	Pack          domain.BranchPack
+	HostMeta      json.RawMessage
+}
+    CreateBranchInput opens a branch on a message of its parent. The pack
+    is built by the caller from the parent's messages (MessagesUpToAnchor).
+    Provider and Model default to the parent's; Origin defaults to button.
+
+type CreateComparisonInput struct {
+	Tenant       string
+	ParentLineID string
+	LineIDs      []string
+	Criteria     []string
+	Actor        string
+	Feature      string
+}
+    CreateComparisonInput compares open sibling branches of one parent;
+    a converge job of Feature fills the matrix.
+
+type CreateFoldInput struct {
+	Tenant        string
+	LineID        string
+	FromMessageID string
+	ToMessageID   string
+	Summary       string
+	Actor         string
+	Feature       string
+	SourceJobID   string
+}
+    CreateFoldInput folds the messages of a line from one message to another
+    (either order). Summary "" drafts it: a fold_summary job of Feature is
+    started in the same transaction. SourceJobID marks a summary a model wrote
+    (an accepted suggestion's).
+
+type CreateGroupInput struct {
+	Tenant        string
+	LineID        string
+	MemberLineIDs []string
+	Title         string
+	Settled       []string
+	Notes         []domain.NoteChange
+	Actor         string
+}
+    CreateGroupInput circles ended branches of the line's tree. Settled are
+    claims adopted when the group came from a suggestion; Notes are written in
+    the same transaction (a keepBoth's to-confirm notes).
+
+type CreateJobInput struct {
+	Tenant    string
+	Kind      string
+	Feature   string
+	LineID    string
+	Input     json.RawMessage
+	Supersede bool
+}
+    CreateJobInput is a new pending job. Input holds the cursors the job started
+    from (a JSON object). Supersede marks the pending jobs of the same kind on
+    the same line superseded first.
+
+type CreateLineInput struct {
+	ID        string
+	Tenant    string
+	Title     string
+	Provider  string
+	Model     string
+	CreatedBy string
+	HostMeta  json.RawMessage
+	Folder    string
+	Tags      []string
+}
+    CreateLineInput is a new main line. ID may be set by the host (宿主
+    uses its session id); empty means a new random id. Folder and Tags are
+    normalised here (domain.NormalizeFolder, domain.NormalizeTags).
+
+type CreateMemoInput struct {
+	Tenant     string
+	LineID     string
+	NodeLineID string
+	Text       string
+	Actor      string
+}
+    CreateMemoInput writes a memo. LineID is the path's line (any line of the
+    conversation); NodeLineID the node it is written on (LineID when empty),
+    which must be in the same conversation.
+
+type CreateRelationInput struct {
+	Tenant string
+	LineID string
+	From   RelationEnd
+	To     RelationEnd
+	Label  string
+	// RelationKind is one of domain.RelationKinds; empty is related.
+	RelationKind string
+	Actor        string
+}
+    CreateRelationInput relates two places. LineID is the line the request is
+    made on: the From end must be in its conversation (From.LineID defaults to
+    it); the To end may be in any conversation of the tenant.
+
+type CreateSeedInput struct {
+	Tenant          string
+	LineID          string
+	AnchorMessageID string
+	Text            string
+	Actor           string
+}
+    CreateSeedInput parks a thought on a line. AnchorMessageID is optional:
+    without it the seed anchors on the line's newest chat message (none on an
+    empty line).
+
+type CreateSeedsInput struct {
+	Tenant          string
+	LineID          string
+	AnchorMessageID string
+	Texts           []string
+	Actor           string
+}
+    CreateSeedsInput parks several thoughts on a line at once (an outline or a
+    to-do list, B14); the anchor rule is CreateSeedInput's and holds for every
+    one.
+
+type CreatedBranch struct {
+	Line   domain.LineView
+	Branch domain.BranchView
+}
+    CreatedBranch is the new branch line and its outline row.
+
+type CreatedSeeds struct {
+	RootLineID string
+	Seeds      []domain.Seed
+}
+    CreatedSeeds is what a batch parked, in the order of its texts.
+
+type DecideInput struct {
+	Tenant       string
+	ComparisonID string
+	LineID       string
+	Decision     domain.LeafInput
+	DeadEnds     map[string]domain.LeafInput
+	Actor        string
+}
+    DecideInput chooses one branch of a ready comparison: Decision is its leaf;
+    DeadEnds holds the leaf of each other compared branch.
+
+type DecidedComparison struct {
+	Comparison   domain.Comparison
+	Chosen       domain.BranchView
+	Decision     domain.Leaf
+	Discarded    []domain.BranchView
+	DeadEnds     []domain.Leaf
+	ParentLineID string
+	RootLineID   string
+}
+    DecidedComparison is what a decision changed: the comparison, the chosen
+    branch and its decision leaf, and the branches it ended (discarded, each
+    with its dead-end leaf).
+
+type DecomposeBase struct {
+	LineID        string
+	Title         string
+	RootLineID    string
+	Messages      []domain.Message
+	Truncated     bool
+	CutMessageIDs map[string]bool
+	Tags          []string
+	TenantTags    []string
+	Related       []domain.RelatedLine
+}
+    DecomposeBase is what a decompose plan (B18) is made from, read without
+    locks: the line's oldest messages (at most domain.DecomposeMaxMessages;
+    Truncated when it has more), the messages of its conversation that hold a
+    chapter cut, its main line's tags, the tags the tenant's unarchived main
+    lines use (B18.1: kept as they are when the tags are cleaned; a tag only
+    on archived lines is not among them, like GET /lines/organization) and the
+    related main lines of the tenant (sharing a tag or the main line's non-empty
+    folder).
+
+type DeletedTree struct {
+	RootLineID   string
+	LineIDs      []string
+	LineHostMeta map[string]json.RawMessage
+	Messages     []MessageHostMeta
+	// PendingJobIDs are the jobs that were still pending on the deleted
+	// lines (they are deleted with them), so their runs can be stopped. No
+	// turn can be pending: a tree that is answering is not deleted.
+	PendingJobIDs []string
+}
+    DeletedTree is what deleting a conversation removed: every line id (the main
+    line first), the lines' host data and the host data of their messages (only
+    non-empty objects), so a host can clean up what it keeps elsewhere.
+
+type DetachBase struct {
+	From domain.SpunOffRef
+	Pack domain.BranchPack
+	// Leaf is the branch's leaf (nil without one or when WithLeaf is off).
+	Leaf *domain.Leaf
+}
+    DetachBase is what the capsule of a detached branch is built from, read
+    under the locks.
+
+type DetachInput struct {
+	Tenant       string
+	LineID       string
+	Title        string
+	Actor        string
+	CopyNotes    bool
+	WithLeaf     bool
+	BuildCapsule func(DetachBase) domain.OriginCapsule
+}
+    DetachInput detaches a branch. Title is the new main line's (empty keeps
+    the purpose). WithLeaf carries the branch's leaf into the capsule (the leaf
+    feature is on); the branch's own leaf row goes either way.
+
+type DivergeInput struct {
+	Tenant       string
+	ParentLineID string
+	Branches     []CreateBranchInput
+	Actor        string
+}
+    DivergeInput opens sibling branches of one parent at once: each branch's
+    anchor, purpose, kind and pack (built by the caller outside the lock);
+    their origin is diverge.
+
+type DivergedBranches struct {
+	Created      []CreatedBranch
+	Job          Job
+	ParentLineID string
+	RootLineID   string
+}
+    DivergedBranches is what a diverge opened and the job it ended (the zero Job
+    for OpenDivergeBranches).
+
+type DraftClaim struct {
+	Job                Job
+	Branch             domain.BranchView
+	UptoSeq            int64
+	ParentTipMessageID string
+}
+    DraftClaim is a started draft: its job, the branch (now drafting), the
+    newest branch message the draft reads and the parent's tip at the claim (the
+    baseline for "the parent moved on").
+
+type ExpandSeedInput struct {
+	SeedID string
+	CreateBranchInput
+}
+    ExpandSeedInput opens the branch of a seed: the branch input as for
+    CreateBranch (the parent and anchor from PlanSeedExpansion); the origin is
+    always seed.
+
+type ExpandedSeed struct {
+	Seed domain.Seed
+	CreatedBranch
+}
+    ExpandedSeed is the expanded seed and its new branch.
+
+type ExtractInput struct {
+	CreateBranchInput
+	FromMessageID string
+	ToMessageID   string
+	Card          *domain.BranchCard
+	CardContent   string
+	Leaf          *domain.LeafInput
+	BuildPack     func(MovePackBase) domain.BranchPack
+}
+    ExtractInput opens a branch from the messages of a line from FromMessageID
+    to ToMessageID (seq order, both included). AnchorMessageID, Excerpt
+    and Origin of the embedded input are ignored: the anchor is the newest
+    anchorable message before the range, found under the lock, and the origin
+    is move. BuildPack builds the pack once the anchor is known. Card (already
+    validated, CardContent its rendering) closes the branch as merged at once;
+    Leaf, with a card, is written as its confirmed leaf (the leaf feature is
+    on).
+
+type ExtractedBranch struct {
+	Line   domain.LineView
+	Branch domain.BranchView
+	// Marker is the branch_marker, or with a card the branch_card, left
+	// where the range was.
+	Marker       domain.Message
+	SourceLineID string
+	RootLineID   string
+	// MovedMessageIDs are the moved messages in seq order.
+	MovedMessageIDs []string
+	// Reparented are the branches that hung on moved messages and now hang
+	// on the new branch.
+	Reparented []string
+	// SummaryReset reports that the source's summary covered a moved message.
+	SummaryReset bool
+	// Folds are the folds the extract changed: removed (they crossed the
+	// range's ends or contained it) or moved with the range.
+	Folds []domain.Fold
+	// MovedCuts counts the chapter cuts moved onto the marker.
+	MovedCuts int
+	// Leaf is the leaf written from the card (nil without one).
+	Leaf *domain.Leaf
+}
+    ExtractedBranch is what an extract changed.
+
+type FisheyeTree struct {
+	RootLineID string
+	Branches   []FisheyeTreeBranch
+}
+    FisheyeTree is a line's whole tree: its main line and every branch, oldest
+    first (a light read: no message counts).
+
+type FisheyeTreeBranch struct {
+	LineID         string
+	ParentLineID   string
+	Purpose        string
+	Kind           string
+	Status         string
+	ConclusionLine string
+	LeafKind       string
+	LeafLine       string
+	HasReply       bool
+}
+    FisheyeTreeBranch is a branch as the fisheye context weighs it.
+
+type FoldList struct {
+	LineID     string
+	RootLineID string
+	Folds      []domain.Fold
+}
+    FoldList is a line's folds.
+
+type FoldSummaryResult struct {
+	Fold       domain.Fold
+	RootLineID string
+	Job        Job
+	Written    bool
+}
+    FoldSummaryResult is a finished fold_summary job: Written is false when the
+    fold no longer waited on it (removed, or failed by a timeout).
+
+type FoldWrite struct {
+	Fold       domain.Fold
+	RootLineID string
+	Job        *Job
+	Messages   []domain.Message
+}
+    FoldWrite is a fold after a write: its conversation, the job that drafts its
+    summary (nil unless one was started) and the messages it covers (when it was
+    created).
+
+type FreshInput struct {
+	Tenant      string
+	LineID      string
+	AtMessageID string
+	Title       string
+	Actor       string
+	CopyNotes   bool
+	Capsule     domain.OriginCapsule
+}
+    FreshInput starts a new main line from a message of a line. The capsule is
+    built by the caller outside the lock (from the line's messages up to the
+    message, its pack and its leaf); the transaction re-checks that the message
+    is still a finished chat message of the line. Title is required.
+
+type GoalWrite struct {
+	Goal    domain.Goal
+	Written bool
+}
+    GoalWrite is a goal write: Written is false when KeepExisting kept the goal
+    that was there (Goal is then that one).
+
+type GroupList struct {
+	RootLineID string
+	Groups     []domain.Group
+}
+    GroupList is a tree's groups.
+
+type GroupMemberSource struct {
+	LineID     string
+	Purpose    string
+	LeafKind   string
+	Leaf       string
+	Body       string
+	Conclusion string
+}
+    GroupMemberSource is a member as the summary job reads it.
+
+type GroupSummaryClaim struct {
+	Group domain.Group
+	Job   Job
+}
+    GroupSummaryClaim is a started summary: the group (drafting) and its job.
+
+type GroupSummaryResult struct {
+	Group   domain.Group
+	Job     Job
+	Written bool
+}
+    GroupSummaryResult is a finished summary job: Written is false when the
+    group started another summary since (or was dissolved).
+
+type GroupSummarySource struct {
+	Group   domain.Group
+	Members []GroupMemberSource
+	Settled []string
+}
+    GroupSummarySource is what a group's summary is written from.
+
+type GroupWrite struct {
+	Group domain.Group
+	Notes NotesWrite
+}
+    GroupWrite is a new group and the notes written with it.
+
+type IbisCandidates struct {
+	Messages []domain.Message
+	UptoSeq  int64
+}
+    IbisCandidates is what the next ibis_tag job of a line reads: its newest
+    untagged operator and assistant messages after the last finished job and up
+    to UptoSeq (oldest first). UptoSeq is the next job's cursor.
+
+type ImportLineInput struct {
+	Tenant    string
+	Title     string
+	Provider  string
+	Model     string
+	Folder    string
+	Tags      []string
+	CreatedBy string
+	Plan      domain.ImportPlan
+	BuildPack func(upToAnchor []domain.Message, branch domain.ImportPlanBranch) domain.BranchPack
+	Leaves    bool
+}
+    ImportLineInput writes a checked import (domain.PlanImport) as a new main
+    line with its branches. Title, Provider and Model are final (checked by the
+    caller); Folder and Tags are normalised here. BuildPack builds a branch's
+    pack from the main line's messages up to its anchor (seq order, the anchor
+    last; conclusion cards of earlier anchors included). Leaves, with the leaf
+    feature on, writes each merged branch's card as its confirmed leaf.
+
+type ImportedLine struct {
+	Line         domain.LineView
+	Branches     []domain.BranchView
+	BranchLines  []domain.LineView
+	MessageCount int
+	Source       string
+	Cuts         []domain.ChapterCut
+	Leaves       []domain.Leaf
+}
+    ImportedLine is what an import wrote: the main line, its branches (in the
+    order given) with their lines, and how many imported messages the main line
+    got (its conclusion cards not counted). Source is the import's source label
+    (for a host that keeps it). Cuts are the chapter cuts and Leaves the leaves
+    the import wrote (B19).
+
+type Job struct {
+	ID       string
+	TenantID string
+	Kind     string
+	Feature  string
+	// LineID is "" for a job that is not about one line.
+	LineID     string
+	Status     string
+	Input      json.RawMessage
+	Error      string
+	CreatedAt  time.Time
+	FinishedAt *time.Time
+}
+    Job is one background job as stored.
+
+type LeafDraftResult struct {
+	Job     Job
+	Leaf    domain.Leaf
+	Written bool
+}
+    LeafDraftResult is a finished leaf_draft job: Written is false when the
+    branch has a leaf the operator (or a card) wrote, which a draft never
+    replaces.
+
+type LeafWrite struct {
+	LineID string
+	Leaf   domain.LeafInput
+	Status string
+	Actor  string
+}
+    LeafWrite is a leaf written inside another write's transaction (a merge's
+    conclusion, a discard's dead end), whose locks already cover the branch.
+
+type LinePage struct {
+	Lines      []domain.LineView
+	NextCursor string
+}
+    LinePage is one page of main lines, newest activity first. NextCursor is ""
+    on the last page.
+
+type LinePatch struct {
+	Title    *string
+	Provider *string
+	Model    *string
+	HostMeta json.RawMessage
+	Folder   *string
+	Tags     *[]string
+}
+    LinePatch carries the editable fields; nil leaves a field as it is. An empty
+    title is ignored; HostMeta replaces the whole object. Folder and Tags (B18)
+    are normalised and belong to main lines: a branch accepts only "" and no
+    tags (a no-op).
+
+type ListLinesInput struct {
+	Tenant   string
+	Archived bool
+	Limit    int
+	Cursor   string
+	Folder   string
+	Tag      string
+}
+    ListLinesInput selects one page of a tenant's main lines. Cursor is the
+    NextCursor of the previous page. Folder ("" = any, domain.FolderUnfiled =
+    only unfiled ones) and Tag ("" = any) filter the page (B18).
+
+type MemoList struct {
+	RootLineID string
+	Memos      []domain.Memo
+}
+    MemoList is a conversation's memos, oldest first.
+
+type MemoryPage struct {
+	Memories   []domain.Memory
+	NextCursor string
+}
+    MemoryPage is one page of memories, newest first. NextCursor is "" on the
+    last page.
+
+type MemoryPair struct {
+	Tenant     string
+	A, B       domain.Memory
+	Similarity float64
+	LineID     string
+	Key        string
+}
+    MemoryPair is two active memories of a tenant that look alike, the
+    conversation line its consolidation suggestion is raised on (a source line
+    of the pair that still exists) and the pair's key ("<id>:<id>", ids in
+    order). A is the older memory, B the newer.
+
+type MemoryPatch struct {
+	Kind            *string
+	Importance      *int
+	ValidUntil      *time.Time
+	ClearValidUntil bool
+}
+    MemoryPatch changes what a memory is filed as; its text changes only by
+    superseding it.
+
+type MemoryQuery struct {
+	Tenant   string
+	Kind     string
+	Statuses []string
+	Limit    int
+	Cursor   string
+}
+    MemoryQuery lists a tenant's memories: of a kind ("" for all), of the
+    statuses (default active), newest first (created_at, then id), at most Limit
+    (default 100). Cursor is the NextCursor of the previous page.
+
+type MemoryWriteInput struct {
+	Tenant      string
+	Memory      domain.MemoryInput
+	Source      domain.MemorySource
+	SourceJobID string
+	Embedding   []float32
+	Actor       string
+}
+    MemoryWriteInput is a new memory: what it says, where it came from, the job
+    that proposed it (empty for the operator's) and its embedding.
+
+type MergeBranchInput struct {
+	Tenant             string
+	LineID             string
+	Card               domain.BranchCard
+	Content            string
+	ParentTipMessageID string
+	ConfirmParentMoved bool
+	NoteChanges        []domain.NoteChange
+	Actor              string
+}
+    MergeBranchInput is a confirmed card and the Markdown that stands
+    for it. The card is already validated and neutralised by the caller
+    (domain.ValidateBranchCard); Content is its rendering. ParentTipMessageID is
+    the newest parent message the operator saw; NoteChanges are written in the
+    same transaction, citing the branch and the card.
+
+type MergedBranch struct {
+	Card         domain.Message
+	Branch       domain.BranchView
+	ParentLineID string
+	RootLineID   string
+	Notes        NotesWrite
+	// Parent is the parent line as the merge left it (read in the
+	// transaction, so a committed merge always has it).
+	Parent domain.LineView
+}
+    MergedBranch is what a merge changed: the card as the parent's newest
+    message, the closed branch and the notes it wrote (Revision 0 when none).
+
+type MessageHostMeta struct {
+	LineID    string
+	MessageID string
+	HostMeta  json.RawMessage
+}
+    MessageHostMeta is the host data of one message of a deleted line.
+
+type MilestoneInput struct {
+	Tenant    string
+	LineID    string
+	MessageID string
+	Title     string
+	Actor     string
+}
+    MilestoneInput marks a message of a conversation as a chapter start.
+
+type MovePackBase struct {
+	Anchor         domain.Message
+	Remaining      []domain.Message
+	Summary        domain.Summary
+	SummaryUptoSeq int64
+}
+    MovePackBase is what the pack of a moved branch is built from: the anchor
+    (the newest finished operator or assistant message that stays), the finished
+    messages that stay up to it in seq order, and the source's summary when it
+    still describes only messages that stay.
+
+type MoveToBranchInput struct {
+	CreateBranchInput
+	Count     int
+	BuildPack func(MovePackBase) domain.BranchPack
+}
+    MoveToBranchInput opens a branch from the last Count messages of a line.
+    AnchorMessageID, Excerpt and Origin of the embedded input are ignored:
+    the anchor is found under the lock and the origin is move. BuildPack builds
+    the pack once the anchor is known (nil keeps Pack as given).
+
+type MovedBranch struct {
+	Line   domain.LineView
+	Branch domain.BranchView
+	// Marker is the system message left at the end of the source line.
+	Marker       domain.Message
+	SourceLineID string
+	RootLineID   string
+	// MovedMessageIDs are the moved messages in seq order.
+	MovedMessageIDs []string
+	// Reparented are the branches that hung on moved messages and now hang on the new branch.
+	Reparented []string
+	// SummaryReset reports that the source's summary covered a moved message.
+	SummaryReset bool
+}
+    MovedBranch is what a move changed.
+
+type NewMessage struct {
+	Role     string
+	Kind     string
+	Content  string
+	Status   string
+	Meta     domain.MessageMeta
+	HostMeta json.RawMessage
+}
+    NewMessage is one transcript entry to append. Kind defaults to chat and
+    Status to done; InsertMessage refuses pending (only BeginTurn opens a turn).
+
+type NotePatch struct {
+	Text    *string
+	Section *string
+	Status  *string
+}
+    NotePatch changes one note in place; nil fields stay as they are. Status may
+    be active or done (superseding is ApplyNoteChanges' job).
+
+type NoteSeedInput struct {
+	Tenant  string
+	SeedID  string
+	Section string
+	Actor   string
+}
+    NoteSeedInput writes a seed into the notes; Section defaults to to_confirm.
+
+type NoteUpdate struct {
+	RootLineID string
+	Revision   int
+	Note       domain.Note
+}
+    NoteUpdate is a changed note and the conversation's new notes revision.
+
+type NotedSeed struct {
+	Seed  domain.Seed
+	Notes NotesWrite
+}
+    NotedSeed is a seed that became a note, and the notes write.
+
+type NotesView struct {
+	RootLineID string
+	Revision   int
+	Notes      []domain.Note
+}
+    NotesView is the notes page of a conversation, superseded notes included,
+    newest first.
+
+type NotesWrite struct {
+	RootLineID string        `json:"rootLineId"`
+	Revision   int           `json:"revision"`
+	Created    []domain.Note `json:"created"`
+	Superseded []domain.Note `json:"superseded"`
+}
+    NotesWrite is what a write changed: the new notes in request order and the
+    notes they replaced.
+
+type OpenBranch struct {
+	domain.BranchView
+	RootTitle string `json:"rootTitle"`
+}
+    OpenBranch is an open branch idle too long, with its conversation's title.
+
+type OpenLoopGroup[T any] struct {
+	Items []T `json:"items"`
+	Total int `json:"total"`
+}
+    OpenLoopGroup is one kind of open loop: the newest (stale branches:
+    the idlest) items and how many there are in all.
+
+type OpenLoops struct {
+	RootLineID    string                         `json:"rootLineId"`
+	StaleBranches OpenLoopGroup[OpenBranch]      `json:"staleBranches"`
+	ToConfirm     *OpenLoopGroup[OpenNote]       `json:"toConfirm,omitempty"`
+	Seeds         *OpenLoopGroup[OpenSeed]       `json:"seeds,omitempty"`
+	Suggestions   *OpenLoopGroup[OpenSuggestion] `json:"suggestions,omitempty"`
+}
+    OpenLoops is the listing. RootLineID is the conversation asked for ("" for
+    the whole tenant); a kind that was not asked for is nil.
+
+type OpenLoopsQuery struct {
+	Tenant             string
+	LineID             string
+	IdleBefore         time.Time
+	Notes              bool
+	Seeds              bool
+	SuggestionFeatures []string
+}
+    OpenLoopsQuery asks for the open loops of a tenant, or of the conversation
+    of LineID. IdleBefore: an open branch whose line has been idle since before
+    it is stale. Notes, Seeds and SuggestionFeatures (the features whose open
+    suggestions count; none: no suggestions) choose the kinds besides stale
+    branches.
+
+type OpenNote struct {
+	domain.Note
+	RootLineID string `json:"rootLineId"`
+	RootTitle  string `json:"rootTitle"`
+}
+    OpenNote is a note to confirm, with its conversation.
+
+type OpenSeed struct {
+	domain.Seed
+	RootTitle string `json:"rootTitle"`
+}
+    OpenSeed is an open parked thought, with its conversation's title.
+
+type OpenSuggestion struct {
+	domain.Suggestion
+	RootTitle string `json:"rootTitle"`
+}
+    OpenSuggestion is an open suggestion, with its conversation's title.
+
+type Option func(*Store)
+    Option configures a Store.
+
+func WithClock(now func() time.Time) Option
+    WithClock replaces the clock the store decides with: draft starts and
+    timeouts, the stale-turn, stale-job and aside-purge cutoffs. Timestamps
+    Postgres assigns itself (created_at, closed_at, last_activity_at) still
+    come from the database clock, and those cutoffs are compared with them,
+    so a replacement clock must stay close to the database's (tests move it
+    forward by whole timeouts).
+
+func WithNoteSourceLabels(labels domain.NoteSourceLabels) Option
+    WithNoteSourceLabels sets the templates of the source label every note is
+    written with (default: domain.DefaultNoteSourceLabels, Traditional Chinese).
+
+type PinnedMessage struct {
+	Message    domain.Message
+	RootLineID string
+	Changed    bool
+}
+    PinnedMessage is a message after a pin or unpin: Changed is false when it
+    already was in that state.
+
+type PromotedBranch struct {
+	MainLineID string
+	// PromotedID is the branch whose messages are now the main line's.
+	PromotedID string
+	// PreviousID is the new ended branch that holds the old main line's tail.
+	PreviousID string
+	// Reparented are the branches that now hang on another line.
+	Reparented []string
+	// Main, Promoted and Previous are the views after the promotion, read in
+	// its transaction.
+	Main     domain.LineView
+	Promoted domain.BranchView
+	Previous domain.BranchView
+}
+    PromotedBranch is what a promotion changed.
+
+type Proposal struct {
+	Suggestion domain.Suggestion
+	Created    bool
+}
+    Proposal is the outcome of a proposal: Created is false when the target
+    already has an open suggestion, was dismissed within the cooldown (or for
+    good), or the conversation is archived.
+
+type ProposeInput struct {
+	Tenant    string
+	LineID    string
+	Feature   string
+	Kind      string
+	TargetKey string
+	Payload   json.RawMessage
+	Cooldown  time.Duration
+	Permanent bool
+	// Asked: the operator asked for this proposal, so an earlier dismissal
+	// (cooldown or permanent) does not hold it back.
+	Asked bool
+}
+    ProposeInput is a suggestion a feature raises about a line. Cooldown 0 means
+    Limits.Suggestions.DismissCooldown; Permanent makes a dismissal final for
+    this target.
+
+type PurgedAside struct {
+	Tenant     string
+	LineID     string
+	RootLineID string
+	// LineIDs are the aside and every line below it.
+	LineIDs  []string
+	Messages []MessageHostMeta
+	// PendingJobIDs are the pending jobs deleted with the lines.
+	PendingJobIDs []string
+	// ExpiredSuggestions are the tree's open suggestions that named one of
+	// the deleted lines.
+	ExpiredSuggestions []domain.Suggestion
+}
+    PurgedAside is one expired aside deleted with everything below it.
+
+type PutGoalInput struct {
+	Tenant       string
+	LineID       string
+	Text         string
+	Source       string
+	Actor        string
+	KeepExisting bool
+}
+    PutGoalInput writes the goal of the line's conversation. KeepExisting leaves
+    a goal that is already there (a proposal the model wrote by itself never
+    replaces one).
+
+type PutLeafInput struct {
+	Tenant string
+	LineID string
+	Leaf   domain.LeafInput
+	Actor  string
+}
+    PutLeafInput is a leaf the operator writes or confirms.
+
+type RebalanceState struct {
+	Signals  domain.RebalanceSignals
+	Eligible bool
+	TopLevel bool
+	// ParentTitle is the title of the line the branch hangs on.
+	ParentTitle string
+}
+    RebalanceState is what the rebalance hint measures of a branch. Eligible is
+    false for a branch that cannot be acted on (ended or below an ended one,
+    an aside, drafting, archived); TopLevel says whether it hangs on the main
+    line (only those can be promoted).
+
+type RecordedUsage struct {
+	Message  domain.Message
+	Recorded bool
+}
+    RecordedUsage is what RecordTurnUsage did: Recorded is false when the turn
+    already had usage on record.
+
+type RelationChange struct {
+	Link        domain.Link
+	RootLineIDs []string
+}
+    RelationChange is a relation that was created or deleted and the main lines
+    of the conversations it touches (the From end's first).
+
+type RelationEdit struct {
+	Label        *string
+	RelationKind *string
+}
+    RelationEdit is a change to a relation: a nil field keeps the stored value.
+
+type RelationEnd struct {
+	LineID    string
+	MessageID string
+}
+    RelationEnd is one end of a relation: a line and, optionally, a message on
+    it.
+
+type RenamedFolder struct {
+	From    string
+	To      string
+	LineIDs []string
+}
+    RenamedFolder is what a folder rename changed: the main lines it moved (id
+    order).
+
+type RetryTurnInput struct {
+	Tenant string
+	LineID string
+	Actor  string
+}
+    RetryTurnInput names the line whose last, failed turn runs again.
+
+type SaveSummaryInput struct {
+	Tenant             string
+	LineID             string
+	JobID              string
+	Summary            domain.Summary
+	UptoSeq            int64
+	ReportedTopicStart string
+	Actor              string
+	// SkipTopicCut stores the summary without recording a topic cut (the
+	// host does not keep chapters).
+	SkipTopicCut bool
+}
+    SaveSummaryInput is a finished rolling summary of a line. UptoSeq is the seq
+    of the newest message it covers (0 = none); it must be a finished message
+    of the line and never below the line's current cursor. ReportedTopicStart
+    is the message id the model says the current topic starts at (untrusted).
+    JobID, when set, is the summary job the result belongs to: it must still be
+    pending, and is finished with the write.
+
+type SavedSummary struct {
+	Line       domain.LineView
+	RootLineID string
+	TopicCut   *domain.ChapterCut
+}
+    SavedSummary is the line with its new summary and the topic cut the summary
+    recorded (nil when none was due or the message already had one).
+
+type SearchInput struct {
+	Tenant     string
+	Query      string
+	Limit      int
+	Archived   bool
+	RootLineID string
+}
+    SearchInput is one search of a tenant's conversations. Query is matched as
+    a case-insensitive substring; Archived searches the archived trees instead
+    of the active ones (as ListLines does). RootLineID limits the search to that
+    main line's tree (B14; the caller checked it is one of the tenant's main
+    lines) and then Archived is ignored.
+
+type SearchRow struct {
+	Kind       string
+	LineID     string
+	RootLineID string
+	MessageID  string
+	Seq        int64
+	Role       string
+	Text       string
+	RootTitle  string
+	Purpose    string
+	At         time.Time
+	Score      float64
+}
+    SearchRow is one hit with the whole matched text (Engine cuts the snippet).
+    MessageID, Seq and Role are set for message hits only.
+
+type SeedExpansion struct {
+	Seed            domain.Seed
+	ParentLineID    string
+	AnchorMessageID string
+}
+    SeedExpansion is where an open seed's branch would hang: the line its anchor
+    sits on now (messages move with a move or a promotion) or, when that line
+    has ended, the fork point of the nearest ancestor that has not; the main
+    line's newest chat message when the anchor is gone or there was none.
+
+type SeedList struct {
+	RootLineID string
+	Seeds      []domain.Seed
+}
+    SeedList is a conversation's seeds, newest first (at most 200).
+
+type SeedQuery struct {
+	Tenant   string
+	LineID   string
+	Statuses []string
+}
+    SeedQuery lists a conversation's seeds; Statuses defaults to open.
+
+type SpunOff struct {
+	Mode          string
+	Line          domain.LineView
+	SourceLineID  string
+	OldRootLineID string
+	Marker        domain.Message
+	Link          domain.Link
+	Notes         NotesWrite
+	Branch        domain.BranchView
+	Moved         []string
+	MovedSeeds    int64
+	// DissolvedGroups are the active groups the detach dissolved (it took
+	// some of their members to the new tree).
+	DissolvedGroups []domain.Group
+	// ExpiredSuggestions are the old tree's open suggestions that named a
+	// line the detach took (a relation's end, a group's member).
+	ExpiredSuggestions []domain.Suggestion
+}
+    SpunOff is what a spinoff changed. Line is the new main line; Marker the
+    message the source line keeps; Notes the notes copied into the new tree.
+    For detach, Branch is the branch as it was, Moved the lines that moved with
+    it (below it) and MovedSeeds how many seeds followed their anchor.
+
+type StaleTurn struct {
+	Tenant  string
+	Line    domain.LineView
+	Message domain.Message
+}
+    StaleTurn is one pending turn FailStaleTurns ended.
+
+type Store struct {
+	// Has unexported fields.
+}
+    Store runs tangent's transactions over a host's pool.
+
+func New(pool *pgxpool.Pool, limits domain.Limits, opts ...Option) (*Store, error)
+    New builds a store over the pool. Limits that cannot work are refused;
+    fields left at zero take their defaults.
+
+func (s *Store) ActiveNotes(ctx context.Context, rootLineID string) ([]domain.Note, error)
+    ActiveNotes returns the active notes of a conversation by its main line's
+    id. The id must come from the store (BegunTurn.RootLineID): there is no
+    tenant check here.
+
+func (s *Store) AddMilestone(ctx context.Context, in MilestoneInput, hooks ...TxHook) (ChapterChange, error)
+    AddMilestone stores a milestone on a message of the line's conversation,
+    under the main line's lock so the cap holds. An archived conversation is
+    read-only.
+
+func (s *Store) AppendSystemMessage(ctx context.Context, tenant, lineID string, n SystemNotice, hooks ...TxHook) (AppendedSystemMessage, error)
+    AppendSystemMessage appends a host system message to a line under the line's
+    row lock (the only lock it takes), after whatever the line holds, a pending
+    reply included. A line that is archived, or a branch that (or an ancestor
+    of which) has ended, takes none; a line that is gone (another tenant's,
+    or a conversation deleted meanwhile) is ErrLineNotFound. The line's activity
+    is refreshed.
+
+func (s *Store) ApplyNoteChanges(ctx context.Context, in ApplyNotesInput, hooks ...TxHook) (NotesWrite, error)
+    ApplyNoteChanges validates and writes the changes in one transaction:
+    a refused change leaves the notes as they were. The revision moves once.
+
+func (s *Store) ArchiveTree(ctx context.Context, tenant, lineID string, archived bool, hooks ...TxHook) ([]domain.LineView, error)
+    ArchiveTree archives or unarchives a main line together with every branch
+    of its tree, in one transaction under the locks main line → branches in id
+    order, and returns the changed lines with the main line first. A branch is
+    refused: it ends with discard, not archive.
+
+func (s *Store) AttachLine(ctx context.Context, in AttachInput, hooks ...TxHook) (AttachedLine, error)
+    AttachLine attaches a main line, with its tree, as a branch of another
+    conversation's line. Refusals: either line unknown (line_not_found),
+    the source not a main line, the same conversation or empty (invalid_input),
+    either archived (archived), the target answering (source_busy), a line of
+    the source tree answering (branch_busy) or drafting (branch_drafting),
+    the target a closed branch (parent_closed), the branch limits with the
+    source's tree counted, no anchor on the target (move_no_anchor), an anchor
+    that is not one (anchor_not_found), a card that is not acceptable.
+
+func (s *Store) AttachTags(ctx context.Context, messages []domain.Message) error
+    AttachTags sets the tags of the messages that have one (one query);
+    the fisheye reads them for its head starts.
+
+func (s *Store) BeginTurn(ctx context.Context, in BeginTurnInput, hooks ...TxHook) (BegunTurn, error)
+    BeginTurn stores the operator's message and a pending assistant message
+    and moves the line to thinking, under the line's row lock. It refuses a
+    second pending turn (ErrTurnPending) and a branch that takes no turns.
+    The cards the turn carries and the notes revision are chosen under the same
+    lock and recorded on the pending message, so CompleteTurn marks exactly
+    those delivered.
+
+func (s *Store) BranchLineEnded(ctx context.Context, lineID string) (bool, error)
+    BranchLineEnded reports whether a line is a branch that has ended, or hangs
+    below a branch that ended or a line that was archived. Such a line takes no
+    more turns. A main line is never "ended" here.
+
+func (s *Store) BranchPurposes(ctx context.Context, tenant string, lineIDs []string) (map[string]string, error)
+    BranchPurposes returns the purpose of each of the tenant's branch lines
+    among lineIDs; ids that are not branches (or not ids) are left out.
+
+func (s *Store) BranchSubtree(ctx context.Context, tenant, lineID string) ([]domain.LineView, error)
+    BranchSubtree returns the branch line and every line below it, the branch
+    first.
+
+func (s *Store) BranchViews(ctx context.Context, tenant string, lineIDs []string) ([]domain.BranchView, error)
+    BranchViews reads the outline rows of many branches of the tenant in one
+    query, in the order of lineIDs; ids that name no branch of the tenant are
+    skipped.
+
+func (s *Store) CancelTurn(ctx context.Context, tenant, lineID, partial string, hooks ...TxHook) (CancelledTurn, error)
+    CancelTurn ends the line's pending turn as cancelled: the message keeps the
+    partial text the caller streamed so far, meta.cancelled is set, the line
+    goes idle. Without a pending turn it changes nothing.
+
+func (s *Store) CancelTurnFor(ctx context.Context, tenant, lineID, turnID, partial string, hooks ...TxHook) (CancelledTurn, error)
+    CancelTurnFor is CancelTurn for one named turn: when the line's pending turn
+    is another one (the named turn finished and a new one began), it changes
+    nothing, so the new turn never gets the old turn's text.
+
+func (s *Store) ClaimBranchDraft(ctx context.Context, tenant, lineID string, hooks ...TxHook) (DraftClaim, error)
+    ClaimBranchDraft marks the branch drafting under its line's row lock,
+    so no turn can start while the draft reads the conversation, and records a
+    card_draft job (a timed-out earlier draft's job is superseded).
+
+func (s *Store) CombineBranches(ctx context.Context, in CombineInput, hooks ...TxHook) (CombinedBranches, error)
+    CombineBranches closes the branches (discarded, merged_into the new one),
+    opens the new branch and re-hangs their open children on it, in one
+    transaction under the locks root → parent → the branches in id order → their
+    open children in id order. A child keeps its anchor (the message it forked
+    from, which stays on the combined branch; the new branch's pack quotes that
+    branch's latest messages) and its depth (the new branch is the combined
+    ones' sibling). Refusals: fewer than two, a branch that is not an open
+    non-aside child of the parent (invalid_group, branch_closed), one with a
+    turn in flight (branch_busy) or drafting, more open children than a parent
+    may hold (branch_limit).
+
+func (s *Store) CompleteTurn(ctx context.Context, in CompleteTurnInput, hooks ...TxHook) (CompletedTurn, error)
+    CompleteTurn finishes a pending turn, once: a message that is no longer
+    pending returns ErrTurnNotPending. The notices follow the reply (their
+    seq is after it). A successful turn marks the cards it carried delivered,
+    records the notes revision it carried as sent and ends an answered aside.
+    The usage is added to the line's totals; the line goes idle or error.
+
+func (s *Store) CreateBranch(ctx context.Context, in CreateBranchInput, hooks ...TxHook) (CreatedBranch, error)
+    CreateBranch opens a branch in one transaction: root then parent are locked,
+    the limits checked against the counts under the lock, the anchor checked,
+    and the branch line and row inserted.
+
+func (s *Store) CreateComparison(ctx context.Context, in CreateComparisonInput, hooks ...TxHook) (ComparisonWrite, error)
+    CreateComparison records a drafting comparison and its converge job under
+    the locks root → parent → the branches in id order: MinCount..MaxCount
+    distinct branches of the parent, open and not asides (invalid_comparison,
+    branch_closed); archived conversations are read-only.
+
+func (s *Store) CreateDivergeBranches(ctx context.Context, jobID string, in DivergeInput, hooks ...TxHook) (DivergedBranches, error)
+    CreateDivergeBranches ends a diverge job and opens its branches in one
+    transaction under the locks root → parent → job, every branch checked as
+    CreateBranch checks one (limits, anchor): all of them or none. A refusal
+    leaves the job pending for the caller to fail.
+
+func (s *Store) CreateFold(ctx context.Context, in CreateFoldInput, hooks ...TxHook) (FoldWrite, error)
+    CreateFold folds a stretch of a line under the line's lock: both ends on
+    the line and finished, MinMessages..MaxMessages messages, none pending,
+    no overlap with the line's drafting or active folds (fold_overlap) and room
+    under MaxActivePerLine (fold_limit). An archived conversation is read-only.
+
+func (s *Store) CreateGroup(ctx context.Context, in CreateGroupInput, hooks ...TxHook) (GroupWrite, error)
+    CreateGroup records a group. Refusals (invalid_group): fewer than two or
+    more than MaxMembers members, a member that is not an ended branch of the
+    tree with a leaf or a card's conclusion, a member already in an active
+    group; group_limit at the cap; archived.
+
+func (s *Store) CreateJob(ctx context.Context, in CreateJobInput, hooks ...TxHook) (Job, error)
+    CreateJob records a pending job. A job on a line is created under the
+    line's row lock, so superseding and inserting cannot interleave with another
+    CreateJob or a draft claim on that line.
+
+func (s *Store) CreateLine(ctx context.Context, in CreateLineInput, hooks ...TxHook) (domain.LineView, error)
+    CreateLine inserts a main line.
+
+func (s *Store) CreateMemo(ctx context.Context, in CreateMemoInput, hooks ...TxHook) (domain.Memo, error)
+    CreateMemo writes a memo. Refusals: an empty or long text, a node that is
+    not a line of this conversation, an archived conversation, the cap.
+
+func (s *Store) CreateMemory(ctx context.Context, in MemoryWriteInput, hooks ...TxHook) (domain.Memory, error)
+    CreateMemory stores a memory of the tenant.
+
+func (s *Store) CreateRelation(ctx context.Context, in CreateRelationInput, hooks ...TxHook) (RelationChange, error)
+    CreateRelation records a relation. Refusals: a label over the limit,
+    the same place at both ends, an end that is not a line of the tenant
+    or not a finished operator, assistant or card message on that line,
+    a From end outside the request's conversation, an archived conversation,
+    the same two places related already, the per-conversation cap. Hooks receive
+    the RelationChange.
+
+func (s *Store) CreateSeed(ctx context.Context, in CreateSeedInput, hooks ...TxHook) (domain.Seed, error)
+    CreateSeed parks a thought. Refusals: an empty or long text, an archived
+    conversation, the open-seed cap, an anchor that is not a finished chat
+    message of the conversation.
+
+func (s *Store) CreateSeeds(ctx context.Context, in CreateSeedsInput, hooks ...TxHook) (CreatedSeeds, error)
+    CreateSeeds parks 1 to domain.SeedBatchMax thoughts in one transaction
+    under the main line's lock, all or none: CreateSeed's refusals apply,
+    and the open-seed cap counts the whole batch.
+
+func (s *Store) DecideComparison(ctx context.Context, in DecideInput, hooks ...TxHook) (DecidedComparison, error)
+    DecideComparison decides a comparison in one transaction under the locks
+    root → parent → the compared branches in id order → the comparison:
+    the chosen branch (open) gets its decision leaf and stays open; every other
+    compared branch still open under the parent is discarded with its dead-end
+    leaf (one that ended meanwhile, or left the parent, is left as it is).
+    Refusals: comparison_not_found, comparison_decided, comparison_not_ready
+    (drafting or failed), a choice that is not an option (invalid_comparison), a
+    closed choice (branch_closed), a branch answering (branch_busy) or drafting,
+    archived.
+
+func (s *Store) DecideSuggestion(ctx context.Context, tenant, id, status string, hooks ...TxHook) (domain.Suggestion, error)
+    DecideSuggestion accepts or dismisses an open suggestion under the locks
+    main line → suggestion; the hooks run in the same transaction (a feature
+    writes what accepting it does there).
+
+func (s *Store) DecomposeBase(ctx context.Context, tenant, lineID string) (DecomposeBase, error)
+    DecomposeBase reads a line's decompose base (any line of the tenant;
+    the folder, tags and related lines are its main line's).
+
+func (s *Store) DefaultJobTimeouts() map[string]time.Duration
+    DefaultJobTimeouts are the pending timeouts of the core job kinds: a card
+    draft gets Limits.Branch.DraftTimeout, a summary DefaultSummaryJobTimeout.
+
+func (s *Store) DeleteGoal(ctx context.Context, tenant, lineID string, hooks ...TxHook) (domain.Goal, error)
+    DeleteGoal removes a conversation's goal; ErrGoalNotFound without one.
+
+func (s *Store) DeleteLeaf(ctx context.Context, tenant, lineID string, hooks ...TxHook) (domain.Leaf, error)
+    DeleteLeaf removes a branch's leaf; ErrLeafNotFound when it has none.
+
+func (s *Store) DeleteMemo(ctx context.Context, tenant, memoID string, hooks ...TxHook) (domain.Memo, error)
+    DeleteMemo removes a memo for good and returns it as it was.
+
+func (s *Store) DeleteMilestone(ctx context.Context, tenant, lineID, milestoneID string, hooks ...TxHook) (string, error)
+    DeleteMilestone removes a milestone of the line's conversation and returns
+    the main line's id.
+
+func (s *Store) DeleteRelation(ctx context.Context, tenant, lineID, relationID string, hooks ...TxHook) (RelationChange, error)
+    DeleteRelation removes a relation one of whose ends is in the line's
+    conversation (ErrRelationNotFound otherwise, and for links of other kinds).
+    Only the caller's conversation must not be archived: a relation to an
+    archived conversation can still be removed from this side. Hooks receive the
+    RelationChange.
+
+func (s *Store) DeleteTree(ctx context.Context, tenant, rootID string, hooks ...TxHook) (DeletedTree, error)
+    DeleteTree removes a whole conversation: the main line, every branch below
+    it, their messages, notes, cuts and jobs. Locks are the main line first,
+    then the branches in id order. It refuses a branch (ErrDeleteNotMainLine)
+    and refuses while any line of the tree is answering (ErrDeleteBusy).
+    The hooks run before the rows are deleted, so they can still read them.
+
+func (s *Store) Detach(ctx context.Context, in DetachInput, hooks ...TxHook) (SpunOff, error)
+    Detach makes an open branch, with every line below it, a new main line.
+    Refusals: not a branch, closed (or below a closed one), archived, a line of
+    the subtree answering (branch_busy), the parent answering (source_busy),
+    the branch drafting.
+
+func (s *Store) DiscardBranch(ctx context.Context, tenant, lineID string, hooks ...TxHook) (domain.BranchView, error)
+    DiscardBranch ends a branch without bringing anything back: it is kept,
+    marked discarded, and takes no more turns. Only the branch line is locked.
+
+func (s *Store) DismissOpenSuggestions(ctx context.Context, in SuggestionQuery, hooks ...TxHook) (SuggestionList, error)
+    DismissOpenSuggestions dismisses, in one transaction under the main line's
+    lock (the lock DecideSuggestion takes), every open suggestion of the line's
+    conversation raised by in.Features; Statuses is ignored. The list is newest
+    first, empty when nothing was open.
+
+func (s *Store) DissolveGroup(ctx context.Context, tenant, groupID string, hooks ...TxHook) (domain.Group, error)
+    DissolveGroup ends an active group (its members are free again).
+
+func (s *Store) DropSeed(ctx context.Context, tenant, seedID string, hooks ...TxHook) (domain.Seed, error)
+    DropSeed ends an open seed without doing anything with it.
+
+func (s *Store) DuplicateMemoryPairs(ctx context.Context, minSimilarity float64, limit int) ([]MemoryPair, error)
+    DuplicateMemoryPairs are the pairs a consolidation sweep looks at, at most
+    limit.
+
+func (s *Store) ExpandSeed(ctx context.Context, in ExpandSeedInput, hooks ...TxHook) (ExpandedSeed, error)
+    ExpandSeed opens a branch from an open seed and ends the seed, in one
+    transaction under the locks main line → parent → seed. Every refusal of
+    CreateBranch applies, and the seed stays open when one does.
+
+func (s *Store) ExpireSuggestionsOfEndedBranches(ctx context.Context) ([]TenantSuggestion, error)
+    ExpireSuggestionsOfEndedBranches expires open suggestions about branches
+    that have ended (missed while the inbox was off for their tenant), at most
+    200 per call.
+
+func (s *Store) ExtractToBranch(ctx context.Context, in ExtractInput, hooks ...TxHook) (ExtractedBranch, error)
+    ExtractToBranch moves a range of a line into a new branch of it, in one
+    transaction under the locks root → source. Refusals are MoveToBranch's:
+    the source archived or answering, the branch limits, a range of more
+    than the move limit, anything but finished operator and assistant chat
+    messages in it or a branch opened in it whose conclusion card is on the
+    line (move_protected_message), a range that starts with a reply, nothing to
+    hang the branch on before it; plus ends that are not messages of the line
+    (message_not_found) or in the wrong order (invalid_input).
+
+func (s *Store) FailComparisonOfJob(ctx context.Context, jobID string) (*ComparisonWrite, error)
+    FailComparisonOfJob marks the drafting comparison whose converge job timed
+    out failed; nil when none waits on it.
+
+func (s *Store) FailFoldOfJob(ctx context.Context, jobID string) (*FoldWrite, error)
+    FailFoldOfJob marks the drafting fold whose summary job timed out failed;
+    nil when no fold waits on the job.
+
+func (s *Store) FailGroupSummaryOfJob(ctx context.Context, jobID string) (*domain.Group, error)
+    FailGroupSummaryOfJob marks the active group whose drafting summary this job
+    was as failed (the job timed out); nil when no active group waits on it (a
+    dissolved group is left as it was).
+
+func (s *Store) FailJob(ctx context.Context, jobID, reason string) error
+    FailJob ends a pending job of any kind as failed with reason: a card draft
+    through its branch (FinishBranchDraft), any other job directly. A job that
+    is no longer pending returns ErrJobNotPending.
+
+func (s *Store) FailStaleJobs(ctx context.Context, timeouts map[string]time.Duration) ([]Job, error)
+    FailStaleJobs marks failed (StaleJobError) every pending job that has been
+    pending longer than the timeout of its kind; kinds missing from timeouts are
+    left alone, and nil means DefaultJobTimeouts. At most 200 jobs per kind per
+    call; rows another transaction holds wait for the next sweep. On an error it
+    returns the jobs already failed (committed) with the error.
+
+func (s *Store) FailStaleTurns(ctx context.Context, maxAge time.Duration) ([]StaleTurn, error)
+    FailStaleTurns fails every pending turn created more than maxAge before the
+    store's clock (at most 200 per call) with StaleTurnDetail and parks its
+    line in error. A turn that finished, or whose line went away, meanwhile is
+    skipped. On any other error it stops and returns the turns it already failed
+    (those are committed) with the error.
+
+func (s *Store) FinishBranchDraft(ctx context.Context, jobID string, outcome domain.BranchDraftOutcome, hooks ...TxHook) (domain.BranchView, error)
+    FinishBranchDraft stores the outcome of the draft the job was started for
+    and finishes the job (done for a ready card, failed otherwise). Nothing is
+    written, and ErrDraftNotPending returned, when the job is not a pending
+    draft, was superseded by a newer claim, ran past the draft timeout, or the
+    branch is no longer open; the job is then marked superseded or failed.
+
+func (s *Store) FinishComparison(ctx context.Context, jobID string, matrix *domain.ComparisonMatrix, failure string, hooks ...TxHook) (ComparisonResult, error)
+    FinishComparison ends a converge job under the locks parent → comparison →
+    job: done with the matrix (ready), or failed with failure (failed).
+
+func (s *Store) FinishFoldSummary(ctx context.Context, jobID, summary, failure string, hooks ...TxHook) (FoldSummaryResult, error)
+    FinishFoldSummary ends a fold_summary job under the locks line → fold → job:
+    done with the summary (the fold active), or failed with failure (the fold
+    failed).
+
+func (s *Store) FinishGroupSummary(ctx context.Context, jobID, summary, failure string, hooks ...TxHook) (GroupSummaryResult, error)
+    FinishGroupSummary ends a group_summary job: done with the summary (ready),
+    or failed with failure (the group's summary_status failed, its last summary
+    kept), under the locks main line → group → job.
+
+func (s *Store) FinishIbisTags(ctx context.Context, jobID string, tags []AITag, status, failure string, hooks ...TxHook) (AITagged, error)
+    FinishIbisTags ends an ibis_tag job under the locks line → job: failed with
+    failure, or done with the tags written (as status) on the messages that are
+    still finished operator or assistant messages of the line and have no tag;
+    a tag that is there, the operator's above all, stays.
+
+func (s *Store) FinishJob(ctx context.Context, jobID, status, errText string, hooks ...TxHook) (Job, error)
+    FinishJob ends a pending job as done or failed. A job that is no longer
+    pending (finished, superseded, timed out) returns ErrJobNotPending; a card
+    draft is refused (FinishBranchDraft owns it).
+
+func (s *Store) FinishLeafDraft(ctx context.Context, jobID string, draft domain.LeafInput, status string, hooks ...TxHook) (LeafDraftResult, error)
+    FinishLeafDraft ends a pending leaf_draft job as done and writes its leaf
+    with the given status, under the locks branch line → job. A job that is no
+    longer pending returns ErrJobNotPending.
+
+func (s *Store) FisheyeTree(ctx context.Context, tenant, lineID string) (FisheyeTree, error)
+    FisheyeTree reads the tree of a line.
+
+func (s *Store) GetBranch(ctx context.Context, tenant, lineID string) (domain.BranchDetail, error)
+    GetBranch reads one branch: its outline row, the stored pack, the draft and
+    the parent's newest relevant message (the tip a merge must name).
+
+func (s *Store) GetBranchDraft(ctx context.Context, tenant, lineID string) (domain.BranchDraft, error)
+    GetBranchDraft reads a branch's draft state.
+
+func (s *Store) GetComparison(ctx context.Context, tenant, comparisonID string) (domain.Comparison, error)
+    GetComparison reads a comparison of the tenant.
+
+func (s *Store) GetGoal(ctx context.Context, tenant, lineID string) (*domain.Goal, error)
+    GetGoal reads the goal of the line's conversation; nil when it has none.
+
+func (s *Store) GetGroup(ctx context.Context, tenant, groupID string) (domain.Group, error)
+    GetGroup reads a group of the tenant.
+
+func (s *Store) GetJob(ctx context.Context, jobID string) (Job, error)
+    GetJob loads a job by id (the runner that reports a result knows only the
+    id; the job carries its tenant).
+
+func (s *Store) GetLeaf(ctx context.Context, tenant, lineID string) (*domain.Leaf, error)
+    GetLeaf reads the leaf of a branch; nil when it has none.
+
+func (s *Store) GetLine(ctx context.Context, tenant, lineID string) (domain.LineView, error)
+    GetLine loads one line of the tenant with its place in the tree.
+
+func (s *Store) GetMemory(ctx context.Context, tenant, memoryID string) (domain.Memory, error)
+    GetMemory reads a memory of the tenant.
+
+func (s *Store) GetMessage(ctx context.Context, tenant, lineID, messageID string) (domain.Message, error)
+    GetMessage loads one message of a line.
+
+func (s *Store) GetSeed(ctx context.Context, tenant, seedID string) (domain.Seed, error)
+    GetSeed reads one seed of the tenant.
+
+func (s *Store) GetSuggestion(ctx context.Context, tenant, id string) (domain.Suggestion, error)
+    GetSuggestion reads one suggestion of the tenant.
+
+func (s *Store) GetTurn(ctx context.Context, turnID string) (TurnRef, error)
+    GetTurn resolves a pending turn by its id (the pending assistant message).
+    A finished, unknown or malformed id returns ErrTurnNotPending. It is a plain
+    read: the turn may finish right after it returns.
+
+func (s *Store) GoalOfRoot(ctx context.Context, rootLineID string) (*domain.Goal, error)
+    GoalOfRoot reads the goal of a main line the caller already resolved under
+    its tenant (a turn's tree); nil without one.
+
+func (s *Store) GroupSummarySource(ctx context.Context, tenant, groupID string) (GroupSummarySource, error)
+    GroupSummarySource reads a group's members (purpose, leaf, card conclusion)
+    and the claims settled when it was made.
+
+func (s *Store) IbisCandidates(ctx context.Context, lineID string, uptoSeq int64, limit int) (IbisCandidates, error)
+    IbisCandidates reads the messages a tagging job of the line tags: of the
+    newest limit × ibisScanFactor messages after the last finished job and up
+    to uptoSeq (the newest message the job reads, tagged or not), the untagged
+    ones, at most limit. The caller has the line.
+
+func (s *Store) ImportLine(ctx context.Context, in ImportLineInput, hooks ...TxHook) (ImportedLine, error)
+    ImportLine writes an import in one transaction: the main line, its messages
+    (finished chat messages, in order; a merged branch's conclusion card right
+    after its anchor, before the next one), then each branch like CreateBranch
+    would open it on its anchor (the limits checked against what the transaction
+    wrote so far; origin import) with its messages, discarded or merged at once
+    when asked, then the chapter cuts. A plan with dates writes every message,
+    line and branch with them (B19); without, they are the time of the import.
+    Nothing else of the tenant is locked: the lines are new.
+
+func (s *Store) InsertMessage(ctx context.Context, tenant, lineID string, m NewMessage, hooks ...TxHook) (domain.Message, error)
+    InsertMessage appends a finished message to a line and refreshes its
+    activity, under the line's row lock. A line that is archived, or a branch
+    that (or an ancestor of which) has ended, takes no messages.
+
+func (s *Store) LatestJob(ctx context.Context, tenant, lineID, kind string) (Job, bool, error)
+    LatestJob returns the newest job of a kind on a line of the tenant, whatever
+    its status; ok is false when there is none.
+
+func (s *Store) Limits() domain.Limits
+    Limits returns the limits the store applies, defaults filled in.
+
+func (s *Store) LineMessagesBetween(ctx context.Context, tenant, lineID, fromID, toID string, limit int) ([]domain.Message, error)
+    LineMessagesBetween reads the messages of a line from one of its messages to
+    another (either order), at most limit.
+
+func (s *Store) LineViews(ctx context.Context, tenant string, lineIDs []string) ([]domain.LineView, error)
+    LineViews hydrates many lines of the tenant in one pass, in the order of
+    lineIDs; ids that name no line of the tenant are skipped.
+
+func (s *Store) LinesEndedWith(ctx context.Context, tx Tx, lineID string, withSubtree bool) ([]string, error)
+    LinesEndedWith lists the lines a branch's ending takes out of use: the
+    branch and, withSubtree, every line below it (a promotion lifts those to the
+    main line instead).
+
+func (s *Store) ListBranches(ctx context.Context, tenant, lineID string, includeAside bool) ([]domain.BranchView, error)
+    ListBranches returns the whole tree of the line's conversation as a flat
+    adjacency list, oldest first, at most 500 rows; asides only when asked.
+
+func (s *Store) ListChapters(ctx context.Context, tenant, lineID string) (ChaptersView, error)
+    ListChapters computes the chapters of a line.
+
+func (s *Store) ListComparisons(ctx context.Context, tenant, lineID string) (ComparisonList, error)
+    ListComparisons lists the comparisons of the line's branches, newest first.
+
+func (s *Store) ListFolds(ctx context.Context, tenant, lineID string) (FoldList, error)
+    ListFolds lists a line's folds that were not removed (drafting, active,
+    failed) whose ends are still on it, in seq order.
+
+func (s *Store) ListGroups(ctx context.Context, tenant, lineID string, statuses []string) (GroupList, error)
+    ListGroups lists the groups of the line's tree, newest first; statuses
+    default to active.
+
+func (s *Store) ListLines(ctx context.Context, in ListLinesInput) (LinePage, error)
+    ListLines returns one keyset page of the tenant's main lines.
+
+func (s *Store) ListLinks(ctx context.Context, tenant, lineID string, kinds []string) ([]domain.Link, error)
+    ListLinks lists the links of the kinds from or to any line of the line's
+    tree, newest first (at most 200). A message end is reported on the line its
+    message is on now.
+
+func (s *Store) ListMemories(ctx context.Context, in MemoryQuery) ([]domain.Memory, error)
+    ListMemories lists the tenant's memories (the first page unless Cursor is
+    set).
+
+func (s *Store) ListMemoriesPage(ctx context.Context, in MemoryQuery) (MemoryPage, error)
+    ListMemoriesPage returns one keyset page of the tenant's memories.
+
+func (s *Store) ListMemos(ctx context.Context, tenant, lineID, nodeLineID string) (MemoList, error)
+    ListMemos lists the memos of the line's conversation; with nodeLineID,
+    only those written on that node (a line of another conversation is
+    line_not_found).
+
+func (s *Store) ListMessages(ctx context.Context, tenant, lineID string, afterSeq int64, limit int) ([]domain.Message, error)
+    ListMessages returns an ascending transcript page after a seq cursor.
+
+func (s *Store) ListNotes(ctx context.Context, tenant, lineID string) (NotesView, error)
+    ListNotes returns the notes page of the line's conversation.
+
+func (s *Store) ListSeeds(ctx context.Context, in SeedQuery) (SeedList, error)
+    ListSeeds lists the seeds of the line's conversation.
+
+func (s *Store) ListSuggestions(ctx context.Context, in SuggestionQuery) (SuggestionList, error)
+    ListSuggestions lists the suggestions of the line's conversation.
+
+func (s *Store) ListTagDrafts(ctx context.Context, tenant, lineID string) (TagDrafts, error)
+    ListTagDrafts lists the draft tags of the tree of any of its lines (one
+    query), at most TagDraftsMax, leaving out discarded branches; each draft's
+    content is a snippet of at most domain.TagDraftContentRunes.
+
+func (s *Store) ListTreeComparisons(ctx context.Context, tenant, rootLineID string, lineIDs []string) (out []domain.Comparison, truncated bool, err error)
+    ListTreeComparisons reads the comparisons of branches of the lines of the
+    root's tree, oldest first (at most TreeComparisonCap); truncated reports
+    more.
+
+func (s *Store) ListTreeFolds(ctx context.Context, tenant string, lineIDs []string) (map[string][]domain.Fold, error)
+    ListTreeFolds reads the folds of the lines that were not removed (as
+    ListFolds has them), keyed by line id; lines without one have no key.
+
+func (s *Store) ListTreeMessages(ctx context.Context, tenant string, lineIDs []string, perLine int) (TreeMessages, error)
+    ListTreeMessages reads the first perLine messages of every line in one
+    query, with their tags and spin-off targets as ListMessages has them.
+
+func (s *Store) LiveFolds(ctx context.Context, lineID string) ([]domain.Fold, error)
+    LiveFolds are a line's drafting and active folds whose ends are still on it,
+    in seq order (what a prompt and a suggestion check read).
+
+func (s *Store) LoadTurn(ctx context.Context, tenant, turnID string) (BegunTurn, error)
+    LoadTurn reads a pending turn back as BeginTurn returned it: the line,
+    the operator message it answers, the pending reply, the cards it carries
+    (meta.deliversCards) and the notes revisions (the one it carries from
+    meta.notesRevision, the line's sent one as it is now). A finished, unknown
+    or malformed id, or one of another tenant, returns ErrTurnNotPending.
+    It is a plain read: the turn may end right after.
+
+func (s *Store) MarkRead(ctx context.Context, tenant, lineID string, hooks ...TxHook) (domain.LineView, error)
+    MarkRead resets the line's unread counter.
+
+func (s *Store) MergeBranch(ctx context.Context, in MergeBranchInput, hooks ...TxHook) (MergedBranch, error)
+    MergeBranch writes the card as the newest message of the parent and marks
+    the branch merged, in one transaction under the locks root → parent →
+    branch, so two merges into one parent land in lock order. Refusals:
+    the branch or an ancestor has ended, the branch or the parent has a turn in
+    flight, or the parent moved on since the tip the operator saw and the caller
+    did not confirm.
+
+func (s *Store) MessagesAfterAnchor(ctx context.Context, tenant, lineID, anchorID string) ([]domain.Message, error)
+    MessagesAfterAnchor returns the finished messages of a line after the
+    anchor, in seq order; when there are more than Pack.LaterScan only the
+    newest ones.
+
+func (s *Store) MessagesAfterSummary(ctx context.Context, tenant, lineID string) ([]domain.Message, error)
+    MessagesAfterSummary returns the finished messages after the line's summary
+    cursor (every finished message when there is none), in seq order, at most
+    500.
+
+func (s *Store) MessagesUpToAnchor(ctx context.Context, tenant, lineID, anchorID string) ([]domain.Message, error)
+    MessagesUpToAnchor returns the finished messages of a line up to and
+    including the anchor, in seq order, at most Pack.HistoryScan; the anchor is
+    the last one.
+
+func (s *Store) MoveToBranch(ctx context.Context, in MoveToBranchInput, hooks ...TxHook) (MovedBranch, error)
+    MoveToBranch moves the last Count messages of a line into a new branch of
+    it, in one transaction: root then source are locked. Messages keep their
+    seq, so nothing is renumbered. Branches opened on moved messages go with
+    them one level deeper; the source keeps a marker; a summary whose cursor
+    moved is reset and pending summaries of the source are superseded.
+
+func (s *Store) NoteSeed(ctx context.Context, in NoteSeedInput, hooks ...TxHook) (NotedSeed, error)
+    NoteSeed turns an open seed into a note (its text, cut to the note limit;
+    its source the anchor while that is still in the conversation) in one
+    transaction under the locks main line → seed.
+
+func (s *Store) NotesForTurn(ctx context.Context, tenant, lineID string) (TurnNotes, error)
+    NotesForTurn returns the active notes and revisions for a turn of the line.
+
+func (s *Store) OpenDivergeBranches(ctx context.Context, in DivergeInput, hooks ...TxHook) (DivergedBranches, error)
+    OpenDivergeBranches opens sibling branches of one parent at once without a
+    job (a diverge across models, B14): one transaction under the locks root
+    → parent, every branch checked as CreateBranch checks one, all of them or
+    none. The result's Job is the zero value.
+
+func (s *Store) OpenLoops(ctx context.Context, in OpenLoopsQuery) (OpenLoops, error)
+    OpenLoops lists the open loops asked for.
+
+func (s *Store) ParentTipMessageID(ctx context.Context, tenant, lineID string) (string, error)
+    ParentTipMessageID returns the newest message of a line that counts for "the
+    conversation moved on" (finished operator, assistant and card messages),
+    or "" when it has none.
+
+func (s *Store) PendingJob(ctx context.Context, tenant, lineID, kind string) (Job, bool, error)
+    PendingJob returns the newest pending job of a kind on a line; ok is false
+    when there is none.
+
+func (s *Store) PendingTurn(ctx context.Context, tenant, lineID string) (domain.Message, bool, error)
+    PendingTurn returns the line's pending assistant message; ok is false when
+    the line has no turn in flight.
+
+func (s *Store) PinMessage(ctx context.Context, tenant, messageID string, pinned bool, hooks ...TxHook) (PinnedMessage, error)
+    PinMessage pins or unpins a finished operator, assistant or card message
+    under the lock of the line it is on (a move of the message waits, or is
+    waited for). An archived conversation is read-only.
+
+func (s *Store) PinnedMessages(ctx context.Context, tenant, lineID string, limit int) ([]domain.Message, error)
+    PinnedMessages lists a line's pinned messages, newest first.
+
+func (s *Store) PlanSeedExpansion(ctx context.Context, tenant, seedID string) (SeedExpansion, error)
+    PlanSeedExpansion finds where an open seed's branch would hang, so the
+    caller can build the pack outside the lock (as for CreateBranch).
+
+func (s *Store) PromoteBranch(ctx context.Context, tenant, lineID string, hooks ...TxHook) (PromotedBranch, error)
+    PromoteBranch makes an open branch of the main line the main line,
+    in one transaction under the locks main line → branch. The main line keeps
+    its id: its messages after the fork point move to a new, already discarded
+    "previous main line" branch and the branch's messages take their place
+    (seqs unchanged). Refusals: not a direct branch of the main line, closed,
+    either line answering, the branch drafting, unfinished branches on the part
+    of the main line that is put away.
+
+func (s *Store) ProposeSuggestion(ctx context.Context, in ProposeInput, hooks ...TxHook) (Proposal, error)
+    ProposeSuggestion records an open suggestion unless one of the rules says
+    not to raise it.
+
+func (s *Store) PurgeExpiredAsides(ctx context.Context, retention time.Duration) ([]PurgedAside, error)
+    PurgeExpiredAsides deletes asides that ended more than retention before
+    the store's clock (retention 0 means Limits.Branch.AsideRetention),
+    with their messages, at most 100 per call. An aside whose tree is answering,
+    or that changed or went away meanwhile, is skipped. On an error it stops and
+    returns the asides already deleted (committed) with the error.
+
+func (s *Store) PutGoal(ctx context.Context, in PutGoalInput, hooks ...TxHook) (GoalWrite, error)
+    PutGoal writes a conversation's goal; an archived conversation is read-only.
+    Hooks receive the goal (domain.Goal).
+
+func (s *Store) PutLeaf(ctx context.Context, in PutLeafInput, hooks ...TxHook) (domain.Leaf, error)
+    PutLeaf writes the operator's leaf (confirmed) over whatever the branch had.
+    An archived conversation is read-only.
+
+func (s *Store) ReadyGroups(ctx context.Context, rootLineID string) ([]domain.Group, error)
+    ReadyGroups are a tree's active groups whose summary is ready (what the
+    fisheye shows in place of their members).
+
+func (s *Store) RebalanceSignals(ctx context.Context, tenant, lineID string, l domain.RebalanceLimits) (RebalanceState, error)
+    RebalanceSignals measures a branch: its finished replies, the parent's
+    finished replies after the fork, and whether the tree's last l.RecentTurns
+    replies are all the branch's. A branch with fewer replies than either
+    threshold needs is not measured further. Reads only.
+
+func (s *Store) RecentMessages(ctx context.Context, tenant, lineID string, limit int) ([]domain.Message, error)
+    RecentMessages returns the newest limit messages of a line in seq order
+    (Limits.HistoryScan when limit is not positive).
+
+func (s *Store) RecordTopicCut(ctx context.Context, tenant, lineID, messageID, topic string, hooks ...TxHook) (TopicCut, error)
+    RecordTopicCut stores a topic cut on a message of the line (SaveSummary
+    records its own; this is for hosts that summarise elsewhere).
+
+func (s *Store) RecordTurnUsage(ctx context.Context, turnID string, usage domain.Usage) (RecordedUsage, error)
+    RecordTurnUsage records the usage of a turn that ended without CompleteTurn
+    (cancelled or failed as stale while its run still finished): on the
+    message, once, and added to the line's totals. A pending turn is refused
+    (ErrTurnPending: CompleteTurn records its usage); an unknown one returns
+    ErrTurnNotPending.
+
+func (s *Store) RemoveFold(ctx context.Context, tenant, foldID string, hooks ...TxHook) (FoldWrite, error)
+    RemoveFold takes a fold back (removed; its job, if drafting, no longer
+    writes) under the lock of its line. Removed or unknown: fold_not_found.
+
+func (s *Store) RenameBranch(ctx context.Context, tenant, lineID, purpose string, hooks ...TxHook) (domain.BranchView, error)
+    RenameBranch changes the purpose of a branch (and the title of its line,
+    which follows the purpose) under the branch line's lock. The purpose is
+    trimmed and must be within Limits.Branch.PurposeMaxRunes. Open and ended
+    (merged, discarded) branches can be renamed (B13); a promoted branch (an
+    emptied line) and the previous main line are branch_closed, an archived tree
+    archived. Snapshots keep the old name: the pack, card and marker messages,
+    note, seed and memo labels, spinoff capsules, suggestion payloads. What
+    reads the purpose live (card notices of the parent's next turns, fisheye,
+    group summaries, AI proposals) uses the new name from then on (DESIGN
+    §12.10).
+
+func (s *Store) RenameFolder(ctx context.Context, tenant, from, to string, hooks ...TxHook) (RenamedFolder, error)
+    RenameFolder moves every main line of the tenant in folder from (archived
+    ones too) to folder to ("" unfiles them), under the locks of those lines
+    in id order. Both names are normalised; from must not be empty. The lines'
+    activity time does not change.
+
+func (s *Store) RenameGroup(ctx context.Context, tenant, groupID, title string, hooks ...TxHook) (domain.Group, error)
+    RenameGroup changes an active group's title.
+
+func (s *Store) ReplyCount(ctx context.Context, lineID string) (int, error)
+    ReplyCount counts the finished assistant replies of a line.
+
+func (s *Store) RetryTurn(ctx context.Context, in RetryTurnInput, hooks ...TxHook) (BegunTurn, error)
+    RetryTurn starts the line's last turn again when it failed: the line's two
+    newest messages, host system messages left aside, must be the operator's
+    message and its failed reply. The failed reply stays (status error);
+    a new pending reply is added for the same operator message, which is not
+    duplicated. Like BeginTurn it runs under the line's lock, refuses a pending
+    turn and a branch that takes no turns, and moves the line to thinking.
+
+func (s *Store) SavePartialReply(ctx context.Context, turnID, content string, streamSeq int64) (bool, error)
+    SavePartialReply keeps the text streamed so far on a pending reply and the
+    delta seq it covers (meta.streamSeq), so a client that reloads gets the
+    start of a reply its stream buffer lost. It writes nothing (false) once the
+    reply is finished or a later partial is already saved; it takes no line lock
+    and publishes nothing.
+
+func (s *Store) SaveSummary(ctx context.Context, in SaveSummaryInput, hooks ...TxHook) (SavedSummary, error)
+    SaveSummary stores a rolling summary and its seq cursor under the line's
+    row lock and records the topic cut it implies (domain.TopicCutFor over the
+    messages after the previous cursor), in one transaction.
+
+func (s *Store) Search(ctx context.Context, in SearchInput) ([]SearchRow, error)
+    Search finds the tenant's hits for a query (see SearchInput). It returns
+    invalid_input for a missing tenant or a query shorter than the minimum.
+
+func (s *Store) SetMessageTag(ctx context.Context, tenant, messageID string, in TagInput, actor string, hooks ...TxHook) (TaggedMessage, error)
+    SetMessageTag writes a tag on a finished operator or assistant message under
+    the lock of the line it is on; it replaces any tag, a model's included.
+    Confirmed is the operator's (source user); draft is source ai, status draft.
+    An archived conversation is read-only.
+
+func (s *Store) SimilarMemories(ctx context.Context, tenant string, embedding []float32, limit int) ([]domain.MemoryCandidate, error)
+    SimilarMemories are the tenant's active memories of the embedding's size,
+    the most similar (cosine) first, at most limit.
+
+func (s *Store) SpinOffFresh(ctx context.Context, in FreshInput, hooks ...TxHook) (SpunOff, error)
+    SpinOffFresh creates the new main line (the source's provider and model)
+    with its capsule, copies the notes (CopyNotes), and leaves a marker on the
+    source line, under the locks main line → source line. The source tree is
+    otherwise untouched. Refusals: an archived conversation, the source line
+    answering (source_busy), a message that is not a finished chat message of
+    the line (anchor_not_found).
+
+func (s *Store) StartGroupSummary(ctx context.Context, tenant, groupID, feature string, hooks ...TxHook) (GroupSummaryClaim, error)
+    StartGroupSummary records a group_summary job (of the feature) for an active
+    group and makes it the group's current one (a job started before it no
+    longer writes). Hooks receive the GroupSummaryClaim.
+
+func (s *Store) SupersedeMemories(ctx context.Context, tenant string, memoryIDs []string, in MemoryWriteInput, hooks ...TxHook) (SupersededMemories, error)
+    SupersedeMemories replaces active memories of the tenant (locked in id
+    order) by a new one in one transaction; any of them superseded already →
+    memory_superseded. Nothing is deleted.
+
+func (s *Store) TagMessage(ctx context.Context, tenant, messageID, kind, actor string, hooks ...TxHook) (TaggedMessage, error)
+    TagMessage writes the operator's confirmed tag; see SetMessageTag.
+
+func (s *Store) TakenSuggestionTargets(ctx context.Context, rootLineID, feature, kind string, keys []string) (map[string]bool, error)
+    TakenSuggestionTargets reports which target keys already have an open or a
+    dismissed suggestion of the feature's kind in the conversation.
+
+func (s *Store) TenantOrganization(ctx context.Context, tenant string) (domain.TenantOrganization, error)
+    TenantOrganization reads the tenant's folders and tags over all its main
+    lines (B18.1), without locks: every non-empty folder with its active and
+    archived main lines, and every tag of an unarchived main line with how many
+    carry it. Both lists are non-nil.
+
+func (s *Store) UndeliveredBranchCards(ctx context.Context, tenant, lineID string, limit int) ([]domain.Message, error)
+    UndeliveredBranchCards returns the conclusion cards of a line no turn has
+    carried yet, oldest first, at most limit (NoticeMaxPerTurn by default).
+
+func (s *Store) UnsummarizedSize(ctx context.Context, tenant, lineID string) (UnsummarizedSize, error)
+    UnsummarizedSize measures a line's unsummarized history without reading the
+    messages.
+
+func (s *Store) UntagMessage(ctx context.Context, tenant, messageID string, hooks ...TxHook) (TaggedMessage, error)
+    UntagMessage removes a message's tag (whoever wrote it).
+
+func (s *Store) UpdateBranchCard(ctx context.Context, in UpdateBranchCardInput, hooks ...TxHook) (UpdatedCard, error)
+    UpdateBranchCard rewrites the card of a merged branch in one transaction
+    under the merge's locks root → parent → branch: the card message's content
+    and meta.card (its other meta keys stay; delivered is cleared, so the next
+    turn of the line carries the card once more), the branch's conclusion
+    line and, while it is still the one the merge wrote from the old card (and
+    FollowLeaf), the branch's leaf. Refusals: the branch was not merged, a line
+    involved is archived, the card is no longer on the parent or the parent has
+    ended or has a turn in flight.
+
+func (s *Store) UpdateFold(ctx context.Context, tenant, foldID, summary string, hooks ...TxHook) (FoldWrite, error)
+    UpdateFold writes the operator's summary on a fold that was not removed (a
+    drafting or failed one becomes active; its job no longer writes) under the
+    lock of its line.
+
+func (s *Store) UpdateLine(ctx context.Context, tenant, lineID string, patch LinePatch, hooks ...TxHook) (domain.LineView, error)
+    UpdateLine applies the patch under the line's row lock.
+
+func (s *Store) UpdateMemo(ctx context.Context, tenant, memoID, text string, hooks ...TxHook) (domain.Memo, error)
+    UpdateMemo replaces a memo's text.
+
+func (s *Store) UpdateMemory(ctx context.Context, tenant, memoryID string, patch MemoryPatch, hooks ...TxHook) (domain.Memory, error)
+    UpdateMemory applies a patch to an active memory (a superseded one is
+    history: memory_superseded).
+
+func (s *Store) UpdateNote(ctx context.Context, tenant, lineID, noteID string, patch NotePatch, hooks ...TxHook) (NoteUpdate, error)
+    UpdateNote changes the text, section or status of a note that has not been
+    superseded.
+
+func (s *Store) UpdateRelation(ctx context.Context, tenant, lineID, relationID string, edit RelationEdit, hooks ...TxHook) (RelationChange, error)
+    UpdateRelation changes the label and/or the kind of a relation one of whose
+    ends is in the line's conversation, under the same locks as a delete;
+    an edit with neither field writes the stored values back. A given kind must
+    be one of the four (empty is invalid_input, unlike on create). Hooks receive
+    the RelationChange.
+
+func (s *Store) UpdateRelationLabel(ctx context.Context, tenant, lineID, relationID, label string, hooks ...TxHook) (RelationChange, error)
+    UpdateRelationLabel changes the label of a relation and keeps its kind;
+    see UpdateRelation.
+
+func (s *Store) WriteLeaf(ctx context.Context, tx Tx, in LeafWrite) (domain.Leaf, error)
+    WriteLeaf writes a branch's leaf inside a write's transaction (a TxHook).
+
+type SuggestionList struct {
+	RootLineID  string
+	Suggestions []domain.Suggestion
+}
+    SuggestionList is a conversation's inbox, newest first (at most 200).
+
+type SuggestionQuery struct {
+	Tenant   string
+	LineID   string
+	Features []string
+	Statuses []string
+}
+    SuggestionQuery lists a conversation's suggestions of some features;
+    Statuses defaults to open.
+
+type SupersededMemories struct {
+	New domain.Memory
+	Old []domain.Memory
+}
+    SupersededMemories is a supersede: the new memory and the ones it replaced
+    (now superseded, pointing at it).
+
+type SystemNotice struct {
+	Content    string
+	HostMeta   json.RawMessage
+	SkipRepeat bool
+}
+    SystemNotice is one host system message. Content is the text as it is
+    stored (the Engine cleans it first); HostMeta is a JSON object or empty.
+    SkipRepeat leaves the message out when the newest host system message among
+    the line's last 30 messages has the same content (a status the host reports
+    on every turn is written once).
+
+type TagDrafts struct {
+	RootLineID string            `json:"rootLineId"`
+	Drafts     []domain.TagDraft `json:"drafts"`
+	Truncated  bool              `json:"truncated"`
+}
+    TagDrafts is a tree's messages whose tag is a draft: the main line first,
+    then the branches in outline order, each line by seq.
+
+type TagInput struct {
+	Kind   string
+	Status string
+}
+    TagInput is a tag the operator writes: Status is confirmed (empty too) or
+    draft, which puts the tag back for review as the model's (B15).
+
+type TaggedMessage struct {
+	Message    domain.Message
+	RootLineID string
+	Changed    bool
+}
+    TaggedMessage is a message after a tag was written or removed: Changed is
+    false when it already was in that state.
+
+type TenantSuggestion struct {
+	Tenant     string
+	Suggestion domain.Suggestion
+}
+    TenantSuggestion is a suggestion with its tenant (sweeps cross tenants).
+
+type TopicCut struct {
+	RootLineID string
+	Cut        *domain.ChapterCut
+}
+    TopicCut is the result of RecordTopicCut: Cut is nil when the message
+    already had a topic cut.
+
+type TreeMessages struct {
+	ByLine    map[string][]domain.Message
+	Truncated bool
+}
+    TreeMessages are the oldest perLine messages of each line, in seq order,
+    keyed by line id (every line given has a key); Truncated reports a line that
+    has more.
+
+type TurnNotes struct {
+	RootLineID string
+	Notes      []domain.Note
+	Revision   int
+	Sent       int
+}
+    TurnNotes is what a turn's prompt needs: the active notes (newest first),
+    the conversation's revision and the revision the line's last finished turn
+    carried.
+
+type TurnRef struct {
+	TurnID     string
+	Tenant     string
+	LineID     string
+	RootLineID string
+	// Actor is who started the turn ("" when it was not recorded).
+	Actor string
+}
+    TurnRef names a pending turn's place: its tenant, line and tree.
+
+type Tx interface {
+	Exec(ctx context.Context, sql string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
+	QueryRow(ctx context.Context, sql string, args ...any) pgx.Row
+}
+    Tx is what a hook may run inside a write's transaction.
+
+type TxHook func(ctx context.Context, tx Tx, result any) error
+    TxHook runs inside a write's transaction, after the store's own writes and
+    before the commit; DeleteTree runs it before deleting, so the rows are still
+    readable. result is the value the write is about to return (for example a
+    BegunTurn or a MergedBranch), so a hook sees the ids the write generated.
+    An error rolls the whole write back and comes back wrapped as "tx hook: …".
+    A write that is retried (see runTx) runs its hooks again.
+
+type UnsummarizedSize struct {
+	Messages int64
+	Chars    int64
+}
+    UnsummarizedSize is how much a summary of a line would cover: the finished
+    messages after its cursor up to the first undelivered card, and their length
+    in characters (EstimateTokens never exceeds chars + messages).
+
+type UpdateBranchCardInput struct {
+	Tenant  string
+	LineID  string
+	Card    domain.BranchCard
+	Content string
+	Actor   string
+	// FollowLeaf lets the edit rewrite the branch's leaf (the leaf feature
+	// is on, as it was when the merge wrote one).
+	FollowLeaf bool
+}
+    UpdateBranchCardInput is the edited conclusion card of a merged branch
+    and the Markdown that stands for it. The card is already validated and
+    neutralised by the caller (domain.ValidateBranchCard); Content is its
+    rendering.
+
+type UpdatedCard struct {
+	Branch       domain.BranchView
+	Message      domain.Message
+	ParentLineID string
+	RootLineID   string
+	// Leaf is the branch's leaf when the edit rewrote it, nil otherwise.
+	Leaf *domain.Leaf
+}
+    UpdatedCard is what a card edit changed: the card message, the branch and,
+    when it followed the card, the branch's leaf. ParentLineID is the line that
+    holds the card (the branch's parent).
+

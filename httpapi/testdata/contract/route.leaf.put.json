@@ -1,0 +1,24 @@
+{
+  "method": "PUT",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/leaf",
+  "request": {
+    "body": "Cheaper midweek.",
+    "kind": "answer",
+    "line": "About 30,000 yen a night with dinner"
+  },
+  "response": {
+    "leaf": {
+      "aiDrafted": false,
+      "body": "Cheaper midweek.",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "kind": "answer",
+      "line": "About 30,000 yen a night with dinner",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "rootLineId": "00000000-0000-4000-8000-000000000002",
+      "status": "confirmed",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

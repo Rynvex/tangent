@@ -1,0 +1,30 @@
+{
+  "method": "DELETE",
+  "path": "/api/messages/00000000-0000-4000-8000-000000000001/tag",
+  "response": {
+    "message": {
+      "content": "Fake reply to: ZFS or Btrfs?",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "chat",
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "meta": {
+        "actor": "tester",
+        "durationMs": 42,
+        "model": "fake-1",
+        "provider": "fake",
+        "usage": {
+          "costUsd": 0,
+          "inputTokens": 159,
+          "outputTokens": 7
+        }
+      },
+      "pinned": false,
+      "role": "assistant",
+      "seq": 4,
+      "status": "done"
+    }
+  },
+  "status": 200
+}

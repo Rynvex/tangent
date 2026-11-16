@@ -1,0 +1,32 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/accept",
+  "request": {},
+  "response": {
+    "result": {
+      "goal": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "rootLineId": "00000000-0000-4000-8000-000000000002",
+        "source": "ai",
+        "text": "Settle what this conversation set out to decide (fake runner).",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "updatedBy": "tester"
+      }
+    },
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "feature": "goal",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "goal_propose",
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "payload": {
+        "text": "Settle what this conversation set out to decide (fake runner)."
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000002",
+      "status": "accepted",
+      "targetKey": "goal:00000000-0000-4000-8000-000000000002"
+    }
+  },
+  "status": 200
+}

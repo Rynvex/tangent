@@ -1,0 +1,19 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/leaf",
+  "response": {
+    "leaf": {
+      "aiDrafted": true,
+      "body": "Drafted by the fake runner.",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "",
+      "kind": "conclusion",
+      "line": "The branch settled its question (fake runner).",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "rootLineId": "00000000-0000-4000-8000-000000000002",
+      "status": "draft",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

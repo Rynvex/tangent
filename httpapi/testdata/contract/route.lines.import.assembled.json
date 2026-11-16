@@ -1,0 +1,164 @@
+{
+  "method": "POST",
+  "path": "/api/lines/import",
+  "request": {
+    "branches": [
+      {
+        "anchorExternalId": "s1-2",
+        "card": {
+          "conclusion": "讀寫會互相阻塞，併發度大幅下降。",
+          "openItems": [
+            "量測鎖等待時間"
+          ]
+        },
+        "createdAt": "2026-01-01T00:00:00Z",
+        "messages": [
+          {
+            "content": "如果不用 MVCC 改用 Table Lock 會怎樣？",
+            "role": "user"
+          },
+          {
+            "content": "讀寫會互相阻塞。",
+            "createdAt": "2026-01-01T00:00:00Z",
+            "role": "assistant"
+          }
+        ],
+        "purpose": "如果改用 Table Lock 會怎樣？",
+        "status": "merged"
+      }
+    ],
+    "chapterCuts": [
+      {
+        "anchorExternalId": "s1-1",
+        "title": "§1 MVCC 與 VACUUM"
+      },
+      {
+        "anchorExternalId": "s2-1",
+        "title": "§2 索引"
+      }
+    ],
+    "createdAt": "2026-01-01T00:00:00Z",
+    "messages": [
+      {
+        "content": "請解釋 PostgreSQL 的 MVCC 機制",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": "s1-1",
+        "role": "user"
+      },
+      {
+        "content": "每個交易看到自己的快照。",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": "s1-2",
+        "role": "assistant"
+      },
+      {
+        "content": "VACUUM 什麼時候會跑？",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": "s1-3",
+        "role": "user"
+      },
+      {
+        "content": "dead tuples 超過門檻時。",
+        "externalId": "s1-4",
+        "role": "assistant"
+      },
+      {
+        "content": "索引膨脹怎麼處理？",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": "s2-1",
+        "role": "user"
+      },
+      {
+        "content": "用 REINDEX CONCURRENTLY 重建。",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "externalId": "s2-2",
+        "role": "assistant"
+      }
+    ],
+    "model": "fake-1",
+    "provider": "fake",
+    "source": "chatgpt",
+    "title": "MVCC 筆記（組裝）"
+  },
+  "response": {
+    "branches": [
+      {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000001",
+        "archived": false,
+        "cardMessageId": "00000000-0000-4000-8000-000000000002",
+        "closedAt": "2026-01-01T00:00:00Z",
+        "conclusionLine": "讀寫會互相阻塞，併發度大幅下降。",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "depth": 1,
+        "draftStatus": "none",
+        "excerpt": "",
+        "kind": "alternative",
+        "lastActivityAt": "2026-01-01T00:00:00Z",
+        "leaf": {
+          "kind": "conclusion",
+          "line": "讀寫會互相阻塞，併發度大幅下降。",
+          "status": "confirmed"
+        },
+        "lineId": "00000000-0000-4000-8000-000000000003",
+        "lineStatus": "idle",
+        "mergedIntoLineId": "",
+        "messageCount": 2,
+        "model": "fake-1",
+        "origin": "import",
+        "parentLineId": "00000000-0000-4000-8000-000000000004",
+        "provider": "fake",
+        "purpose": "如果改用 Table Lock 會怎樣？",
+        "rootLineId": "00000000-0000-4000-8000-000000000004",
+        "status": "merged",
+        "unread": 0
+      }
+    ],
+    "line": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 1,
+        "open": 0,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": null,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000004",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 0,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": null,
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "MVCC 筆記（組裝）",
+      "unread": 0,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0,
+        "inputTokens": 0,
+        "outputTokens": 0
+      }
+    },
+    "messageCount": 6
+  },
+  "status": 201
+}

@@ -1,0 +1,52 @@
+{
+  "method": "POST",
+  "path": "/api/memories/00000000-0000-4000-8000-000000000001/supersede",
+  "request": {
+    "text": "The NAS uses ZFS RAIDZ1"
+  },
+  "response": {
+    "memory": {
+      "aiDrafted": false,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000002",
+      "importance": 9,
+      "kind": "decision",
+      "source": {
+        "label": "Home server",
+        "leafLineId": "",
+        "lineId": "00000000-0000-4000-8000-000000000003",
+        "messageId": "",
+        "noteId": ""
+      },
+      "status": "active",
+      "supersededBy": "",
+      "text": "The NAS uses ZFS RAIDZ1",
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "validUntil": "2026-01-01T00:00:00Z"
+    },
+    "superseded": [
+      {
+        "aiDrafted": false,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000001",
+        "importance": 9,
+        "kind": "decision",
+        "source": {
+          "label": "Home server",
+          "leafLineId": "",
+          "lineId": "00000000-0000-4000-8000-000000000003",
+          "messageId": "",
+          "noteId": ""
+        },
+        "status": "superseded",
+        "supersededBy": "00000000-0000-4000-8000-000000000002",
+        "text": "The NAS uses a ZFS mirror",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "validUntil": "2026-01-01T00:00:00Z"
+      }
+    ]
+  },
+  "status": 201
+}

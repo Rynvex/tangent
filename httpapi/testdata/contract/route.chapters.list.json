@@ -1,0 +1,60 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/chapters",
+  "response": {
+    "chapters": [
+      {
+        "branchIds": [],
+        "cardMessageIds": [],
+        "endAt": "2026-01-01T00:00:00Z",
+        "endMessageId": "00000000-0000-4000-8000-000000000002",
+        "index": 0,
+        "kind": "start",
+        "messageCount": 1,
+        "milestoneId": "",
+        "startAt": "2026-01-01T00:00:00Z",
+        "startMessageId": "00000000-0000-4000-8000-000000000002",
+        "title": "2026-01-01 00:00",
+        "titleSource": "time"
+      },
+      {
+        "branchIds": [
+          "00000000-0000-4000-8000-000000000003"
+        ],
+        "cardMessageIds": [
+          "00000000-0000-4000-8000-000000000004"
+        ],
+        "endAt": "2026-01-01T00:00:00Z",
+        "endMessageId": "00000000-0000-4000-8000-000000000005",
+        "index": 1,
+        "kind": "milestone",
+        "messageCount": 6,
+        "milestoneId": "00000000-0000-4000-8000-000000000006",
+        "startAt": "2026-01-01T00:00:00Z",
+        "startMessageId": "00000000-0000-4000-8000-000000000007",
+        "title": "Planning",
+        "titleSource": "milestone"
+      }
+    ],
+    "limits": {
+      "idleGapMinutes": 30,
+      "maxChapters": 60,
+      "maxMilestones": 200,
+      "milestoneMaxLen": 80,
+      "minMessages": 3
+    },
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "milestones": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000006",
+        "kind": "milestone",
+        "messageId": "00000000-0000-4000-8000-000000000007",
+        "title": "Planning"
+      }
+    ],
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 200
+}

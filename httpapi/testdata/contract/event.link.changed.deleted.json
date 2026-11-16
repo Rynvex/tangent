@@ -1,0 +1,24 @@
+{
+  "data": {
+    "deleted": true,
+    "link": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromLineId": "00000000-0000-4000-8000-000000000001",
+      "fromMessageId": "00000000-0000-4000-8000-000000000002",
+      "fromTitle": "Trip to Kyoto",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "kind": "relation",
+      "label": "Same trip, Osaka for a day",
+      "relationKind": "related",
+      "toLineId": "00000000-0000-4000-8000-000000000004",
+      "toMessageId": "",
+      "toTitle": "Osaka side trip"
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000001",
+  "rootLineId": "00000000-0000-4000-8000-000000000001",
+  "tenant": "tenant-a",
+  "type": "link.changed"
+}

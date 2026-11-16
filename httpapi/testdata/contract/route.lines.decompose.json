@@ -1,0 +1,55 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/decompose",
+  "response": {
+    "chapterCuts": [
+      {
+        "messageId": "00000000-0000-4000-8000-000000000002",
+        "reason": "topic_shift",
+        "seq": 77,
+        "title": "另外，索引膨脹怎麼處理？"
+      }
+    ],
+    "detourRanges": [
+      {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+        "fromMessageId": "00000000-0000-4000-8000-000000000004",
+        "messageCount": 2,
+        "purpose": "了解：Docker 容器連不上宿主機的 Postgres，出現 connection…",
+        "suggestedConclusion": "改連 host.docker.internal 即可。",
+        "toMessageId": "00000000-0000-4000-8000-000000000005"
+      }
+    ],
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "relatedLines": [
+      {
+        "folder": "",
+        "lineId": "00000000-0000-4000-8000-000000000006",
+        "sharedTags": [
+          "postgres"
+        ],
+        "title": "Postgres tuning"
+      }
+    ],
+    "seedCandidates": [
+      {
+        "messageId": "00000000-0000-4000-8000-000000000007",
+        "reason": "open_item",
+        "text": "要不要調整 autovacuum_vacuum_scale_factor？"
+      },
+      {
+        "messageId": "00000000-0000-4000-8000-000000000007",
+        "reason": "question",
+        "text": "你想看設定範例嗎？"
+      }
+    ],
+    "suggestedTags": [
+      "postgresql",
+      "機制",
+      "docker",
+      "容器"
+    ],
+    "truncated": false
+  },
+  "status": 200
+}

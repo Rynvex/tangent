@@ -1,0 +1,12 @@
+{
+  "method": "PATCH",
+  "path": "/api/memos/00000000-0000-4000-8000-000000000001",
+  "request": {
+    "text": "gone"
+  },
+  "response": {
+    "code": "memo_not_found",
+    "error": "memo not found"
+  },
+  "status": 404
+}

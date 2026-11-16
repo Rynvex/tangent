@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/memories/search",
+  "request": {
+    "query": "fans"
+  },
+  "response": {
+    "code": "embedder_unavailable",
+    "error": "the memory service is unavailable; try again later"
+  },
+  "status": 503
+}

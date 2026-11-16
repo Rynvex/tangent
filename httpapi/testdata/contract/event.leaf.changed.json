@@ -1,0 +1,22 @@
+{
+  "data": {
+    "leaf": {
+      "aiDrafted": false,
+      "body": "What did this branch settle?\n- Confirm with a real model",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "kind": "conclusion",
+      "line": "The branch reached a conclusion (fake runner).",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "rootLineId": "00000000-0000-4000-8000-000000000002",
+      "status": "confirmed",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "rootLineId": "00000000-0000-4000-8000-000000000002"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000001",
+  "rootLineId": "00000000-0000-4000-8000-000000000002",
+  "tenant": "tenant-a",
+  "type": "leaf.changed"
+}

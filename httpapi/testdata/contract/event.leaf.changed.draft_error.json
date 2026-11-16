@@ -1,0 +1,15 @@
+{
+  "data": {
+    "draftError": {
+      "code": "run_failed",
+      "message": "the leaf draft run failed"
+    },
+    "leaf": null,
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "rootLineId": "00000000-0000-4000-8000-000000000002"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000001",
+  "rootLineId": "00000000-0000-4000-8000-000000000002",
+  "tenant": "tenant-a",
+  "type": "leaf.changed"
+}

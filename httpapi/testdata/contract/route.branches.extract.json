@@ -1,0 +1,134 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branches/extract",
+  "request": {
+    "card": {
+      "conclusion": "改用 host network 或連 host.docker.internal 即可解決。",
+      "question": "為什麼容器連不上宿主機 Postgres？"
+    },
+    "fromMessageId": "00000000-0000-4000-8000-000000000002",
+    "kind": "investigate",
+    "purpose": "排查 Docker 連線錯誤",
+    "toMessageId": "00000000-0000-4000-8000-000000000003"
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000004",
+      "archived": false,
+      "cardMessageId": "00000000-0000-4000-8000-000000000005",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "改用 host network 或連 host.docker.internal 即可解決。",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": {
+        "kind": "conclusion",
+        "line": "改用 host network 或連 host.docker.internal 即可解決。",
+        "status": "confirmed"
+      },
+      "lineId": "00000000-0000-4000-8000-000000000006",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "move",
+      "parentLineId": "00000000-0000-4000-8000-000000000001",
+      "provider": "fake",
+      "purpose": "排查 Docker 連線錯誤",
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "status": "merged",
+      "unread": 0
+    },
+    "line": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 0,
+        "open": 0,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000004",
+        "depth": 1,
+        "kind": "investigate",
+        "origin": "move",
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "purpose": "排查 Docker 連線錯誤",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "merged"
+      },
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000006",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 0,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": null,
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "排查 Docker 連線錯誤",
+      "unread": 0,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0,
+        "inputTokens": 0,
+        "outputTokens": 0
+      }
+    },
+    "marker": {
+      "content": "### Branch conclusion card\n\nBranch purpose: 排查 Docker 連線錯誤\n\n**Question**\n\u003e 為什麼容器連不上宿主機 Postgres？\n\n**Conclusion**\n\u003e 改用 host network 或連 host.docker.internal 即可解決。\n",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000005",
+      "kind": "branch_card",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "meta": {
+        "branchLineId": "00000000-0000-4000-8000-000000000006",
+        "card": {
+          "conclusion": "改用 host network 或連 host.docker.internal 即可解決。",
+          "evidence": [],
+          "excerpts": [],
+          "impact": "",
+          "needsDecision": [],
+          "openItems": [],
+          "question": "為什麼容器連不上宿主機 Postgres？"
+        },
+        "delivered": true
+      },
+      "pinned": false,
+      "role": "system",
+      "seq": 74,
+      "status": "done"
+    },
+    "movedMessageIds": [
+      "00000000-0000-4000-8000-000000000002",
+      "00000000-0000-4000-8000-000000000003"
+    ],
+    "reparented": [],
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "sourceLineId": "00000000-0000-4000-8000-000000000001",
+    "summaryReset": false
+  },
+  "status": 201
+}

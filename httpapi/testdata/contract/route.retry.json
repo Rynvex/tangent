@@ -1,0 +1,39 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/retry",
+  "response": {
+    "pendingMessage": {
+      "content": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000002",
+      "kind": "chat",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "meta": {
+        "actor": "tester",
+        "model": "fake-1",
+        "notesRevision": 1,
+        "provider": "fake"
+      },
+      "pinned": false,
+      "role": "assistant",
+      "seq": 55,
+      "status": "pending"
+    },
+    "turnId": "00000000-0000-4000-8000-000000000002",
+    "userMessage": {
+      "content": "This one fails",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000003",
+      "kind": "chat",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "meta": {},
+      "pinned": false,
+      "role": "user",
+      "seq": 53,
+      "status": "done"
+    }
+  },
+  "status": 202
+}

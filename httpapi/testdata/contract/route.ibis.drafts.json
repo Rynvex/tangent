@@ -1,0 +1,102 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/tag-drafts",
+  "response": {
+    "drafts": [
+      {
+        "content": "Which file system for the NAS?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000002",
+        "role": "user",
+        "seq": 1,
+        "tag": {
+          "kind": "question",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      {
+        "content": "Fake reply to: Which file system for the NAS?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000003",
+        "role": "assistant",
+        "seq": 2,
+        "tag": {
+          "kind": "decision",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      {
+        "content": "ZFS or Btrfs?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000004",
+        "role": "user",
+        "seq": 3,
+        "tag": {
+          "kind": "question",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      {
+        "content": "And the backups?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000005",
+        "role": "user",
+        "seq": 5,
+        "tag": {
+          "kind": "question",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      {
+        "content": "Fake reply to: And the backups?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000006",
+        "role": "assistant",
+        "seq": 6,
+        "tag": {
+          "kind": "idea",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      {
+        "content": "Offsite as well?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000007",
+        "role": "user",
+        "seq": 7,
+        "tag": {
+          "kind": "question",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      },
+      {
+        "content": "Fake reply to: Offsite as well?",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "messageId": "00000000-0000-4000-8000-000000000008",
+        "role": "assistant",
+        "seq": 8,
+        "tag": {
+          "kind": "idea",
+          "source": "ai",
+          "status": "draft",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      }
+    ],
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "truncated": false
+  },
+  "status": 200
+}

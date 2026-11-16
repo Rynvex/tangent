@@ -1,0 +1,9 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/dismiss",
+  "response": {
+    "code": "suggestion_not_open",
+    "error": "this suggestion was already accepted, dismissed or expired"
+  },
+  "status": 409
+}

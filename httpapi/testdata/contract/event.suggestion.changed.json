@@ -1,0 +1,23 @@
+{
+  "data": {
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": null,
+      "feature": "suggestion_probe",
+      "id": "00000000-0000-4000-8000-000000000002",
+      "kind": "probe",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "payload": {
+        "reason": "the reply asked for a probe suggestion"
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "status": "open",
+      "targetKey": "line:00000000-0000-4000-8000-000000000001"
+    }
+  },
+  "lineId": "00000000-0000-4000-8000-000000000001",
+  "rootLineId": "00000000-0000-4000-8000-000000000001",
+  "tenant": "tenant-a",
+  "type": "suggestion.changed"
+}

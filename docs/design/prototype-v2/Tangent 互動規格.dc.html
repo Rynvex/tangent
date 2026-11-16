@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<style>body { margin: 0; }</style>
+</helmet>
+<div data-theme="light" style="min-height:100vh;background:var(--tg-background);color:var(--tg-foreground);font-family:var(--tg-font-sans);font-size:var(--tg-text-base);line-height:1.6">
+<div style="max-width:960px;margin:0 auto;padding:40px 24px 96px;display:flex;flex-direction:column;gap:36px">
+  <header style="display:flex;flex-direction:column;gap:6px">
+    <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">Tangent・互動規格 v1・2026-10-15</span>
+    <h1 style="margin:0;font-size:var(--tg-text-xl);font-weight:600;color:var(--tg-foreground-strong)">大綱鍵盤操作、地圖拉關聯線</h1>
+    <p style="margin:0;color:var(--tg-muted);max-width:720px">兩項都不做成可操作原型，實作時照這兩張表。狀態名稱建議直接用在程式裡。</p>
+  </header>
+
+  <sc-for list="{{ specs }}" as="sp" hint-placeholder-count="2">
+    <section style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+        <span style="padding:2px 8px;border-radius:var(--tg-radius-sm);background:var(--tg-foreground-strong);color:var(--tg-background);font-size:var(--tg-text-xs);font-weight:600;font-family:var(--tg-font-mono)">{{ sp.code }}</span>
+        <h2 style="margin:0;font-size:var(--tg-text-lg);font-weight:600;color:var(--tg-foreground-strong)">{{ sp.title }}</h2>
+      </div>
+      <p style="margin:0;color:var(--tg-muted);max-width:760px;text-wrap:pretty">{{ sp.intro }}</p>
+
+      <h3 style="margin:8px 0 0;font-size:var(--tg-text-sm);font-weight:600;color:var(--tg-foreground-strong)">狀態</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px">
+        <sc-for list="{{ sp.states }}" as="st">
+          <div style="display:flex;flex-direction:column;gap:4px;padding:10px 12px;border:1px solid var(--tg-border);border-radius:var(--tg-radius-sm);background:var(--tg-surface)">
+            <code style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-primary-text)">{{ st.k }}</code>
+            <span style="font-size:var(--tg-text-sm);color:var(--tg-foreground)">{{ st.d }}</span>
+            <span style="font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ st.v }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <h3 style="margin:8px 0 0;font-size:var(--tg-text-sm);font-weight:600;color:var(--tg-foreground-strong)">按鍵與指標對照</h3>
+      <div style="overflow:auto;border:1px solid var(--tg-border);border-radius:var(--tg-radius-sm);background:var(--tg-surface)">
+        <table style="width:100%;min-width:720px;border-collapse:collapse;font-size:var(--tg-text-sm)">
+          <thead><tr>
+            <th style="text-align:left;padding:8px 12px;background:var(--tg-surface-sunken);color:var(--tg-muted);font-weight:500;font-size:var(--tg-text-xs)">在這個狀態</th>
+            <th style="text-align:left;padding:8px 12px;background:var(--tg-surface-sunken);color:var(--tg-muted);font-weight:500;font-size:var(--tg-text-xs)">輸入</th>
+            <th style="text-align:left;padding:8px 12px;background:var(--tg-surface-sunken);color:var(--tg-muted);font-weight:500;font-size:var(--tg-text-xs)">結果</th>
+            <th style="text-align:left;padding:8px 12px;background:var(--tg-surface-sunken);color:var(--tg-muted);font-weight:500;font-size:var(--tg-text-xs)">下一個狀態</th>
+          </tr></thead>
+          <tbody>
+            <sc-for list="{{ sp.rows }}" as="r">
+              <tr>
+                <td style="padding:8px 12px;border-top:1px solid var(--tg-border);vertical-align:top"><code style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ r.from }}</code></td>
+                <td style="padding:8px 12px;border-top:1px solid var(--tg-border);vertical-align:top;white-space:nowrap"><span style="display:flex;gap:4px;flex-wrap:wrap"><sc-for list="{{ r.keys }}" as="k"><kbd style="min-width:22px;height:22px;padding:0 6px;display:inline-grid;place-items:center;border:1px solid var(--tg-border-strong);border-bottom-width:2px;border-radius:5px;background:var(--tg-surface-raised);font-family:var(--tg-font-mono);font-size:var(--tg-text-xs)">{{ k }}</kbd></sc-for></span></td>
+                <td style="padding:8px 12px;border-top:1px solid var(--tg-border);vertical-align:top;text-wrap:pretty">{{ r.does }}</td>
+                <td style="padding:8px 12px;border-top:1px solid var(--tg-border);vertical-align:top"><code style="font-family:var(--tg-font-mono);font-size:var(--tg-text-xs);color:var(--tg-muted)">{{ r.to }}</code></td>
+              </tr>
+            </sc-for>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 style="margin:8px 0 0;font-size:var(--tg-text-sm);font-weight:600;color:var(--tg-foreground-strong)">規則</h3>
+      <ul style="margin:0;padding-left:1.3em;display:flex;flex-direction:column;gap:4px;max-width:760px">
+        <sc-for list="{{ sp.rules }}" as="ru"><li style="text-wrap:pretty">{{ ru }}</li></sc-for>
+      </ul>
+    </section>
+  </sc-for>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const SPECS = [
+  {
+    code: 'A8・大綱', title: '大綱的鍵盤操作',
+    intro: '大綱是一個 role="tree"。整棵樹只有一個 tab 停駐點（roving tabindex）；進入時 focus 落在「你在這裡」那一列，沒有的話落在主線。多選只在「多選模式」開啟時有效（C2 建立群組、合併）。',
+    states: [
+      { k: 'idle', d: 'focus 不在大綱', v: '無 focus 外框' },
+      { k: 'focused', d: '某一列有 focus', v: '2px --tg-ring 外框；aria-selected 不變' },
+      { k: 'typeahead', d: '連續輸入字元找列', v: '500ms 內的字元累加比對目的開頭' },
+      { k: 'multiselect', d: '多選模式（大綱頂端開關或 ⇧ 點選進入）', v: '每列左側出現勾選框；底部出現動作列' },
+      { k: 'renaming', d: '正在改支線目的', v: '列內換成輸入框；最多 200 字' }
+    ],
+    rows: [
+      { from: 'idle', keys: ['Tab'], does: 'focus 進大綱，落在「你在這裡」', to: 'focused' },
+      { from: 'focused', keys: ['↓'], does: '下一個可見列（跳過收合中的子列、隱藏的順口問）', to: 'focused' },
+      { from: 'focused', keys: ['↑'], does: '上一個可見列', to: 'focused' },
+      { from: 'focused', keys: ['→'], does: '收合中 → 展開；已展開 → 移到第一個子列；沒有子列 → 不動', to: 'focused' },
+      { from: 'focused', keys: ['←'], does: '已展開 → 收合；已收合或沒有子列 → 移到上一層', to: 'focused' },
+      { from: 'focused', keys: ['Home'], does: '第一列（主線）', to: 'focused' },
+      { from: 'focused', keys: ['End'], does: '最後一個可見列', to: 'focused' },
+      { from: 'focused', keys: ['Enter'], does: '進入這條支線（中欄切換）；focus 留在大綱', to: 'focused' },
+      { from: 'focused', keys: ['Space'], does: '多選模式中切換勾選；否則同 Enter', to: 'focused / multiselect' },
+      { from: 'focused', keys: ['*'], does: '展開同一層所有兄弟列', to: 'focused' },
+      { from: 'focused', keys: ['F2'], does: '改目的（只限進行中、使用者有寫入權限）', to: 'renaming' },
+      { from: 'focused', keys: ['a–z', '中文'], does: '比對目的開頭，移到下一個符合的列', to: 'typeahead' },
+      { from: 'focused', keys: ['⇧', '↑/↓'], does: '進入多選並延伸選取範圍', to: 'multiselect' },
+      { from: 'multiselect', keys: ['⌘', 'A'], does: '選取所有可見支線（不含主線、順口問）', to: 'multiselect' },
+      { from: 'multiselect', keys: ['G'], does: '把選取的支線建立群組（打開 C2 表單）', to: 'focused' },
+      { from: 'multiselect', keys: ['Esc'], does: '清除選取、離開多選', to: 'focused' },
+      { from: 'renaming', keys: ['Enter'], does: '儲存；空白時不儲存並提示「目的是必填」', to: 'focused' },
+      { from: 'renaming', keys: ['Esc'], does: '放棄修改', to: 'focused' },
+      { from: 'focused', keys: ['Esc'], does: 'focus 回到中欄輸入框', to: 'idle' }
+    ],
+    rules: [
+      '每列的 aria-level、aria-setsize、aria-posinset 依可見樹計算；收合的列 aria-expanded="false"。',
+      '「你在這裡」用 aria-current="location"，與 focus 分開。',
+      '未帶回的支線仍可 focus 與進入，只是視覺較淡；已清除的順口問不出現在樹裡。',
+      'AI 正在回覆的列，名稱後加「回覆中」給螢幕報讀器（aria-describedby），不搶 focus。',
+      '窄寬度（420 嵌入、手機）的大綱同一套規則；手機另外支援長按進入多選。',
+      '宿主可以停用整組大綱快捷鍵，但方向鍵與 Enter 屬於 tree 基本行為，不可停用。'
+    ]
+  },
+  {
+    code: 'C3・地圖', title: '在地圖上拉關聯線',
+    intro: '關聯連接兩個節點（訊息或支線），附一句說明。使用者手動拉的線是實線；AI 建議的線是虛線，等確認。地圖本身不讓人拖曳節點（自動排版），所以拖曳只用來拉線與平移畫布。',
+    states: [
+      { k: 'idle', d: '沒有在拉線', v: '節點 hover 時右緣出現 8px 圓點（連接點）' },
+      { k: 'armed', d: '按住連接點，或鍵盤按 R', v: '來源節點加 --tg-ring 外框；游標變十字' },
+      { k: 'dragging', d: '拖曳中', v: '從連接點到游標畫一條虛線；可放的節點出現淡色底' },
+      { k: 'targeting', d: '游標停在可放的節點上', v: '目標節點加外框；線吸附到目標左緣' },
+      { k: 'labeling', d: '放開後寫說明', v: '線中間出現輸入框（最多 120 字），可留白' },
+      { k: 'committed', d: '已建立', v: '實線＋說明標籤；可點選、可刪除' },
+      { k: 'suggested', d: 'AI 建議（建議匣也有一筆）', v: '--tg-suggestion 虛線＋「確認／移除」' }
+    ],
+    rows: [
+      { from: 'idle', keys: ['按住連接點'], does: '開始拉線', to: 'armed → dragging' },
+      { from: 'idle', keys: ['選節點', 'R'], does: '鍵盤開始拉線；focus 移到第一個候選目標', to: 'targeting' },
+      { from: 'dragging', keys: ['移到節點上'], does: '吸附；不可放的節點（自己、已有同一條關聯）不吸附並顯示禁止游標', to: 'targeting' },
+      { from: 'dragging', keys: ['放開在空白處'], does: '取消，不留任何東西', to: 'idle' },
+      { from: 'dragging', keys: ['拖到畫布邊緣'], does: '畫布自動平移（每 16ms 8px）', to: 'dragging' },
+      { from: 'targeting', keys: ['方向鍵'], does: '在候選目標間移動（依地圖位置，最近的優先）', to: 'targeting' },
+      { from: 'targeting', keys: ['放開', 'Enter'], does: '建立關聯，打開說明輸入框', to: 'labeling' },
+      { from: 'labeling', keys: ['Enter'], does: '儲存說明（可留白）', to: 'committed' },
+      { from: 'labeling', keys: ['Esc'], does: '關聯保留、不寫說明', to: 'committed' },
+      { from: 'armed / dragging / targeting', keys: ['Esc'], does: '取消拉線', to: 'idle' },
+      { from: 'committed', keys: ['點線或標籤'], does: '選取這條線；出現「改說明」「刪除」', to: 'committed' },
+      { from: 'committed（已選取）', keys: ['Delete'], does: '刪除；底部提示可復原 5 秒', to: 'idle' },
+      { from: 'suggested', keys: ['確認'], does: '變成實線，建議匣那筆同步標為已接受', to: 'committed' },
+      { from: 'suggested', keys: ['移除'], does: '線消失，建議匣那筆標為已忽略', to: 'idle' },
+      { from: 'idle', keys: ['拖曳空白處'], does: '平移畫布（不是拉線）', to: 'idle' }
+    ],
+    rules: [
+      '兩端可以是訊息或支線；同一對端點只能有一條關聯（方向不計）。',
+      '「關聯」圖層關閉時不能拉線，連接點也不顯示；打開圖層才可以。',
+      '觸控裝置（平板）用長按節點 500ms 進入 armed；手機沒有地圖，所以沒有這個互動。',
+      '唯讀身分看得到所有關聯，但不出現連接點與刪除。',
+      '新建、修改、刪除都寫入關聯資料（兩端、說明），並在建議匣以外不另外通知 AI；下一輪的預覽裡看得到「關聯 n 條」。',
+      '減少動態效果時：吸附與自動平移不做動畫，直接跳到結果。'
+    ]
+  }
+];
+class Component extends DCLogic {
+  renderVals() { return { specs: SPECS }; }
+}
+</script>
+</body>
+</html>

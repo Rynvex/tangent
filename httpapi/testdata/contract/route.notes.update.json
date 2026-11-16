@@ -1,0 +1,25 @@
+{
+  "method": "PATCH",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/notes/00000000-0000-4000-8000-000000000002",
+  "request": {
+    "status": "done"
+  },
+  "response": {
+    "note": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000002",
+      "section": "todo",
+      "sourceCardMessageId": "",
+      "sourceLineId": "",
+      "sourceMessageId": "",
+      "status": "done",
+      "supersededBy": "",
+      "text": "Book the train",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "revision": 3,
+    "rootLineId": "00000000-0000-4000-8000-000000000001"
+  },
+  "status": 200
+}

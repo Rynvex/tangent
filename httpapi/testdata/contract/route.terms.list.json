@@ -1,0 +1,41 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/terms",
+  "response": {
+    "limits": {
+      "explanationMaxRunes": 1000,
+      "maxTotal": 300,
+      "termMaxRunes": 60
+    },
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "terms": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "explanation": "多版本並行控制：讀不擋寫",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceLabel": "順口問・quick check",
+        "sourceLineId": "00000000-0000-4000-8000-000000000003",
+        "sourceMessageId": "",
+        "term": "MVCC",
+        "termKey": "mvcc",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "explanation": "write-ahead log",
+        "id": "00000000-0000-4000-8000-000000000004",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceLabel": "主線 #2",
+        "sourceLineId": "00000000-0000-4000-8000-000000000001",
+        "sourceMessageId": "00000000-0000-4000-8000-000000000005",
+        "term": "WAL",
+        "termKey": "wal",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    ]
+  },
+  "status": 200
+}

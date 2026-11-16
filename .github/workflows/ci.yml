@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  go:
+    name: Go (vet + test)
+    runs-on: ubuntu-latest
+    services:
+      # The same image as docker-compose.yml: pgvector (the memory feature) on
+      # top of Postgres 17, which also ships pg_trgm (the search feature).
+      postgres:
+        image: pgvector/pgvector:pg17
+        env:
+          POSTGRES_USER: tangent
+          POSTGRES_PASSWORD: tangent
+          POSTGRES_DB: tangent_test
+        ports:
+          - 5444:5432
+        options: >-
+          --health-cmd "pg_isready -U tangent -d tangent_test"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      # Tests open a fresh schema per test in this database; with this set a
+      # missing database fails the job instead of skipping the DB tests.
+      TANGENT_TEST_DATABASE_URL: postgres://tangent:tangent@localhost:5444/tangent_test?sslmode=disable
+      TANGENT_TEST_REQUIRE_DB: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test ./... -count=1
+
+  web-typecheck:
+    name: Web typecheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm -C web install --frozen-lockfile
+      - run: pnpm -C web typecheck
+
+  # One job per package, none stopping the others: `pnpm -r test` halts at the
+  # first failing package and would hide the rest.
+  web-vitest:
+    name: Web vitest (${{ matrix.package }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        package:
+          - packages/fonts
+          - packages/client
+          - packages/react
+          - apps/demo
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm -C web install --frozen-lockfile
+      - run: npx vitest run
+        working-directory: web/${{ matrix.package }}
+
+  web-build:
+    name: Web build and main JS budget
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm -C web install --frozen-lockfile
+      - name: Build (mock) and check the main JS (budget 172 kB gzip)
+        env:
+          BUDGET_BYTES: "172000"
+        run: |
+          pnpm -C web build
+          bash -c "$CHECK_BUNDLE"
+      - name: Build (http, the reference server's client) and check the main JS (budget 185 kB gzip)
+        env:
+          VITE_TANGENT_API: http
+          BUDGET_BYTES: "185000"
+        run: |
+          pnpm -C web build
+          bash -c "$CHECK_BUNDLE"
+    # Shared by both steps above. The main chunk is the largest index-*.js of
+    # the demo build (lazy chunks have other names); the job fails over budget.
+    env:
+      CHECK_BUNDLE: |
+        set -euo pipefail
+        main="$(find web/apps/demo/dist/assets -maxdepth 1 -name 'index-*.js' -printf '%s %p\n' | sort -n | tail -n 1 | cut -d' ' -f2-)"
+        test -n "$main" || { echo "no index-*.js in web/apps/demo/dist/assets" >&2; exit 1; }
+        size="$(gzip -9 -c "$main" | wc -c)"
+        echo "main chunk: $main gzip=$size bytes budget=$BUDGET_BYTES bytes"
+        if [ "$size" -gt "$BUDGET_BYTES" ]; then
+          echo "main JS is over the budget by $((size - BUDGET_BYTES)) bytes" >&2
+          exit 1
+        fi

@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/groups/00000000-0000-4000-8000-000000000001/summarize",
+  "response": {
+    "jobId": "00000000-0000-4000-8000-000000000002",
+    "kind": "group_summary",
+    "lineId": "00000000-0000-4000-8000-000000000003",
+    "model": "fake-1",
+    "provider": "fake"
+  },
+  "status": 202
+}

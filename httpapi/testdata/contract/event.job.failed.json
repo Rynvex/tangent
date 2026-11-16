@@ -1,0 +1,16 @@
+{
+  "data": {
+    "error": {
+      "code": "run_failed",
+      "message": "the job run failed"
+    },
+    "jobId": "00000000-0000-4000-8000-000000000001",
+    "kind": "group_suggest",
+    "lineId": "00000000-0000-4000-8000-000000000002",
+    "rootLineId": "00000000-0000-4000-8000-000000000002"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000002",
+  "rootLineId": "00000000-0000-4000-8000-000000000002",
+  "tenant": "tenant-a",
+  "type": "job.failed"
+}

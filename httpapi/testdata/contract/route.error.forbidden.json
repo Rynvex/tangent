@@ -1,0 +1,12 @@
+{
+  "method": "POST",
+  "path": "/api/lines",
+  "request": {
+    "title": "x"
+  },
+  "response": {
+    "code": "forbidden",
+    "error": "this request may not change anything"
+  },
+  "status": 403
+}

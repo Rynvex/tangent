@@ -1,0 +1,9 @@
+{
+  "method": "DELETE",
+  "path": "/api/folds/00000000-0000-4000-8000-000000000001",
+  "response": {
+    "code": "fold_not_found",
+    "error": "fold not found"
+  },
+  "status": 404
+}

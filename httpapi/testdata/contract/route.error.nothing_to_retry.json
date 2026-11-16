@@ -1,0 +1,9 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/retry",
+  "response": {
+    "code": "nothing_to_retry",
+    "error": "the last turn of this conversation did not fail"
+  },
+  "status": 409
+}

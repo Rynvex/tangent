@@ -1,0 +1,70 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/groups",
+  "request": {
+    "conflicts": [
+      {
+        "branch": {
+          "claim": "new disks",
+          "lineId": "00000000-0000-4000-8000-000000000002"
+        },
+        "choice": "keepBoth",
+        "other": {
+          "claim": "a 500W supply",
+          "lineId": "00000000-0000-4000-8000-000000000003"
+        }
+      }
+    ],
+    "memberLineIds": [
+      "00000000-0000-4000-8000-000000000002",
+      "00000000-0000-4000-8000-000000000003"
+    ],
+    "title": "Parts"
+  },
+  "response": {
+    "group": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000004",
+      "memberLineIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003"
+      ],
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "status": "active",
+      "summary": "",
+      "summaryStatus": "drafting",
+      "title": "Parts",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "job": {
+      "jobId": "00000000-0000-4000-8000-000000000005",
+      "kind": "group_summary",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "model": "fake-1",
+      "provider": "fake"
+    },
+    "notes": {
+      "created": [
+        {
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000006",
+          "section": "to_confirm",
+          "sourceCardMessageId": "",
+          "sourceLabel": "查證・New disks",
+          "sourceLineId": "00000000-0000-4000-8000-000000000002",
+          "sourceMessageId": "",
+          "status": "active",
+          "supersededBy": "",
+          "text": "New disks: new disks / Power supply: a 500W supply",
+          "updatedAt": "2026-01-01T00:00:00Z"
+        }
+      ],
+      "revision": 2,
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "superseded": []
+    }
+  },
+  "status": 201
+}

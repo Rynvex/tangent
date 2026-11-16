@@ -1,0 +1,80 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/suggestions",
+  "response": {
+    "rootLineId": "00000000-0000-4000-8000-000000000001",
+    "suggestions": [
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": null,
+        "feature": "group",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "group",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "payload": {
+          "conflicts": [],
+          "members": [
+            {
+              "ended": false,
+              "leaf": "",
+              "lineId": "00000000-0000-4000-8000-000000000003",
+              "purpose": "Six-bay case"
+            },
+            {
+              "ended": false,
+              "leaf": "",
+              "lineId": "00000000-0000-4000-8000-000000000004",
+              "purpose": "Four-bay case"
+            }
+          ],
+          "title": "Open together (fake runner)"
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "targetKey": "group:00000000-0000-4000-8000-000000000003,00000000-0000-4000-8000-000000000004"
+      },
+      {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "decidedAt": null,
+        "feature": "group",
+        "id": "00000000-0000-4000-8000-000000000005",
+        "kind": "group",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "payload": {
+          "conflicts": [
+            {
+              "branch": {
+                "claim": "the first one says yes",
+                "lineId": "00000000-0000-4000-8000-000000000006"
+              },
+              "id": "c1",
+              "other": {
+                "claim": "the second one says no",
+                "lineId": "00000000-0000-4000-8000-000000000007"
+              }
+            }
+          ],
+          "members": [
+            {
+              "ended": true,
+              "leaf": "Cables settled",
+              "lineId": "00000000-0000-4000-8000-000000000006",
+              "purpose": "Cables"
+            },
+            {
+              "ended": true,
+              "leaf": "Used disks settled",
+              "lineId": "00000000-0000-4000-8000-000000000007",
+              "purpose": "Used disks"
+            }
+          ],
+          "title": "Ended together (fake runner)"
+        },
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "open",
+        "targetKey": "group:00000000-0000-4000-8000-000000000006,00000000-0000-4000-8000-000000000007"
+      }
+    ]
+  },
+  "status": 200
+}

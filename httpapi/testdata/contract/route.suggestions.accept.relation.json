@@ -1,0 +1,43 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/accept",
+  "request": {},
+  "response": {
+    "result": {
+      "link": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "fromLineId": "00000000-0000-4000-8000-000000000002",
+        "fromMessageId": "",
+        "fromTitle": "Ryokan prices",
+        "id": "00000000-0000-4000-8000-000000000003",
+        "kind": "relation",
+        "label": "Related (fake runner)",
+        "relationKind": "related",
+        "toLineId": "00000000-0000-4000-8000-000000000004",
+        "toMessageId": "",
+        "toTitle": "Hotel prices"
+      }
+    },
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "feature": "relations",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "relation",
+      "lineId": "00000000-0000-4000-8000-000000000005",
+      "payload": {
+        "fromLineId": "00000000-0000-4000-8000-000000000002",
+        "fromTitle": "Ryokan prices",
+        "label": "Related (fake runner)",
+        "relationKind": "related",
+        "toLineId": "00000000-0000-4000-8000-000000000004",
+        "toTitle": "Hotel prices"
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000005",
+      "status": "accepted",
+      "targetKey": "relation:00000000-0000-4000-8000-000000000002:00000000-0000-4000-8000-000000000004"
+    }
+  },
+  "status": 200
+}

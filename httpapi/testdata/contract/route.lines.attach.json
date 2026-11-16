@@ -1,0 +1,169 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/attach",
+  "request": {
+    "card": {
+      "conclusion": "用 transaction 模式，pool size 先設 20。"
+    },
+    "sourceLineId": "00000000-0000-4000-8000-000000000002",
+    "status": "merged"
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+      "archived": false,
+      "cardMessageId": "00000000-0000-4000-8000-000000000004",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "用 transaction 模式，pool size 先設 20。",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": {
+        "kind": "conclusion",
+        "line": "用 transaction 模式，pool size 先設 20。",
+        "status": "confirmed"
+      },
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "move",
+      "parentLineId": "00000000-0000-4000-8000-000000000001",
+      "provider": "fake",
+      "purpose": "PgBouncer 設定",
+      "rootLineId": "00000000-0000-4000-8000-000000000001",
+      "status": "merged",
+      "unread": 0
+    },
+    "branchLine": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 0,
+        "open": 0,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+        "depth": 1,
+        "kind": "investigate",
+        "origin": "move",
+        "parentLineId": "00000000-0000-4000-8000-000000000001",
+        "purpose": "PgBouncer 設定",
+        "rootLineId": "00000000-0000-4000-8000-000000000001",
+        "status": "merged"
+      },
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000002",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 0,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": null,
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "PgBouncer 設定",
+      "unread": 0,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0,
+        "inputTokens": 0,
+        "outputTokens": 0
+      }
+    },
+    "cardMessage": {
+      "content": "### Branch conclusion card\n\nBranch purpose: PgBouncer 設定\n\n**Question**\n\u003e PgBouncer 設定\n\n**Conclusion**\n\u003e 用 transaction 模式，pool size 先設 20。\n",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000004",
+      "kind": "branch_card",
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "meta": {
+        "branchLineId": "00000000-0000-4000-8000-000000000002",
+        "card": {
+          "conclusion": "用 transaction 模式，pool size 先設 20。",
+          "evidence": [],
+          "excerpts": [],
+          "impact": "",
+          "needsDecision": [],
+          "openItems": [],
+          "question": "PgBouncer 設定"
+        },
+        "delivered": true
+      },
+      "pinned": false,
+      "role": "system",
+      "seq": 95,
+      "status": "done"
+    },
+    "reparented": [],
+    "targetLine": {
+      "archivedAt": null,
+      "awaitingReview": 0,
+      "branchCounts": {
+        "discarded": 0,
+        "merged": 1,
+        "open": 0,
+        "promoted": 0
+      },
+      "branchUnread": 0,
+      "conversationBranch": null,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "folder": "",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "model": "fake-1",
+      "notesRevision": 0,
+      "openSeeds": 0,
+      "openSuggestions": 0,
+      "provider": "fake",
+      "spunOffFrom": null,
+      "staleBranches": 0,
+      "status": "idle",
+      "statusDetail": "",
+      "summary": {
+        "decisions": [],
+        "files": [],
+        "openQuestions": [],
+        "suggestedLandings": [],
+        "topic": "",
+        "updatedAt": ""
+      },
+      "tags": [],
+      "tenantId": "tenant-a",
+      "title": "連線池調校",
+      "unread": 1,
+      "updatedAt": "2026-01-01T00:00:00Z",
+      "usage": {
+        "costUsd": 0.00017,
+        "inputTokens": 144,
+        "outputTokens": 13
+      }
+    }
+  },
+  "status": 200
+}

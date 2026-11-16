@@ -1,0 +1,96 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/accept",
+  "request": {
+    "choices": {
+      "c1": "keepBoth"
+    }
+  },
+  "response": {
+    "result": {
+      "action": "group",
+      "group": {
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000002",
+        "memberLineIds": [
+          "00000000-0000-4000-8000-000000000003",
+          "00000000-0000-4000-8000-000000000004"
+        ],
+        "rootLineId": "00000000-0000-4000-8000-000000000005",
+        "status": "active",
+        "summary": "",
+        "summaryStatus": "drafting",
+        "title": "Ended together (fake runner)",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      },
+      "job": {
+        "jobId": "00000000-0000-4000-8000-000000000006",
+        "kind": "group_summary"
+      },
+      "notes": {
+        "created": [
+          {
+            "createdAt": "2026-01-01T00:00:00Z",
+            "createdBy": "tester",
+            "id": "00000000-0000-4000-8000-000000000007",
+            "section": "to_confirm",
+            "sourceCardMessageId": "",
+            "sourceLabel": "查證・Cables",
+            "sourceLineId": "00000000-0000-4000-8000-000000000004",
+            "sourceMessageId": "",
+            "status": "active",
+            "supersededBy": "",
+            "text": "Cables: the first one says yes / Used disks: the second one says no",
+            "updatedAt": "2026-01-01T00:00:00Z"
+          }
+        ],
+        "revision": 1,
+        "rootLineId": "00000000-0000-4000-8000-000000000005",
+        "superseded": []
+      }
+    },
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "feature": "group",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "group",
+      "lineId": "00000000-0000-4000-8000-000000000005",
+      "payload": {
+        "conflicts": [
+          {
+            "branch": {
+              "claim": "the first one says yes",
+              "lineId": "00000000-0000-4000-8000-000000000004"
+            },
+            "id": "c1",
+            "other": {
+              "claim": "the second one says no",
+              "lineId": "00000000-0000-4000-8000-000000000003"
+            }
+          }
+        ],
+        "members": [
+          {
+            "ended": true,
+            "leaf": "Cables settled",
+            "lineId": "00000000-0000-4000-8000-000000000004",
+            "purpose": "Cables"
+          },
+          {
+            "ended": true,
+            "leaf": "Used disks settled",
+            "lineId": "00000000-0000-4000-8000-000000000003",
+            "purpose": "Used disks"
+          }
+        ],
+        "title": "Ended together (fake runner)"
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000005",
+      "status": "accepted",
+      "targetKey": "group:00000000-0000-4000-8000-000000000004,00000000-0000-4000-8000-000000000003"
+    }
+  },
+  "status": 200
+}

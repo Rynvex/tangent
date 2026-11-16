@@ -1,0 +1,69 @@
+{
+ "name": "cooling",
+ "source": "domain/import_analyze_test.go interleavedUnits（A→B→A→C→A→B）",
+ "title": "雜談",
+ "units": [
+  {
+   "key": "u1",
+   "question": "如果電腦平常都不關, CPU散熱多久換一次散熱膏比較好?",
+   "answer": "建議每 1.5 年到 2 年更換一次 CPU 散熱膏。長時間高溫會讓散熱膏乾裂、導熱變差。",
+   "messageCount": 2
+  },
+  {
+   "key": "u2",
+   "question": "firebase是什麼?",
+   "answer": "Firebase 是 Google 提供的 BaaS 雲端平台，讓開發者不用自己架後端就能做出 App。",
+   "messageCount": 2
+  },
+  {
+   "key": "u3",
+   "question": "散熱膏可以改用相變導熱片 PTM7950 嗎?",
+   "answer": "PTM7950 是相變導熱片，長期使用不會乾掉，適合不關機的電腦。",
+   "messageCount": 2
+  },
+  {
+   "key": "u4",
+   "question": "水冷排要裝在機殼上方還是前方?",
+   "answer": "冷排裝在上方當排氣比較好，熱空氣會往上走。",
+   "messageCount": 2
+  },
+  {
+   "key": "u5",
+   "question": "散熱膏換完之後 CPU 待機溫度還是很高怎麼辦?",
+   "answer": "可以檢查散熱器是否鎖緊，風扇有沒有正常運轉。",
+   "messageCount": 2
+  },
+  {
+   "key": "u6",
+   "question": "Firebase 的免費方案有什麼限制?",
+   "answer": "Spark 免費方案每天有讀寫次數上限，超過就要升級 Blaze 按量計費。",
+   "messageCount": 2
+  }
+ ],
+ "gold": [
+  {
+   "unitKeys": [
+    "u1",
+    "u3",
+    "u5"
+   ],
+   "role": "chapter",
+   "note": "同一台不關機電腦的 CPU 散熱膏：更換週期、改用 PTM7950、換完仍高溫"
+  },
+  {
+   "unitKeys": [
+    "u2",
+    "u6"
+   ],
+   "role": "merged_branch",
+   "note": "Firebase 是什麼與免費方案限制；穿插在散熱章節中間"
+  },
+  {
+   "unitKeys": [
+    "u4"
+   ],
+   "role": "merged_branch",
+   "note": "水冷排位置：散熱相關但是另一個問題，一次性；掛在散熱章節下"
+  }
+ ]
+}

@@ -1,0 +1,89 @@
+{
+  "method": "POST",
+  "path": "/api/lines/import-analyze",
+  "request": {
+    "title": "雜談",
+    "units": [
+      {
+        "answer": "建議每 1.5 年到 2 年更換一次 CPU 散熱膏。長時間高溫會讓散熱膏乾裂、導熱變差。",
+        "key": "s1#turn-1",
+        "messageCount": 2,
+        "question": "如果電腦平常都不關, CPU散熱多久換一次散熱膏比較好?"
+      },
+      {
+        "answer": "Firebase 是 Google 提供的 BaaS 雲端平台，讓開發者不用自己架後端就能做出 App。",
+        "key": "s1#turn-2",
+        "messageCount": 2,
+        "question": "firebase是什麼?"
+      },
+      {
+        "answer": "PTM7950 是相變導熱片，長期使用不會乾掉，適合不關機的電腦。",
+        "key": "s1#turn-3",
+        "messageCount": 2,
+        "question": "散熱膏可以改用相變導熱片 PTM7950 嗎?"
+      },
+      {
+        "answer": "冷排裝在上方當排氣比較好，熱空氣會往上走。",
+        "key": "s1#turn-4",
+        "messageCount": 2,
+        "question": "水冷排要裝在機殼上方還是前方?"
+      },
+      {
+        "answer": "可以檢查散熱器是否鎖緊，風扇有沒有正常運轉。",
+        "key": "s1#turn-5",
+        "messageCount": 2,
+        "question": "散熱膏換完之後 CPU 待機溫度還是很高怎麼辦?"
+      },
+      {
+        "answer": "Spark 免費方案每天有讀寫次數上限，超過就要升級 Blaze 按量計費。",
+        "key": "s1#turn-6",
+        "messageCount": 2,
+        "question": "Firebase 的免費方案有什麼限制?"
+      }
+    ]
+  },
+  "response": {
+    "mode": "tree",
+    "nodes": [
+      {
+        "key": "s1#turn-1",
+        "reason": "跨段縫合 #1、#3、#5 的同主題問答；貫穿對話的主題，作為主幹章節",
+        "role": "chapter",
+        "title": "如果電腦平常都不關, CPU散熱多久換一次散熱膏比較好?",
+        "unitKeys": [
+          "s1#turn-1",
+          "s1#turn-3",
+          "s1#turn-5"
+        ]
+      },
+      {
+        "attachAfterUnitKey": "s1#turn-1",
+        "attachToKey": "s1#turn-1",
+        "conclusion": "Spark 免費方案每天有讀寫次數上限，超過就要升級 Blaze 按量計費。",
+        "key": "s1#turn-2",
+        "reason": "跨段縫合 #2、#6 的同主題問答；穿插於主幹期間的延伸話題，掛為支線",
+        "role": "merged_branch",
+        "title": "firebase是什麼?",
+        "unitKeys": [
+          "s1#turn-2",
+          "s1#turn-6"
+        ]
+      },
+      {
+        "attachAfterUnitKey": "s1#turn-3",
+        "attachToKey": "s1#turn-1",
+        "conclusion": "冷排裝在上方當排氣比較好，熱空氣會往上走。",
+        "key": "s1#turn-4",
+        "reason": "穿插於主幹期間的延伸話題，掛為支線",
+        "role": "merged_branch",
+        "title": "水冷排要裝在機殼上方還是前方?",
+        "unitKeys": [
+          "s1#turn-4"
+        ]
+      }
+    ],
+    "source": "heuristic",
+    "summary": "跨段縫合為 3 個主題：1 個主幹章節、2 條支線、0 篇獨立對話"
+  },
+  "status": 200
+}

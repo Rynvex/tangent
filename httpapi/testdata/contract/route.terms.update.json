@@ -1,0 +1,23 @@
+{
+  "method": "PATCH",
+  "path": "/api/terms/00000000-0000-4000-8000-000000000001",
+  "request": {
+    "explanation": "多版本並行控制"
+  },
+  "response": {
+    "term": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "explanation": "多版本並行控制",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "rootLineId": "00000000-0000-4000-8000-000000000002",
+      "sourceLabel": "順口問・quick check",
+      "sourceLineId": "00000000-0000-4000-8000-000000000003",
+      "sourceMessageId": "",
+      "term": "MVCC",
+      "termKey": "mvcc",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

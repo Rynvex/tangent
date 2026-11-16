@@ -1,0 +1,51 @@
+{
+  "name": "@tangent/react",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "React provider, i18n, query keys, design tokens, base components, layout frame and shortcuts for Tangent.",
+  "sideEffects": [
+    "*.css"
+  ],
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles.css": "./src/styles.css"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@tangent/client": "workspace:*",
+    "@base-ui/react": "catalog:",
+    "highlight.js": "catalog:",
+    "katex": "catalog:",
+    "lowlight": "catalog:",
+    "lucide-react": "catalog:",
+    "react-markdown": "catalog:",
+    "remark-gfm": "catalog:",
+    "remark-math": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "^5.96.2",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "catalog:",
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@testing-library/user-event": "catalog:",
+    "@types/hast": "catalog:",
+    "@types/katex": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vitejs/plugin-react": "catalog:",
+    "jsdom": "catalog:",
+    "react": "catalog:",
+    "react-dom": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

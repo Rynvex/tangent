@@ -1,0 +1,35 @@
+{
+  "method": "GET",
+  "path": "/api/memories?limit=1",
+  "response": {
+    "limits": {
+      "searchMax": 20,
+      "textMaxRunes": 500,
+      "topK": 5
+    },
+    "memories": [
+      {
+        "aiDrafted": false,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "id": "00000000-0000-4000-8000-000000000001",
+        "importance": 8,
+        "kind": "decision",
+        "source": {
+          "label": "Home server",
+          "leafLineId": "",
+          "lineId": "00000000-0000-4000-8000-000000000002",
+          "messageId": "",
+          "noteId": ""
+        },
+        "status": "active",
+        "supersededBy": "",
+        "text": "The NAS uses a ZFS mirror",
+        "updatedAt": "2026-01-01T00:00:00Z",
+        "validUntil": null
+      }
+    ],
+    "nextCursor": "CURSOR"
+  },
+  "status": 200
+}

@@ -1,0 +1,51 @@
+{
+  "data": {
+    "archivedAt": null,
+    "awaitingReview": 0,
+    "branchCounts": {
+      "discarded": 0,
+      "merged": 0,
+      "open": 0,
+      "promoted": 0
+    },
+    "branchUnread": 0,
+    "conversationBranch": null,
+    "createdAt": "2026-01-01T00:00:00Z",
+    "createdBy": "tester",
+    "folder": "",
+    "hostMeta": {},
+    "id": "00000000-0000-4000-8000-000000000001",
+    "lastActivityAt": "2026-01-01T00:00:00Z",
+    "model": "fake-1",
+    "notesRevision": 0,
+    "openSeeds": 0,
+    "openSuggestions": 0,
+    "provider": "fake",
+    "spunOffFrom": null,
+    "staleBranches": 0,
+    "status": "idle",
+    "statusDetail": "",
+    "summary": {
+      "decisions": [],
+      "files": [],
+      "openQuestions": [],
+      "suggestedLandings": [],
+      "topic": "",
+      "updatedAt": ""
+    },
+    "tags": [],
+    "tenantId": "tenant-a",
+    "title": "Trip planning",
+    "unread": 0,
+    "updatedAt": "2026-01-01T00:00:00Z",
+    "usage": {
+      "costUsd": 0,
+      "inputTokens": 0,
+      "outputTokens": 0
+    }
+  },
+  "lineId": "00000000-0000-4000-8000-000000000001",
+  "rootLineId": "00000000-0000-4000-8000-000000000001",
+  "tenant": "tenant-a",
+  "type": "line.created"
+}

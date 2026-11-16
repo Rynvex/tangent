@@ -1,0 +1,253 @@
+package httpapi // import "github.com/Rynvex/tangent/httpapi"
+
+Package httpapi is tangent's HTTP API (DESIGN §7): a mountable http.Handler
+over the standard library's ServeMux, plus an SSE Hub for /events. The host
+authenticates through Config.Scope; the API never routes the runner-side calls
+(CompleteTurn, AppendDelta, FinishJob).
+
+CONSTANTS
+
+const (
+	// CodeUnauthorized: Config.Scope refused the request.
+	CodeUnauthorized = "unauthorized"
+	// CodeForbidden: Config.CanWrite refused a write.
+	CodeForbidden = "forbidden"
+	// CodePayloadTooLarge: the body is larger than Config.MaxBodyBytes.
+	CodePayloadTooLarge = "payload_too_large"
+	// CodeNotFound: no such route (also a feature route that is not mounted).
+	CodeNotFound = "not_found"
+	// CodeUnavailable: the work could not be handed to the dispatcher.
+	CodeUnavailable = "unavailable"
+	// CodeInternal: anything else; the detail is only logged.
+	CodeInternal = "internal"
+	// CodeUnsupportedMediaType: a body that is not application/json.
+	CodeUnsupportedMediaType = "unsupported_media_type"
+)
+    Codes httpapi adds to the domain's (DESIGN §6 errors).
+
+const (
+	DefaultClientBuffer     = 256
+	DefaultKeepalive        = 25 * time.Second
+	DefaultMaxStreams       = 256
+	DefaultMaxTenantStreams = 16
+	DefaultWriteTimeout     = 10 * time.Second
+	// DefaultMaxLag is how long a client may keep losing events (its queue
+	// never drained in between) before its stream ends.
+	DefaultMaxLag = 30 * time.Second
+)
+    Defaults of a Hub.
+
+const (
+	OpLinesCreate        = "lines.create"
+	OpLinesUpdate        = "lines.update"
+	OpLinesDelete        = "lines.delete"
+	OpLinesArchive       = "lines.archive"
+	OpLinesUnarchive     = "lines.unarchive"
+	OpLinesRead          = "lines.read"
+	OpTurnsSend          = "turns.send"
+	OpTurnsRetry         = "turns.retry"
+	OpTurnsCancel        = "turns.cancel"
+	OpSummaryCompact     = "summary.compact"
+	OpBranchesCreate     = "branches.create"
+	OpBranchesMove       = "branches.move"
+	OpBranchesRename     = "branches.rename"
+	OpBranchesDraft      = "branches.draft"
+	OpBranchesMerge      = "branches.merge"
+	OpBranchesDiscard    = "branches.discard"
+	OpBranchesPromote    = "branches.promote"
+	OpBranchesCombine    = "branches.combine"
+	OpNotesCreate        = "notes.create"
+	OpNotesUpdate        = "notes.update"
+	OpNotesSupersede     = "notes.supersede"
+	OpMilestonesAdd      = "milestones.add"
+	OpMilestonesDelete   = "milestones.delete"
+	OpSuggestionsAccept  = "suggestions.accept"
+	OpSuggestionsDismiss = "suggestions.dismiss"
+	OpLeafPut            = "leaf.put"
+	OpLeafDelete         = "leaf.delete"
+	OpLeafDraft          = "leaf.draft"
+	OpSeedsCreate        = "seeds.create"
+	OpSeedsExpand        = "seeds.expand"
+	OpSeedsToNote        = "seeds.to_note"
+	OpSeedsDrop          = "seeds.drop"
+	OpSeedsBatch         = "seeds.batch"
+	OpSpinoffCreate      = "spinoff.create"
+	OpGoalPut            = "goal.put"
+	OpGoalDelete         = "goal.delete"
+	OpGoalPropose        = "goal.propose"
+	OpRelationsCreate    = "relations.create"
+	OpRelationsUpdate    = "relations.update"
+	OpRelationsDelete    = "relations.delete"
+	OpMessagesPin        = "messages.pin"
+	OpMessagesUnpin      = "messages.unpin"
+	OpGroupsCreate       = "groups.create"
+	OpGroupsRename       = "groups.rename"
+	OpGroupsDissolve     = "groups.dissolve"
+	OpGroupsSummarize    = "groups.summarize"
+	OpMessagesTag        = "messages.tag"
+	OpMessagesUntag      = "messages.untag"
+	OpFoldsCreate        = "folds.create"
+	OpFoldsUpdate        = "folds.update"
+	OpFoldsDelete        = "folds.delete"
+	OpDivergeStart       = "diverge.start"
+	OpDivergeModels      = "diverge.models"
+	OpComparisonsCreate  = "comparisons.create"
+	OpComparisonsDecide  = "comparisons.decide"
+	OpMemoriesCreate     = "memories.create"
+	OpMemoriesUpdate     = "memories.update"
+	OpMemoriesSupersede  = "memories.supersede"
+	OpMemosCreate        = "memos.create"
+	OpMemosUpdate        = "memos.update"
+	OpMemosDelete        = "memos.delete"
+)
+    Ops name the API's writes for Config.TxOptions and Config.HostMeta. They
+    are stable: a host may switch on them. docs/API.md lists the route and the
+    Engine method of each (its InTx result type is in docs/EMBEDDING.md §4.4).
+
+const (
+	OpBranchesUpdateCard    = "branches.update_card"
+	OpSuggestionsDismissAll = "suggestions.dismiss_all"
+)
+    The B17 ops: editing a merged branch's card, dismissing a whole inbox.
+
+const (
+	OpLinesImport       = "lines.import"
+	OpLinesRenameFolder = "lines.rename_folder"
+	OpBranchesExtract   = "branches.extract"
+)
+    The B18 ops: importing a conversation, renaming a folder, extracting a
+    stretch of a line into a branch.
+
+const DefaultMaxBodyBytes = 1 << 20
+    DefaultMaxBodyBytes bounds a request body when Config.MaxBodyBytes is 0.
+
+const DefaultMaxImportBodyBytes = 16 << 20
+    DefaultMaxImportBodyBytes bounds the body of POST /lines/import when
+    Config.MaxImportBodyBytes is 0 (an import carries a whole conversation).
+
+const EventStreamLagged = "stream.lagged"
+    EventStreamLagged is sent to a client that lost events because it read too
+    slowly; it should reload what it shows. Data: {"dropped": n}.
+
+const OpLinesAttach = "lines.attach"
+    The B20 op: attaching another conversation as a branch.
+
+
+FUNCTIONS
+
+func LaggedEvent(tenant string, dropped int64) tangent.Event
+    LaggedEvent is the stream.lagged notice the hub sends a client that lost
+    dropped events.
+
+func New(cfg Config) (http.Handler, error)
+    New returns the API handler. Mount it under any prefix with
+    http.StripPrefix. Feature routes are only mounted when the engine has the
+    feature configured.
+
+func StatusOf(code string) (int, bool)
+    StatusOf is the HTTP status httpapi answers a code with, and whether the
+    code is one it knows (for hosts and tests).
+
+
+TYPES
+
+type Config struct {
+	// Engine is required.
+	Engine *tangent.Engine
+	// Dispatcher runs the turns and jobs the API starts; required.
+	Dispatcher tangent.Dispatcher
+	// Scope resolves who a request is for: the host's authentication. A
+	// *domain.Error is answered with its code; any other error is a 401.
+	Scope func(*http.Request) (tangent.Scope, error)
+	// CanWrite reports whether the request may change anything; nil lets
+	// every request write. Refused writes are 403 forbidden.
+	CanWrite func(*http.Request) bool
+	// Hub serves GET /events; nil leaves the route out.
+	Hub *Hub
+	// StatusFor maps codes httpapi does not know (a TurnGate's own codes);
+	// unmapped domain errors are 409.
+	StatusFor func(code string) (int, bool)
+	// MaxBodyBytes bounds a request body (default 1 MiB).
+	MaxBodyBytes int64
+	// MaxImportBodyBytes bounds the body of POST /lines/import and POST
+	// /lines/import-analyze instead (default 16 MiB, never less than MaxBodyBytes).
+	MaxImportBodyBytes int64
+	// Logger receives internal failures (default slog.Default()).
+	Logger *slog.Logger
+	// TxOptions adds the host's options (InTx hooks) to the Engine write of a
+	// write route, named by op (the Op constants); nil adds nothing. A hook
+	// runs in that write's transaction; its error rolls the write back and is
+	// answered like any other.
+	TxOptions func(r *http.Request, op string) []tangent.TxOption
+	// HostMeta returns the host_meta stored with the line or message the
+	// write creates (lines.create, turns.send, branches.create,
+	// branches.move) or the object that replaces a line's (lines.update; nil
+	// leaves it as it is); no other write asks. A *domain.Error refuses the write with its code, any
+	// other error is a 500. Clients never send hostMeta themselves. Each
+	// callback reads r.Body from the start (the whole body httpapi decoded,
+	// fields it ignores included; it is put back before every callback).
+	HostMeta func(r *http.Request, op string) (json.RawMessage, error)
+	// DeltaFilter decides per reader what of a turn's stream it gets: it is
+	// asked about every delta GET /lines/{id}/stream returns and every
+	// message.delta event GET /events sends, with the reader's request and
+	// the delta's line, and returns the delta to send (rewritten if need be;
+	// its TurnID and Seq always stay as they were) or false to leave it out.
+	// nil sends every delta to every reader. It must be quick and safe for
+	// concurrent use; for /events it runs on that subscriber's goroutine.
+	// Only these two outputs are filtered: text deltas also end up in the
+	// saved partial and the finished reply (docs/EMBEDDING.md §5).
+	DeltaFilter func(r *http.Request, lineID string, d domain.Delta) (domain.Delta, bool)
+}
+    Config wires the API to an engine and the host.
+
+type Hub struct {
+	// Has unexported fields.
+}
+    Hub fans engine events out to SSE clients, per tenant. It is a
+    tangent.Publisher: pass it to tangent.WithPublisher and to Config.Hub.
+    A slow client loses its oldest queued events and is told so with a
+    stream.lagged event; one that stays behind is disconnected. Every client
+    gets a keepalive comment line so proxies keep the connection open, and every
+    write has a deadline. Streams are capped per tenant and in total. A stream
+    opened with a delta filter (Config.DeltaFilter) gets each message.delta
+    event as its filter leaves it, decided on that stream's own goroutine;
+    every other event is encoded once for all.
+
+func NewHub(opts ...HubOption) *Hub
+    NewHub returns a hub without clients.
+
+func (h *Hub) Clients() int
+    Clients counts the connected clients.
+
+func (h *Hub) Close()
+    Close ends every stream and refuses new ones (call it when the server shuts
+    down, so open streams do not hold the shutdown up).
+
+func (h *Hub) Publish(_ context.Context, ev tangent.Event)
+    Publish sends an event to every client of its tenant as "event:
+    <type>\ndata: <json envelope>\n\n".
+
+type HubOption func(*Hub)
+    HubOption configures a Hub.
+
+func WithClientBuffer(n int) HubOption
+    WithClientBuffer sets how many events wait for one client.
+
+func WithHubLogger(l *slog.Logger) HubOption
+    WithHubLogger sets where the hub logs events it cannot encode.
+
+func WithKeepalive(d time.Duration) HubOption
+    WithKeepalive sets the keepalive interval.
+
+func WithMaxLag(d time.Duration) HubOption
+    WithMaxLag sets how long a client may keep losing events before its stream
+    ends.
+
+func WithMaxStreams(total, perTenant int) HubOption
+    WithMaxStreams caps the open streams in total and per tenant; more are
+    refused with 503 unavailable.
+
+func WithWriteTimeout(d time.Duration) HubOption
+    WithWriteTimeout bounds one write to a client; a client that does not take a
+    write in time is disconnected.
+

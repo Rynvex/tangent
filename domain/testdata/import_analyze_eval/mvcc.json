@@ -1,0 +1,90 @@
+{
+ "name": "mvcc",
+ "source": "web/e2e/fixtures/chatgpt-conversations.json「Postgres MVCC 與索引設計」",
+ "title": "Postgres MVCC 與索引設計",
+ "units": [
+  {
+   "key": "m1",
+   "question": "幫我設計一個多租戶 SaaS 的事件表，Postgres 要怎麼規劃？",
+   "answer": "先決定隔離方式：共用表加 tenant_id，或每個租戶一個 schema。共用表比較好維護，備份也簡單。",
+   "messageCount": 2
+  },
+  {
+   "key": "m2",
+   "question": "共用表。那 Postgres 的 MVCC 對寫入量大的表有什麼影響？",
+   "answer": "每次 UPDATE 都會產生新版本的資料列，舊版本要等 VACUUM 清掉，所以寫入量大的表要注意膨脹。",
+   "messageCount": 2
+  },
+  {
+   "key": "m3",
+   "question": "那索引要怎麼設計？",
+   "answer": "索引先建在 (tenant_id, created_at)，大部分查詢都會用到這組。",
+   "messageCount": 2
+  },
+  {
+   "key": "m4",
+   "question": "為什麼容器連不上宿主機的 Postgres？出現 connection refused 錯誤",
+   "answer": "容器裡的 localhost 指的是容器自己，不是你的電腦。改連 host.docker.internal 就能連到宿主機。",
+   "messageCount": 2
+  },
+  {
+   "key": "m5",
+   "question": "pg_hba.conf 也得改嗎？",
+   "answer": "改用 host.docker.internal 就能解決，另外放行 172.17.0.0/16 這個網段。",
+   "messageCount": 2
+  },
+  {
+   "key": "m6",
+   "question": "回到正題：MVCC 下長交易會讓表膨脹嗎？",
+   "answer": "會。長交易讓 VACUUM 不能回收它之後產生的舊版本，表和索引都會膨脹。",
+   "messageCount": 2
+  },
+  {
+   "key": "m7",
+   "question": "要怎麼監控膨脹？",
+   "answer": "看 pg_stat_user_tables 的 n_dead_tup，或用 pgstattuple 估算膨脹比例。",
+   "messageCount": 2
+  },
+  {
+   "key": "m8",
+   "question": "另外，即時通知要用 WebSocket 還是 SSE？",
+   "answer": "單向推播用 SSE 就夠了，瀏覽器會自動重連；需要雙向才用 WebSocket。",
+   "messageCount": 2
+  },
+  {
+   "key": "m9",
+   "question": "SSE 斷線時怎麼補送？",
+   "answer": "用 Last-Event-ID 記住最後一筆，伺服器從那之後補送。\n- 要不要用 Redis pub/sub 做多台廣播？\n- 事件保留多久，待確認\n你想看程式碼範例嗎？",
+   "messageCount": 2
+  }
+ ],
+ "gold": [
+  {
+   "unitKeys": [
+    "m1",
+    "m2",
+    "m3",
+    "m6",
+    "m7"
+   ],
+   "role": "chapter",
+   "note": "同一張多租戶事件表：規劃、MVCC 影響、索引、長交易膨脹、監控膨脹；m6 明說「回到正題」"
+  },
+  {
+   "unitKeys": [
+    "m4",
+    "m5"
+   ],
+   "role": "merged_branch",
+   "note": "容器連不上宿主機 Postgres 的排錯，m5 pg_hba 是同一個錯誤的後續；穿插在章節中間"
+  },
+  {
+   "unitKeys": [
+    "m8",
+    "m9"
+   ],
+   "role": "standalone",
+   "note": "「另外」開的即時通知話題，m9 是 SSE 的下一步；與事件表無關"
+  }
+ ]
+}

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="./tangent-tokens.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Noto+Sans+TC:wght@400;500;700&display=swap">
+<meta name="design_doc_mode" content="canvas">
+<style>body { margin: 0; }</style>
+</helmet>
+<div data-theme="light" style="min-height:100vh;background:var(--tg-surface-sunken);color:var(--tg-foreground);font-family:var(--tg-font-sans);padding:32px">
+  <header style="display:flex;flex-direction:column;gap:6px;margin-bottom:24px">
+    <h1 style="margin:0;font-size:var(--tg-text-xl);font-weight:600;color:var(--tg-foreground-strong)">寬度對照・同一份原型</h1>
+    <p style="margin:0;color:var(--tg-muted);font-size:var(--tg-text-sm)">每一格都是可操作的原型，依寬度自動換版面。點進支線、打開大綱、審結論卡，在各寬度下都能走完。</p>
+  </header>
+  <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+    <sc-for list="{{ frames }}" as="f" hint-placeholder-count="5">
+      <figure style="margin:0;display:flex;flex-direction:column;gap:8px">
+        <figcaption style="display:flex;gap:10px;align-items:baseline"><b style="font-family:var(--tg-font-mono);color:var(--tg-foreground-strong)">{{ f.w }}</b><span style="font-size:var(--tg-text-sm);color:var(--tg-muted)">{{ f.label }}</span></figcaption>
+        <div style="width:{{ f.boxW }}px;height:{{ f.boxH }}px;overflow:hidden;border:1px solid var(--tg-border-strong);border-radius:10px;background:var(--tg-background);box-shadow:var(--tg-shadow)">
+          <iframe title="{{ f.label }}" src="{{ f.src }}" style="width:{{ f.iw }}px;height:{{ f.ih }}px;border:0;transform:scale({{ f.scale }});transform-origin:0 0"></iframe>
+        </div>
+      </figure>
+    </sc-for>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+const F = [
+  ['1440', '完整 app・三欄', 'Tangent 原型.dc.html', 1440, 900, 0.5],
+  ['1024', '筆電・清單收成圖示列，側欄覆蓋', 'Tangent 原型.dc.html', 1024, 768, 0.6],
+  ['768', '平板直向・對話＋覆蓋式側欄', 'Tangent 原型.dc.html', 768, 1024, 0.5],
+  ['420', '嵌入深色開發者工具', 'Tangent 原型.dc.html?frame=embed', 900, 820, 0.56],
+  ['375', '手機', 'Tangent 原型.dc.html?frame=mobile', 420, 860, 0.6]
+];
+class Component extends DCLogic {
+  renderVals() {
+    return { frames: F.map(([w, label, src, iw, ih, scale]) => ({ w, label, src, iw, ih, scale, boxW: Math.round(iw * scale), boxH: Math.round(ih * scale) })) };
+  }
+}
+</script>
+</body>
+</html>

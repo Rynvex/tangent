@@ -1,0 +1,27 @@
+{
+  "data": {
+    "fold": {
+      "aiDrafted": true,
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromMessageId": "00000000-0000-4000-8000-000000000001",
+      "fromSeq": 1,
+      "id": "00000000-0000-4000-8000-000000000002",
+      "lineId": "00000000-0000-4000-8000-000000000003",
+      "messageCount": 4,
+      "status": "active",
+      "summary": "This stretch of the conversation is folded (fake runner).",
+      "toMessageId": "00000000-0000-4000-8000-000000000004",
+      "toSeq": 4,
+      "tokensOriginal": 47,
+      "tokensSummary": 15,
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "lineId": "00000000-0000-4000-8000-000000000003",
+    "rootLineId": "00000000-0000-4000-8000-000000000003"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000003",
+  "rootLineId": "00000000-0000-4000-8000-000000000003",
+  "tenant": "tenant-a",
+  "type": "fold.changed"
+}

@@ -1,0 +1,74 @@
+{
+  "method": "PATCH",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/branch/card",
+  "request": {
+    "card": {
+      "conclusion": "Tomatoes first, peppers in June",
+      "openItems": [
+        "Buy seedlings"
+      ],
+      "question": "Tomatoes or peppers?"
+    }
+  },
+  "response": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+      "archived": false,
+      "cardEditedAt": "2026-01-01T00:00:00Z",
+      "cardMessageId": "00000000-0000-4000-8000-000000000003",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "Tomatoes first, peppers in June",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": {
+        "kind": "conclusion",
+        "line": "Tomatoes first, peppers in June",
+        "status": "confirmed"
+      },
+      "lineId": "00000000-0000-4000-8000-000000000001",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "button",
+      "parentLineId": "00000000-0000-4000-8000-000000000004",
+      "provider": "fake",
+      "purpose": "Tomatoes or peppers",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "merged",
+      "unread": 1
+    },
+    "message": {
+      "content": "### Branch conclusion card\n\nBranch purpose: Tomatoes or peppers\n\n**Question**\n\u003e Tomatoes or peppers?\n\n**Conclusion**\n\u003e Tomatoes first, peppers in June\n\n**Still unresolved**\n- Buy seedlings\n",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000003",
+      "kind": "branch_card",
+      "lineId": "00000000-0000-4000-8000-000000000004",
+      "meta": {
+        "branchLineId": "00000000-0000-4000-8000-000000000001",
+        "card": {
+          "conclusion": "Tomatoes first, peppers in June",
+          "evidence": [],
+          "excerpts": [],
+          "impact": "",
+          "needsDecision": [],
+          "openItems": [
+            "Buy seedlings"
+          ],
+          "question": "Tomatoes or peppers?"
+        },
+        "editedAt": "2026-01-01T00:00:00Z"
+      },
+      "pinned": false,
+      "role": "system",
+      "seq": 70,
+      "status": "done"
+    }
+  },
+  "status": 200
+}

@@ -1,0 +1,39 @@
+{
+  "data": {
+    "branch": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000001",
+      "archived": false,
+      "cardMessageId": "00000000-0000-4000-8000-000000000002",
+      "closedAt": "2026-01-01T00:00:00Z",
+      "conclusionLine": "The branch reached a conclusion (fake runner).",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "ready",
+      "excerpt": "Kyoto in autumn",
+      "kind": "investigate",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": {
+        "kind": "conclusion",
+        "line": "The branch reached a conclusion (fake runner).",
+        "status": "confirmed"
+      },
+      "lineId": "00000000-0000-4000-8000-000000000003",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "selection",
+      "parentLineId": "00000000-0000-4000-8000-000000000004",
+      "provider": "fake",
+      "purpose": "Compare ryokan and business hotels",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "merged",
+      "unread": 1
+    },
+    "change": "merged"
+  },
+  "lineId": "00000000-0000-4000-8000-000000000003",
+  "rootLineId": "00000000-0000-4000-8000-000000000004",
+  "tenant": "tenant-a",
+  "type": "branch.changed"
+}

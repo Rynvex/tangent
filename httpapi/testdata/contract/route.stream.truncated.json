@@ -1,0 +1,65 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/stream?afterSeq=1",
+  "response": {
+    "deltas": [
+      {
+        "kind": "text",
+        "seq": 1000,
+        "text": "Plan the route.",
+        "turnId": "00000000-0000-4000-8000-000000000002"
+      },
+      {
+        "kind": "text",
+        "seq": 1001,
+        "text": "Fake reply to: Anything",
+        "turnId": "00000000-0000-4000-8000-000000000003"
+      },
+      {
+        "kind": "text",
+        "seq": 1002,
+        "text": " else? [fake:suggest]",
+        "turnId": "00000000-0000-4000-8000-000000000003"
+      },
+      {
+        "kind": "text",
+        "seq": 1003,
+        "text": "Fake reply to: Thanks, n",
+        "turnId": "00000000-0000-4000-8000-000000000004"
+      },
+      {
+        "kind": "text",
+        "seq": 1004,
+        "text": "oted.",
+        "turnId": "00000000-0000-4000-8000-000000000004"
+      },
+      {
+        "kind": "text",
+        "seq": 1005,
+        "text": "Fake reply to: This one",
+        "turnId": "00000000-0000-4000-8000-000000000005"
+      },
+      {
+        "kind": "text",
+        "seq": 1006,
+        "text": " fails",
+        "turnId": "00000000-0000-4000-8000-000000000005"
+      },
+      {
+        "kind": "text",
+        "seq": 1007,
+        "text": "Half of",
+        "turnId": "00000000-0000-4000-8000-000000000006"
+      },
+      {
+        "kind": "text",
+        "seq": 1008,
+        "text": " the answer",
+        "turnId": "00000000-0000-4000-8000-000000000006"
+      }
+    ],
+    "seq": 1008,
+    "truncated": true
+  },
+  "status": 200
+}

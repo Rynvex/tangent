@@ -1,0 +1,12 @@
+{
+  "headers": {
+    "WWW-Authenticate": "Bearer realm=\"tangent\""
+  },
+  "method": "GET",
+  "path": "/api/lines",
+  "response": {
+    "code": "unauthorized",
+    "error": "authentication required"
+  },
+  "status": 401
+}

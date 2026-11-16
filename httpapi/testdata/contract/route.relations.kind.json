@@ -1,0 +1,30 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/relations",
+  "request": {
+    "fromLineId": "00000000-0000-4000-8000-000000000002",
+    "label": "Opposite answers to the same question",
+    "relationKind": "contradicts",
+    "toLineId": "00000000-0000-4000-8000-000000000003"
+  },
+  "response": {
+    "relation": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "fromLineId": "00000000-0000-4000-8000-000000000002",
+      "fromMessageId": "",
+      "fromTitle": "Write-through",
+      "id": "00000000-0000-4000-8000-000000000004",
+      "kind": "relation",
+      "label": "Opposite answers to the same question",
+      "relationKind": "contradicts",
+      "toLineId": "00000000-0000-4000-8000-000000000003",
+      "toMessageId": "",
+      "toTitle": "Write-back"
+    },
+    "rootLineIds": [
+      "00000000-0000-4000-8000-000000000001"
+    ]
+  },
+  "status": 201
+}

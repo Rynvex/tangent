@@ -1,0 +1,50 @@
+{
+  "method": "POST",
+  "path": "/api/suggestions/00000000-0000-4000-8000-000000000001/accept",
+  "request": {},
+  "response": {
+    "result": {
+      "fold": {
+        "aiDrafted": true,
+        "createdAt": "2026-01-01T00:00:00Z",
+        "createdBy": "tester",
+        "fromMessageId": "00000000-0000-4000-8000-000000000002",
+        "fromSeq": 1,
+        "id": "00000000-0000-4000-8000-000000000003",
+        "lineId": "00000000-0000-4000-8000-000000000004",
+        "messageCount": 4,
+        "status": "active",
+        "summary": "This stretch of the conversation is folded (fake runner).",
+        "toMessageId": "00000000-0000-4000-8000-000000000005",
+        "toSeq": 4,
+        "tokensOriginal": 47,
+        "tokensSummary": 15,
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    },
+    "suggestion": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "feature": "fold",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "fold",
+      "lineId": "00000000-0000-4000-8000-000000000004",
+      "payload": {
+        "fromMessageId": "00000000-0000-4000-8000-000000000002",
+        "fromSeq": 1,
+        "jobId": "00000000-0000-4000-8000-000000000006",
+        "messageCount": 4,
+        "summary": "This stretch of the conversation is folded (fake runner).",
+        "title": "2026-01-01 00:00",
+        "toMessageId": "00000000-0000-4000-8000-000000000005",
+        "toSeq": 4,
+        "tokensOriginal": 47,
+        "tokensSummary": 15
+      },
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "accepted",
+      "targetKey": "fold:00000000-0000-4000-8000-000000000002:00000000-0000-4000-8000-000000000005"
+    }
+  },
+  "status": 200
+}

@@ -1,0 +1,16 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/diverge",
+  "request": {
+    "anchorMessageId": "00000000-0000-4000-8000-000000000002",
+    "count": 3
+  },
+  "response": {
+    "jobId": "00000000-0000-4000-8000-000000000003",
+    "kind": "diverge",
+    "lineId": "00000000-0000-4000-8000-000000000001",
+    "model": "fake-1",
+    "provider": "fake"
+  },
+  "status": 202
+}

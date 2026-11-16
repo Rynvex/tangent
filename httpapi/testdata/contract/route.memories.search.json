@@ -1,0 +1,37 @@
+{
+  "method": "POST",
+  "path": "/api/memories/search",
+  "request": {
+    "query": "Which ZFS layout for the NAS?"
+  },
+  "response": {
+    "query": "Which ZFS layout for the NAS?",
+    "results": [
+      {
+        "memory": {
+          "aiDrafted": false,
+          "createdAt": "2026-01-01T00:00:00Z",
+          "createdBy": "tester",
+          "id": "00000000-0000-4000-8000-000000000001",
+          "importance": 9,
+          "kind": "decision",
+          "source": {
+            "label": "Home server",
+            "leafLineId": "",
+            "lineId": "00000000-0000-4000-8000-000000000002",
+            "messageId": "",
+            "noteId": ""
+          },
+          "status": "active",
+          "supersededBy": "",
+          "text": "The NAS uses a ZFS mirror",
+          "updatedAt": "2026-01-01T00:00:00Z",
+          "validUntil": "2026-01-01T00:00:00Z"
+        },
+        "score": 0.45,
+        "similarity": 0.5
+      }
+    ]
+  },
+  "status": 200
+}

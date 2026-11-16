@@ -1,0 +1,22 @@
+{
+  "method": "GET",
+  "path": "/api/groups/00000000-0000-4000-8000-000000000001",
+  "response": {
+    "group": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "memberLineIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003"
+      ],
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "active",
+      "summary": "These branches settle one question together (fake runner).",
+      "summaryStatus": "ready",
+      "title": "Parts",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

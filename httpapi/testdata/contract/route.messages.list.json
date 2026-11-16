@@ -1,0 +1,81 @@
+{
+  "method": "GET",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/messages?afterSeq=0\u0026limit=50",
+  "response": {
+    "messages": [
+      {
+        "content": "When should I go to Kyoto?",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {},
+        "pinned": false,
+        "role": "user",
+        "seq": 1,
+        "status": "done"
+      },
+      {
+        "content": "Kyoto in autumn is lovely.",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000003",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "actor": "tester",
+          "durationMs": 42,
+          "model": "fake-1",
+          "provider": "fake",
+          "usage": {
+            "costUsd": 0,
+            "inputTokens": 0,
+            "outputTokens": 0
+          }
+        },
+        "pinned": false,
+        "role": "assistant",
+        "seq": 2,
+        "status": "done"
+      },
+      {
+        "content": "And where should I stay?",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000004",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {},
+        "pinned": false,
+        "role": "user",
+        "seq": 3,
+        "status": "done"
+      },
+      {
+        "content": "Fake reply to: And where should I stay?",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "hostMeta": {},
+        "id": "00000000-0000-4000-8000-000000000005",
+        "kind": "chat",
+        "lineId": "00000000-0000-4000-8000-000000000001",
+        "meta": {
+          "actor": "tester",
+          "durationMs": 42,
+          "model": "fake-1",
+          "provider": "fake",
+          "usage": {
+            "costUsd": 0.000175,
+            "inputTokens": 155,
+            "outputTokens": 10
+          }
+        },
+        "pinned": false,
+        "role": "assistant",
+        "seq": 4,
+        "status": "done"
+      }
+    ]
+  },
+  "status": 200
+}

@@ -1,0 +1,146 @@
+{
+  "method": "POST",
+  "path": "/api/comparisons/00000000-0000-4000-8000-000000000001/decide",
+  "request": {
+    "lineId": "00000000-0000-4000-8000-000000000002"
+  },
+  "response": {
+    "chosen": {
+      "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+      "archived": false,
+      "cardMessageId": "",
+      "closedAt": null,
+      "conclusionLine": "",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "depth": 1,
+      "draftStatus": "none",
+      "excerpt": "",
+      "kind": "alternative",
+      "lastActivityAt": "2026-01-01T00:00:00Z",
+      "leaf": {
+        "kind": "decision",
+        "line": "The first option fits best (fake runner).",
+        "status": "confirmed"
+      },
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "lineStatus": "idle",
+      "mergedIntoLineId": "",
+      "messageCount": 2,
+      "model": "fake-1",
+      "origin": "diverge",
+      "parentLineId": "00000000-0000-4000-8000-000000000004",
+      "provider": "fake",
+      "purpose": "Direction 1 (fake runner)",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "open",
+      "unread": 1
+    },
+    "comparison": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "criteria": [
+        "Safety",
+        "Speed"
+      ],
+      "decidedAt": "2026-01-01T00:00:00Z",
+      "decidedBy": "tester",
+      "decidedLineId": "00000000-0000-4000-8000-000000000002",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lineIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000005"
+      ],
+      "matrix": {
+        "criteria": [
+          "Safety",
+          "Speed"
+        ],
+        "options": [
+          {
+            "label": "Direction 1 (fake runner)",
+            "lineId": "00000000-0000-4000-8000-000000000002"
+          },
+          {
+            "label": "Direction 2 (fake runner)",
+            "lineId": "00000000-0000-4000-8000-000000000005"
+          }
+        ],
+        "recommendation": {
+          "lineId": "00000000-0000-4000-8000-000000000002",
+          "reason": "The first option fits best (fake runner)."
+        },
+        "scores": [
+          [
+            {
+              "score": 5,
+              "why": "Scored by the fake runner."
+            },
+            {
+              "score": 4,
+              "why": "Scored by the fake runner."
+            }
+          ],
+          [
+            {
+              "score": 5,
+              "why": "Scored by the fake runner."
+            },
+            {
+              "score": 4,
+              "why": "Scored by the fake runner."
+            }
+          ]
+        ]
+      },
+      "parentLineId": "00000000-0000-4000-8000-000000000004",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "decided",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "decision": {
+      "aiDrafted": false,
+      "body": "- Safety: 5/5 — Scored by the fake runner.\n- Speed: 5/5 — Scored by the fake runner.",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "kind": "decision",
+      "line": "The first option fits best (fake runner).",
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "confirmed",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    },
+    "discarded": [
+      {
+        "anchorMessageId": "00000000-0000-4000-8000-000000000003",
+        "archived": false,
+        "cardMessageId": "",
+        "closedAt": "2026-01-01T00:00:00Z",
+        "conclusionLine": "",
+        "createdAt": "2026-01-01T00:00:00Z",
+        "depth": 1,
+        "draftStatus": "none",
+        "excerpt": "",
+        "kind": "alternative",
+        "lastActivityAt": "2026-01-01T00:00:00Z",
+        "leaf": {
+          "kind": "dead_end",
+          "line": "沒選：改走「Direction 1 (fake runner)」",
+          "status": "confirmed"
+        },
+        "lineId": "00000000-0000-4000-8000-000000000005",
+        "lineStatus": "idle",
+        "mergedIntoLineId": "",
+        "messageCount": 2,
+        "model": "fake-1",
+        "origin": "diverge",
+        "parentLineId": "00000000-0000-4000-8000-000000000004",
+        "provider": "fake",
+        "purpose": "Direction 2 (fake runner)",
+        "rootLineId": "00000000-0000-4000-8000-000000000004",
+        "status": "discarded",
+        "unread": 1
+      }
+    ]
+  },
+  "status": 200
+}

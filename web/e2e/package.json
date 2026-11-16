@@ -1,0 +1,19 @@
+{
+  "name": "@tangent/e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Playwright e2e and accessibility checks: the demo on the mock (project mock) and on the reference server (project api).",
+  "scripts": {
+    "e2e": "playwright test",
+    "e2e:mock": "E2E_ONLY=mock playwright test",
+    "e2e:api": "E2E_ONLY=api playwright test",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "catalog:",
+    "@playwright/test": "catalog:",
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

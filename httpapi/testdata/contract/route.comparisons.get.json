@@ -1,0 +1,69 @@
+{
+  "method": "GET",
+  "path": "/api/comparisons/00000000-0000-4000-8000-000000000001",
+  "response": {
+    "comparison": {
+      "createdAt": "2026-01-01T00:00:00Z",
+      "createdBy": "tester",
+      "criteria": [
+        "Safety",
+        "Speed"
+      ],
+      "decidedAt": null,
+      "decidedBy": "",
+      "decidedLineId": "",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "lineIds": [
+        "00000000-0000-4000-8000-000000000002",
+        "00000000-0000-4000-8000-000000000003"
+      ],
+      "matrix": {
+        "criteria": [
+          "Safety",
+          "Speed"
+        ],
+        "options": [
+          {
+            "label": "Direction 1 (fake runner)",
+            "lineId": "00000000-0000-4000-8000-000000000002"
+          },
+          {
+            "label": "Direction 2 (fake runner)",
+            "lineId": "00000000-0000-4000-8000-000000000003"
+          }
+        ],
+        "recommendation": {
+          "lineId": "00000000-0000-4000-8000-000000000002",
+          "reason": "The first option fits best (fake runner)."
+        },
+        "scores": [
+          [
+            {
+              "score": 5,
+              "why": "Scored by the fake runner."
+            },
+            {
+              "score": 4,
+              "why": "Scored by the fake runner."
+            }
+          ],
+          [
+            {
+              "score": 5,
+              "why": "Scored by the fake runner."
+            },
+            {
+              "score": 4,
+              "why": "Scored by the fake runner."
+            }
+          ]
+        ]
+      },
+      "parentLineId": "00000000-0000-4000-8000-000000000004",
+      "rootLineId": "00000000-0000-4000-8000-000000000004",
+      "status": "ready",
+      "updatedAt": "2026-01-01T00:00:00Z"
+    }
+  },
+  "status": 200
+}

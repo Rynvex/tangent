@@ -1,0 +1,40 @@
+{
+  "method": "PUT",
+  "path": "/api/messages/00000000-0000-4000-8000-000000000001/tag",
+  "request": {
+    "kind": "decision",
+    "status": "draft"
+  },
+  "response": {
+    "message": {
+      "content": "Fake reply to: Which file system for the NAS?",
+      "createdAt": "2026-01-01T00:00:00Z",
+      "hostMeta": {},
+      "id": "00000000-0000-4000-8000-000000000001",
+      "kind": "chat",
+      "lineId": "00000000-0000-4000-8000-000000000002",
+      "meta": {
+        "actor": "tester",
+        "durationMs": 42,
+        "model": "fake-1",
+        "provider": "fake",
+        "usage": {
+          "costUsd": 0,
+          "inputTokens": 201,
+          "outputTokens": 12
+        }
+      },
+      "pinned": false,
+      "role": "assistant",
+      "seq": 2,
+      "status": "done",
+      "tag": {
+        "kind": "decision",
+        "source": "ai",
+        "status": "draft",
+        "updatedAt": "2026-01-01T00:00:00Z"
+      }
+    }
+  },
+  "status": 200
+}

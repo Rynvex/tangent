@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "path": "/api/lines/00000000-0000-4000-8000-000000000001/folds",
+  "request": {
+    "fromMessageId": "00000000-0000-4000-8000-000000000002",
+    "summary": "x",
+    "toMessageId": "00000000-0000-4000-8000-000000000002"
+  },
+  "response": {
+    "code": "invalid_fold",
+    "error": "a fold covers at least 2 messages"
+  },
+  "status": 422
+}

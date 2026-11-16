@@ -1,0 +1,10 @@
+{
+  "method": "POST",
+  "path": "/api/lines",
+  "request": "{\"title\":\"x\"}",
+  "response": {
+    "code": "unsupported_media_type",
+    "error": "send the body as application/json"
+  },
+  "status": 415
+}

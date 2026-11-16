@@ -1,0 +1,90 @@
+[
+ {
+  "uuid": "f14-tx-limits",
+  "name": "PgBouncer transaction mode 的限制",
+  "created_at": "2026-08-12T07:10:00Z",
+  "updated_at": "2026-08-12T07:22:00Z",
+  "chat_messages": [
+   {
+    "uuid": "f14-tx-limits-1",
+    "sender": "human",
+    "text": "PgBouncer transaction mode 下哪些功能不能用？",
+    "created_at": "2026-08-12T07:10:00Z"
+   },
+   {
+    "uuid": "f14-tx-limits-2",
+    "sender": "assistant",
+    "text": "session 層級的狀態都不能依賴：SET、advisory lock、LISTEN／NOTIFY。",
+    "created_at": "2026-08-12T07:12:00Z"
+   },
+   {
+    "uuid": "f14-tx-limits-3",
+    "sender": "human",
+    "text": "那時區之類的設定怎麼辦？",
+    "created_at": "2026-08-12T07:20:00Z"
+   },
+   {
+    "uuid": "f14-tx-limits-4",
+    "sender": "assistant",
+    "text": "不能用 session 層級的 SET；改在交易內用 SET LOCAL。其他設定放在連線字串。",
+    "created_at": "2026-08-12T07:22:00Z"
+   }
+  ]
+ },
+ {
+  "uuid": "f14-final",
+  "name": "最終設定檔",
+  "created_at": "2026-08-20T13:00:00Z",
+  "updated_at": "2026-08-20T13:35:00Z",
+  "chat_messages": [
+   {
+    "uuid": "f14-final-1",
+    "sender": "human",
+    "text": "pgbouncer.ini 最後怎麼寫？",
+    "created_at": "2026-08-20T13:00:00Z"
+   },
+   {
+    "uuid": "f14-final-2",
+    "sender": "assistant",
+    "text": "pool_mode = transaction，default_pool_size = 20。",
+    "created_at": "2026-08-20T13:05:00Z"
+   },
+   {
+    "uuid": "f14-final-3",
+    "sender": "human",
+    "text": "server_idle_timeout 呢？",
+    "created_at": "2026-08-20T13:10:00Z"
+   },
+   {
+    "uuid": "f14-final-4",
+    "sender": "assistant",
+    "text": "設 60 秒，閒置的伺服器連線會被收回。",
+    "created_at": "2026-08-20T13:15:00Z"
+   },
+   {
+    "uuid": "f14-final-5",
+    "sender": "human",
+    "text": "max_client_conn 要多少？",
+    "created_at": "2026-08-20T13:20:00Z"
+   },
+   {
+    "uuid": "f14-final-6",
+    "sender": "assistant",
+    "text": "400，比尖峰多留一些。",
+    "created_at": "2026-08-20T13:25:00Z"
+   },
+   {
+    "uuid": "f14-final-7",
+    "sender": "human",
+    "text": "那就這樣定案。",
+    "created_at": "2026-08-20T13:30:00Z"
+   },
+   {
+    "uuid": "f14-final-8",
+    "sender": "assistant",
+    "text": "設定檔定案，下週上線前再壓一次。",
+    "created_at": "2026-08-20T13:35:00Z"
+   }
+  ]
+ }
+]

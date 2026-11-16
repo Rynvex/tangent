@@ -1,0 +1,14 @@
+{
+  "method": "POST",
+  "path": "/api/lines",
+  "request": {
+    "title": "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt"
+  },
+  "response": {
+    "code": "too_long",
+    "error": "title is longer than 200 characters",
+    "field": "title",
+    "max": 200
+  },
+  "status": 422
+}

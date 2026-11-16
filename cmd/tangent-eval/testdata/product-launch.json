@@ -1,0 +1,319 @@
+{
+ "name": "product-launch",
+ "title": "Launch plan for the note-taking app",
+ "main": [
+  {
+   "user": "Who is the first audience for the launch?",
+   "assistant": "On the launch, students sign up fastest but pay least. From what you described, a 14-day trial converts better than a crippled free tier for this audience. Many people forget that Product Hunt brings a spike but little retention. From what you described, support volume peaks on day two. One thing worth keeping in mind: beta users want a public roadmap. On the launch, beta users want a public roadmap."
+  },
+  {
+   "user": "What should the pricing look like?",
+   "assistant": "Many people forget that beta users want a public roadmap. A practical note: Product Hunt brings a spike but little retention. Many people forget that Notion import is the most requested integration. From what you described, annual plans cut churn noticeably. A practical note: annual plans cut churn noticeably. From what you described, annual plans cut churn noticeably."
+  },
+  {
+   "user": "Do we launch on Product Hunt?",
+   "assistant": "On the launch, students sign up fastest but pay least. A practical note: the landing page needs one demo video above the fold. A practical note: the landing page needs one demo video above the fold. If we look at the launch again, Notion import is the most requested integration. If we look at the launch again, Product Hunt brings a spike but little retention. One thing worth keeping in mind: Product Hunt brings a spike but little retention."
+  },
+  {
+   "user": "How long should the beta run?",
+   "assistant": "On the launch, weekly active writers is the metric that predicts retention. From what you described, Product Hunt brings a spike but little retention. One thing worth keeping in mind: Product Hunt brings a spike but little retention. If we look at the launch again, annual plans cut churn noticeably. If we look at the launch again, the landing page needs one demo video above the fold. One thing worth keeping in mind: annual plans cut churn noticeably."
+  },
+  {
+   "user": "What metrics define a good first month?",
+   "assistant": "A practical note: press works better after the first 1,000 users. From what you described, annual plans cut churn noticeably. From what you described, beta users want a public roadmap. A practical note: the landing page needs one demo video above the fold. A practical note: Product Hunt brings a spike but little retention. Many people forget that press works better after the first 1,000 users."
+  },
+  {
+   "user": "What goes on the landing page?",
+   "assistant": "One thing worth keeping in mind: annual plans cut churn noticeably. From what you described, press works better after the first 1,000 users. If we look at the launch again, press works better after the first 1,000 users. From what you described, annual plans cut churn noticeably. A practical note: press works better after the first 1,000 users. If we look at the launch again, the landing page needs one demo video above the fold."
+  },
+  {
+   "user": "Should we have a free tier?",
+   "assistant": "Many people forget that annual plans cut churn noticeably. A practical note: press works better after the first 1,000 users. From what you described, weekly active writers is the metric that predicts retention. If we look at the launch again, Product Hunt brings a spike but little retention. A practical note: support volume peaks on day two. From what you described, support volume peaks on day two."
+  },
+  {
+   "user": "How do we handle support at launch?",
+   "assistant": "If we look at the launch again, annual plans cut churn noticeably. If we look at the launch again, annual plans cut churn noticeably. If we look at the launch again, beta users want a public roadmap. From what you described, Notion import is the most requested integration. A practical note: weekly active writers is the metric that predicts retention. From what you described, annual plans cut churn noticeably."
+  },
+  {
+   "user": "Which integrations matter first?",
+   "assistant": "On the launch, beta users want a public roadmap. Many people forget that the landing page needs one demo video above the fold. One thing worth keeping in mind: students sign up fastest but pay least. On the launch, a 14-day trial converts better than a crippled free tier for this audience. Many people forget that beta users want a public roadmap. From what you described, students sign up fastest but pay least."
+  },
+  {
+   "user": "What is the press plan?",
+   "assistant": "One thing worth keeping in mind: beta users want a public roadmap. If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. From what you described, Product Hunt brings a spike but little retention. One thing worth keeping in mind: weekly active writers is the metric that predicts retention. A practical note: students sign up fastest but pay least. On the launch, students sign up fastest but pay least."
+  },
+  {
+   "user": "Who is the first audience for the launch? (follow-up 1)",
+   "assistant": "From what you described, the landing page needs one demo video above the fold. One thing worth keeping in mind: Product Hunt brings a spike but little retention. On the launch, students sign up fastest but pay least. On the launch, a 14-day trial converts better than a crippled free tier for this audience. On the launch, students sign up fastest but pay least. From what you described, students sign up fastest but pay least."
+  },
+  {
+   "user": "What should the pricing look like? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: support volume peaks on day two. Many people forget that Product Hunt brings a spike but little retention. If we look at the launch again, Product Hunt brings a spike but little retention. A practical note: students sign up fastest but pay least. On the launch, beta users want a public roadmap. One thing worth keeping in mind: weekly active writers is the metric that predicts retention."
+  },
+  {
+   "user": "Do we launch on Product Hunt? (follow-up 1)",
+   "assistant": "On the launch, students sign up fastest but pay least. If we look at the launch again, the landing page needs one demo video above the fold. From what you described, a 14-day trial converts better than a crippled free tier for this audience. A practical note: the landing page needs one demo video above the fold. From what you described, students sign up fastest but pay least. If we look at the launch again, press works better after the first 1,000 users."
+  },
+  {
+   "user": "How long should the beta run? (follow-up 1)",
+   "assistant": "Many people forget that beta users want a public roadmap. From what you described, students sign up fastest but pay least. If we look at the launch again, Notion import is the most requested integration. A practical note: Product Hunt brings a spike but little retention. On the launch, weekly active writers is the metric that predicts retention. On the launch, the landing page needs one demo video above the fold."
+  },
+  {
+   "user": "What metrics define a good first month? (follow-up 1)",
+   "assistant": "A practical note: students sign up fastest but pay least. If we look at the launch again, Product Hunt brings a spike but little retention. A practical note: beta users want a public roadmap. If we look at the launch again, press works better after the first 1,000 users. One thing worth keeping in mind: the landing page needs one demo video above the fold. From what you described, the landing page needs one demo video above the fold."
+  },
+  {
+   "user": "What goes on the landing page? (follow-up 1)",
+   "assistant": "If we look at the launch again, support volume peaks on day two. Many people forget that Notion import is the most requested integration. Many people forget that students sign up fastest but pay least. One thing worth keeping in mind: annual plans cut churn noticeably. From what you described, students sign up fastest but pay least. One thing worth keeping in mind: students sign up fastest but pay least."
+  },
+  {
+   "user": "Should we have a free tier? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: Product Hunt brings a spike but little retention. A practical note: a 14-day trial converts better than a crippled free tier for this audience. If we look at the launch again, weekly active writers is the metric that predicts retention. One thing worth keeping in mind: students sign up fastest but pay least. Many people forget that weekly active writers is the metric that predicts retention. On the launch, press works better after the first 1,000 users."
+  },
+  {
+   "user": "How do we handle support at launch? (follow-up 1)",
+   "assistant": "On the launch, support volume peaks on day two. One thing worth keeping in mind: beta users want a public roadmap. If we look at the launch again, beta users want a public roadmap. From what you described, the landing page needs one demo video above the fold. From what you described, Notion import is the most requested integration. On the launch, annual plans cut churn noticeably."
+  },
+  {
+   "user": "Which integrations matter first? (follow-up 1)",
+   "assistant": "On the launch, Product Hunt brings a spike but little retention. A practical note: Notion import is the most requested integration. On the launch, Product Hunt brings a spike but little retention. Many people forget that annual plans cut churn noticeably. One thing worth keeping in mind: a 14-day trial converts better than a crippled free tier for this audience. On the launch, a 14-day trial converts better than a crippled free tier for this audience."
+  },
+  {
+   "user": "What is the press plan? (follow-up 1)",
+   "assistant": "One thing worth keeping in mind: students sign up fastest but pay least. On the launch, weekly active writers is the metric that predicts retention. On the launch, weekly active writers is the metric that predicts retention. Many people forget that annual plans cut churn noticeably. A practical note: press works better after the first 1,000 users. If we look at the launch again, support volume peaks on day two."
+  },
+  {
+   "user": "Who is the first audience for the launch? (follow-up 2)",
+   "assistant": "One thing worth keeping in mind: Notion import is the most requested integration. Many people forget that weekly active writers is the metric that predicts retention. A practical note: Notion import is the most requested integration. On the launch, annual plans cut churn noticeably. If we look at the launch again, beta users want a public roadmap. A practical note: students sign up fastest but pay least."
+  },
+  {
+   "user": "What should the pricing look like? (follow-up 2)",
+   "assistant": "If we look at the launch again, annual plans cut churn noticeably. On the launch, Product Hunt brings a spike but little retention. From what you described, press works better after the first 1,000 users. If we look at the launch again, students sign up fastest but pay least. If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. From what you described, the landing page needs one demo video above the fold."
+  },
+  {
+   "user": "Do we launch on Product Hunt? (follow-up 2)",
+   "assistant": "From what you described, the landing page needs one demo video above the fold. Many people forget that students sign up fastest but pay least. On the launch, Notion import is the most requested integration. From what you described, a 14-day trial converts better than a crippled free tier for this audience. Many people forget that weekly active writers is the metric that predicts retention. A practical note: students sign up fastest but pay least."
+  },
+  {
+   "user": "How long should the beta run? (follow-up 2)",
+   "assistant": "A practical note: students sign up fastest but pay least. A practical note: press works better after the first 1,000 users. If we look at the launch again, weekly active writers is the metric that predicts retention. On the launch, beta users want a public roadmap. From what you described, students sign up fastest but pay least. From what you described, students sign up fastest but pay least."
+  },
+  {
+   "user": "What metrics define a good first month? (follow-up 2)",
+   "assistant": "Many people forget that support volume peaks on day two. One thing worth keeping in mind: a 14-day trial converts better than a crippled free tier for this audience. One thing worth keeping in mind: press works better after the first 1,000 users. If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. A practical note: the landing page needs one demo video above the fold. One thing worth keeping in mind: press works better after the first 1,000 users."
+  },
+  {
+   "user": "What goes on the landing page? (follow-up 2)",
+   "assistant": "A practical note: the landing page needs one demo video above the fold. From what you described, a 14-day trial converts better than a crippled free tier for this audience. On the launch, a 14-day trial converts better than a crippled free tier for this audience. If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. Many people forget that the landing page needs one demo video above the fold. One thing worth keeping in mind: Notion import is the most requested integration."
+  },
+  {
+   "user": "Should we have a free tier? (follow-up 2)",
+   "assistant": "On the launch, a 14-day trial converts better than a crippled free tier for this audience. Many people forget that beta users want a public roadmap. On the launch, press works better after the first 1,000 users. From what you described, press works better after the first 1,000 users. A practical note: the landing page needs one demo video above the fold. From what you described, Product Hunt brings a spike but little retention."
+  },
+  {
+   "user": "How do we handle support at launch? (follow-up 2)",
+   "assistant": "A practical note: support volume peaks on day two. A practical note: annual plans cut churn noticeably. A practical note: Notion import is the most requested integration. A practical note: support volume peaks on day two. One thing worth keeping in mind: weekly active writers is the metric that predicts retention. If we look at the launch again, press works better after the first 1,000 users."
+  },
+  {
+   "user": "Which integrations matter first? (follow-up 2)",
+   "assistant": "If we look at the launch again, support volume peaks on day two. Many people forget that Notion import is the most requested integration. If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. On the launch, beta users want a public roadmap. From what you described, a 14-day trial converts better than a crippled free tier for this audience. If we look at the launch again, Product Hunt brings a spike but little retention."
+  },
+  {
+   "user": "What is the press plan? (follow-up 2)",
+   "assistant": "A practical note: Product Hunt brings a spike but little retention. On the launch, a 14-day trial converts better than a crippled free tier for this audience. One thing worth keeping in mind: students sign up fastest but pay least. A practical note: support volume peaks on day two. Many people forget that weekly active writers is the metric that predicts retention. A practical note: the landing page needs one demo video above the fold."
+  },
+  {
+   "user": "Who is the first audience for the launch? (follow-up 3)",
+   "assistant": "If we look at the launch again, Product Hunt brings a spike but little retention. On the launch, support volume peaks on day two. If we look at the launch again, Product Hunt brings a spike but little retention. On the launch, Notion import is the most requested integration. If we look at the launch again, the landing page needs one demo video above the fold. Many people forget that weekly active writers is the metric that predicts retention."
+  },
+  {
+   "user": "What should the pricing look like? (follow-up 3)",
+   "assistant": "From what you described, annual plans cut churn noticeably. One thing worth keeping in mind: Product Hunt brings a spike but little retention. Many people forget that press works better after the first 1,000 users. A practical note: weekly active writers is the metric that predicts retention. If we look at the launch again, the landing page needs one demo video above the fold. A practical note: Product Hunt brings a spike but little retention."
+  },
+  {
+   "user": "Do we launch on Product Hunt? (follow-up 3)",
+   "assistant": "Many people forget that press works better after the first 1,000 users. If we look at the launch again, students sign up fastest but pay least. Many people forget that Notion import is the most requested integration. A practical note: Product Hunt brings a spike but little retention. On the launch, annual plans cut churn noticeably. From what you described, press works better after the first 1,000 users."
+  },
+  {
+   "user": "How long should the beta run? (follow-up 3)",
+   "assistant": "From what you described, Notion import is the most requested integration. Many people forget that Notion import is the most requested integration. From what you described, press works better after the first 1,000 users. From what you described, annual plans cut churn noticeably. Many people forget that a 14-day trial converts better than a crippled free tier for this audience. If we look at the launch again, weekly active writers is the metric that predicts retention."
+  },
+  {
+   "user": "What metrics define a good first month? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: beta users want a public roadmap. Many people forget that Notion import is the most requested integration. Many people forget that Notion import is the most requested integration. From what you described, students sign up fastest but pay least. If we look at the launch again, press works better after the first 1,000 users. Many people forget that press works better after the first 1,000 users."
+  },
+  {
+   "user": "What goes on the landing page? (follow-up 3)",
+   "assistant": "On the launch, Product Hunt brings a spike but little retention. A practical note: students sign up fastest but pay least. Many people forget that weekly active writers is the metric that predicts retention. If we look at the launch again, beta users want a public roadmap. One thing worth keeping in mind: Notion import is the most requested integration. A practical note: a 14-day trial converts better than a crippled free tier for this audience."
+  },
+  {
+   "user": "Should we have a free tier? (follow-up 3)",
+   "assistant": "One thing worth keeping in mind: annual plans cut churn noticeably. Many people forget that support volume peaks on day two. If we look at the launch again, beta users want a public roadmap. A practical note: weekly active writers is the metric that predicts retention. One thing worth keeping in mind: beta users want a public roadmap. If we look at the launch again, students sign up fastest but pay least."
+  },
+  {
+   "user": "How do we handle support at launch? (follow-up 3)",
+   "assistant": "A practical note: Notion import is the most requested integration. If we look at the launch again, support volume peaks on day two. One thing worth keeping in mind: beta users want a public roadmap. Many people forget that press works better after the first 1,000 users. On the launch, weekly active writers is the metric that predicts retention. On the launch, the landing page needs one demo video above the fold."
+  },
+  {
+   "user": "Which integrations matter first? (follow-up 3)",
+   "assistant": "If we look at the launch again, press works better after the first 1,000 users. If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. Many people forget that press works better after the first 1,000 users. A practical note: the landing page needs one demo video above the fold. If we look at the launch again, support volume peaks on day two. On the launch, press works better after the first 1,000 users."
+  },
+  {
+   "user": "What is the press plan? (follow-up 3)",
+   "assistant": "If we look at the launch again, a 14-day trial converts better than a crippled free tier for this audience. One thing worth keeping in mind: the landing page needs one demo video above the fold. From what you described, Notion import is the most requested integration. On the launch, Product Hunt brings a spike but little retention. A practical note: Product Hunt brings a spike but little retention. A practical note: Notion import is the most requested integration."
+  },
+  {
+   "user": "Who is the first audience for the launch? (follow-up 4)",
+   "assistant": "One thing worth keeping in mind: support volume peaks on day two. From what you described, students sign up fastest but pay least. A practical note: annual plans cut churn noticeably. From what you described, students sign up fastest but pay least. If we look at the launch again, students sign up fastest but pay least. If we look at the launch again, Notion import is the most requested integration."
+  },
+  {
+   "user": "What should the pricing look like? (follow-up 4)",
+   "assistant": "One thing worth keeping in mind: press works better after the first 1,000 users. A practical note: support volume peaks on day two. A practical note: Product Hunt brings a spike but little retention. Many people forget that annual plans cut churn noticeably. On the launch, support volume peaks on day two. From what you described, support volume peaks on day two."
+  }
+ ],
+ "pins": [
+  2,
+  17
+ ],
+ "branches": [
+  {
+   "name": "pricing",
+   "parent": "main",
+   "at": 5,
+   "purpose": "Price points",
+   "end": "merge",
+   "card": {
+    "question": "What do we charge?",
+    "conclusion": "8 USD a month or 72 USD a year, 14-day trial, no free tier"
+   },
+   "leaf": {
+    "kind": "decision",
+    "line": "8 USD a month or 72 USD a year with a 14-day trial; no free tier"
+   },
+   "exchanges": [
+    {
+     "user": "What do competitors charge?",
+     "assistant": "From what you described, annual plans are 25% cheaper elsewhere. Many people forget that annual plans are 25% cheaper elsewhere. If we look at Price points again, annual plans are 25% cheaper elsewhere. If we look at Price points again, competitors sit between 5 and 12 USD. A practical note: competitors sit between 5 and 12 USD. If we look at Price points again, competitors sit between 5 and 12 USD."
+    },
+    {
+     "user": "Monthly or annual?",
+     "assistant": "From what you described, competitors sit between 5 and 12 USD. One thing worth keeping in mind: competitors sit between 5 and 12 USD. If we look at Price points again, annual plans are 25% cheaper elsewhere. If we look at Price points again, competitors sit between 5 and 12 USD. On Price points, annual plans are 25% cheaper elsewhere. On Price points, competitors sit between 5 and 12 USD."
+    },
+    {
+     "user": "Free tier or trial?",
+     "assistant": "From what you described, annual plans are 25% cheaper elsewhere. From what you described, competitors sit between 5 and 12 USD. On Price points, annual plans are 25% cheaper elsewhere. A practical note: annual plans are 25% cheaper elsewhere. One thing worth keeping in mind: annual plans are 25% cheaper elsewhere. A practical note: annual plans are 25% cheaper elsewhere."
+    },
+    {
+     "user": "What do competitors charge? (follow-up 1)",
+     "assistant": "A practical note: annual plans are 25% cheaper elsewhere. Many people forget that competitors sit between 5 and 12 USD. Many people forget that annual plans are 25% cheaper elsewhere. From what you described, competitors sit between 5 and 12 USD. One thing worth keeping in mind: annual plans are 25% cheaper elsewhere. One thing worth keeping in mind: competitors sit between 5 and 12 USD."
+    }
+   ]
+  },
+  {
+   "name": "ph",
+   "parent": "main",
+   "at": 14,
+   "purpose": "Product Hunt launch",
+   "end": "discard",
+   "leaf": {
+    "kind": "dead_end",
+    "line": "No Product Hunt at launch: the spike does not retain for this audience"
+   },
+   "exchanges": [
+    {
+     "user": "When should we post?",
+     "assistant": "One thing worth keeping in mind: a hunter no longer matters much. One thing worth keeping in mind: a hunter no longer matters much. One thing worth keeping in mind: a hunter no longer matters much. One thing worth keeping in mind: Tuesday posts get the most traffic. If we look at Product Hunt launch again, a hunter no longer matters much. A practical note: a hunter no longer matters much."
+    },
+    {
+     "user": "Do we need a hunter?",
+     "assistant": "From what you described, a hunter no longer matters much. Many people forget that a hunter no longer matters much. Many people forget that a hunter no longer matters much. If we look at Product Hunt launch again, a hunter no longer matters much. From what you described, Tuesday posts get the most traffic. A practical note: a hunter no longer matters much."
+    },
+    {
+     "user": "When should we post? (follow-up 1)",
+     "assistant": "One thing worth keeping in mind: a hunter no longer matters much. From what you described, a hunter no longer matters much. A practical note: a hunter no longer matters much. One thing worth keeping in mind: Tuesday posts get the most traffic. A practical note: a hunter no longer matters much. On Product Hunt launch, Tuesday posts get the most traffic."
+    },
+    {
+     "user": "Do we need a hunter? (follow-up 1)",
+     "assistant": "From what you described, Tuesday posts get the most traffic. From what you described, Tuesday posts get the most traffic. Many people forget that Tuesday posts get the most traffic. On Product Hunt launch, a hunter no longer matters much. One thing worth keeping in mind: a hunter no longer matters much. If we look at Product Hunt launch again, a hunter no longer matters much."
+    }
+   ]
+  },
+  {
+   "name": "metrics",
+   "parent": "main",
+   "at": 22,
+   "purpose": "First-month metrics",
+   "end": "merge",
+   "card": {
+    "question": "What defines success?",
+    "conclusion": "Track weekly active writers; 40% of signups writing weekly by week four"
+   },
+   "leaf": {
+    "kind": "conclusion",
+    "line": "40% of signups writing weekly by week four"
+   },
+   "exchanges": [
+    {
+     "user": "Which metric?",
+     "assistant": "A practical note: 40% is a strong week-four number. From what you described, weekly active writers predicts retention. One thing worth keeping in mind: 40% is a strong week-four number. On First-month metrics, 40% is a strong week-four number. One thing worth keeping in mind: weekly active writers predicts retention. From what you described, 40% is a strong week-four number."
+    },
+    {
+     "user": "What target?",
+     "assistant": "A practical note: weekly active writers predicts retention. From what you described, 40% is a strong week-four number. From what you described, weekly active writers predicts retention. One thing worth keeping in mind: weekly active writers predicts retention. Many people forget that weekly active writers predicts retention. From what you described, weekly active writers predicts retention."
+    },
+    {
+     "user": "Which metric? (follow-up 1)",
+     "assistant": "Many people forget that 40% is a strong week-four number. One thing worth keeping in mind: weekly active writers predicts retention. On First-month metrics, weekly active writers predicts retention. A practical note: 40% is a strong week-four number. One thing worth keeping in mind: 40% is a strong week-four number. If we look at First-month metrics again, 40% is a strong week-four number."
+    },
+    {
+     "user": "What target? (follow-up 1)",
+     "assistant": "From what you described, weekly active writers predicts retention. One thing worth keeping in mind: 40% is a strong week-four number. A practical note: weekly active writers predicts retention. A practical note: 40% is a strong week-four number. If we look at First-month metrics again, 40% is a strong week-four number. If we look at First-month metrics again, weekly active writers predicts retention."
+    }
+   ]
+  },
+  {
+   "name": "support",
+   "parent": "main",
+   "at": 34,
+   "purpose": "Launch support rota",
+   "end": "open",
+   "exchanges": [
+    {
+     "user": "Who covers support on day two?",
+     "assistant": "A practical note: support volume peaks on day two. One thing worth keeping in mind: support volume peaks on day two. A practical note: support volume peaks on day two. On Launch support rota, support volume peaks on day two. A practical note: support volume peaks on day two. On Launch support rota, support volume peaks on day two."
+    },
+    {
+     "user": "Who covers support on day two? (follow-up 1)",
+     "assistant": "On Launch support rota, support volume peaks on day two. From what you described, support volume peaks on day two. Many people forget that support volume peaks on day two. From what you described, support volume peaks on day two. Many people forget that support volume peaks on day two. One thing worth keeping in mind: support volume peaks on day two."
+    },
+    {
+     "user": "Who covers support on day two? (follow-up 2)",
+     "assistant": "On Launch support rota, support volume peaks on day two. A practical note: support volume peaks on day two. From what you described, support volume peaks on day two. On Launch support rota, support volume peaks on day two. One thing worth keeping in mind: support volume peaks on day two. A practical note: support volume peaks on day two."
+    },
+    {
+     "user": "Who covers support on day two? (follow-up 3)",
+     "assistant": "If we look at Launch support rota again, support volume peaks on day two. One thing worth keeping in mind: support volume peaks on day two. On Launch support rota, support volume peaks on day two. If we look at Launch support rota again, support volume peaks on day two. If we look at Launch support rota again, support volume peaks on day two. Many people forget that support volume peaks on day two."
+    }
+   ]
+  }
+ ],
+ "asks": [
+  {
+   "line": "main",
+   "question": "Summarise the launch plan in five bullets.",
+   "expect": [
+    "8 USD a month or 72 USD a year with a 14-day trial; no free tier",
+    "No Product Hunt at launch",
+    "40% of signups writing weekly by week four"
+   ]
+  },
+  {
+   "line": "support",
+   "question": "How should support be staffed given the plan?",
+   "expect": [
+    "No free tier",
+    "Support peaks on day two"
+   ]
+  }
+ ]
+}

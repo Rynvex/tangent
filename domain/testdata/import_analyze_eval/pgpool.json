@@ -1,0 +1,132 @@
+{
+ "name": "pgpool",
+ "source": "web/e2e/fixtures/f14/chatgpt-pg.json「PG 連線池設定」＋「高併發壓測與鎖等待」串成一段",
+ "title": "PG 連線池與壓測",
+ "units": [
+  {
+   "key": "p1",
+   "question": "PgBouncer 要用哪種 pool mode？我們是 Django + Postgres，尖峰大概 300 個連線。",
+   "answer": "建議用 transaction mode。session mode 每個用戶端佔一條伺服器連線，撐不住 300 個。",
+   "messageCount": 2
+  },
+  {
+   "key": "p2",
+   "question": "max_connections 要跟 pool size 一起調嗎？",
+   "answer": "不用。max_connections 留 100 就夠；PgBouncer 的 default_pool_size 先設 20，讓連線在 PgBouncer 這一層排隊。",
+   "messageCount": 2
+  },
+  {
+   "key": "p3",
+   "question": "壓到 200 連線時開始出現 lock wait，要怎麼查？",
+   "answer": "先看 pg_stat_activity 的 wait_event，再對照 pg_locks 找出擋住別人的那筆交易。",
+   "messageCount": 2
+  },
+  {
+   "key": "p4",
+   "question": "找到了，卡在 orders 表的外鍵檢查。",
+   "answer": "外鍵欄位沒有索引時，刪除父表的列要掃整張子表。先在子表的外鍵欄位補索引。",
+   "messageCount": 2
+  },
+  {
+   "key": "p5",
+   "question": "應用端還要注意什麼？",
+   "answer": "transaction mode 下不能用 server-side prepared statements，Django 要關掉 server-side cursor。",
+   "messageCount": 2
+  },
+  {
+   "key": "p6",
+   "question": "幫我整理最後的設定。",
+   "answer": "default_pool_size 20、transaction mode，應用端關掉 prepared statements。之後再壓測一次確認。",
+   "messageCount": 2
+  },
+  {
+   "key": "b1",
+   "question": "pgbench 200 連線時 p95 飆高，從哪裡開始看？",
+   "answer": "先確認瓶頸在資料庫：看 pg_stat_statements 的平均時間與 PgBouncer 的 cl_waiting。",
+   "messageCount": 2
+  },
+  {
+   "key": "b2",
+   "question": "cl_waiting 一直是 0，pg_stat_statements 顯示 DELETE FROM customers 很慢。",
+   "answer": "刪除 customers 會檢查 orders 的外鍵，鎖等待集中在這裡。",
+   "messageCount": 2
+  },
+  {
+   "key": "b3",
+   "question": "要怎麼證明是外鍵？",
+   "answer": "用 EXPLAIN (ANALYZE, BUFFERS) 看刪除時對 orders 的 Seq Scan。",
+   "messageCount": 2
+  },
+  {
+   "key": "b4",
+   "question": "確實是 Seq Scan。",
+   "answer": "那就在 orders.customer_id 建索引，用 CREATE INDEX CONCURRENTLY 避免鎖表。",
+   "messageCount": 2
+  },
+  {
+   "key": "b5",
+   "question": "索引建好了，再壓一次要用什麼參數？",
+   "answer": "跟上次一樣 -c 200 -j 8 -T 600，才好比較。",
+   "messageCount": 2
+  },
+  {
+   "key": "b6",
+   "question": "p95 降到 120ms 了。",
+   "answer": "很好。順便看 autovacuum 有沒有跟上。",
+   "messageCount": 2
+  },
+  {
+   "key": "b7",
+   "question": "dead tuples 很少。",
+   "answer": "那這部分沒問題。",
+   "messageCount": 2
+  },
+  {
+   "key": "b8",
+   "question": "還有其他鎖等待嗎？",
+   "answer": "pg_locks 裡已經看不到長時間等待。",
+   "messageCount": 2
+  },
+  {
+   "key": "b9",
+   "question": "幫我總結這次壓測。",
+   "answer": "在 orders.customer_id 補索引後 p95 從 410ms 降到 120ms。鎖等待消失。",
+   "messageCount": 2
+  }
+ ],
+ "gold": [
+  {
+   "unitKeys": [
+    "p1",
+    "p2",
+    "p5",
+    "p6"
+   ],
+   "role": "chapter",
+   "note": "Django + PgBouncer 的設定：pool mode、max_connections、應用端注意、整理最後設定"
+  },
+  {
+   "unitKeys": [
+    "p3",
+    "p4"
+   ],
+   "role": "merged_branch",
+   "note": "設定過程中壓到 200 連線碰到的 lock wait，p4 當場查到是 orders 外鍵就回到設定；穿插在設定章節中間。b 線之後又碰到同一個外鍵，但那是另一次完整的 pgbench 調校（同一份匯出裡的第二篇對話），不是這段排查的延續"
+  },
+  {
+   "unitKeys": [
+    "b1",
+    "b2",
+    "b3",
+    "b4",
+    "b5",
+    "b6",
+    "b7",
+    "b8",
+    "b9"
+   ],
+   "role": "chapter",
+   "note": "一次 pgbench p95 調校的完整線：找慢查詢、證明外鍵、建索引、重壓、確認、總結。同是 Postgres、也再碰到 orders 外鍵，但是另一次工作（目標是 p95，不是連線池設定），由 b1 從頭開始"
+  }
+ ]
+}

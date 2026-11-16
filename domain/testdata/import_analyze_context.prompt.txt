@@ -1,0 +1,51 @@
+## Conversation title
+> PG 連線池調校
+
+## Units (4, oldest first)
+
+### U1 (2 messages)
+Question:
+> PG 連線一直爆 too many connections，要怎麼設定連線池？
+Answer, first sentence:
+> 可以在應用與資料庫之間放 PgBouncer。
+Answer, last sentence:
+> 它會把大量客戶端連線收斂成少數伺服器連線，讓 max_connections 不再被打爆。
+Answer key terms:
+> max_connections, 應用, 資料庫之間放, 大量客戶端連, 打爆, pgbouncer
+
+### U2 (2 messages, +2d 3h)
+Question:
+> PgBouncer 的 pool_mode 要選 session 還是 transaction？我們是 Django 應用，尖峰大概 400 個連線。
+Answer, first sentence:
+> 好的，這是個很常見的問題！
+Answer, last sentence:
+> 總結：高併發短交易選 transaction 模式，長交易或依賴 session 狀態的應用維持 session 模式。
+Answer key terms:
+> statement, 模式下, 交易期間, max_client_conn, default_pool_size, 併發短交易選, 長交易, 狀態會失效
+
+### U3 (2 messages)
+Question:
+> 改成 transaction 之後跑 migrate 出現這個錯誤：
+> 
+> Traceback (most recent call last):
+>   File "manage.py", line 22, in <module>
+>     main()
+>   File "/app/venv/lib/python3.12/site-packages/django/db/backends/utils.py", line 89, in _execute
+>     return self.cursor.execute(sql, params)
+> psycopg.errors.DuplicatePreparedSta … ，default_pool_size 20，max_prepared_statements 沒有設。本機直連 Postgres 不會出錯，只有經過 PgBouncer 才會，而且不是每次都出現，大概…
+Answer, first sentence:
+> 這是 psycopg 3 的伺服器端 prepared statement 與 transaction 模式衝突造成的。
+Answer, last sentence:
+> 有兩種修法：在 Django 的 OPTIONS 加上 prepare_threshold: None 關掉自動準備；或升級到 PgBouncer 1.21 以上並設定 max_prepared_statements = 100，讓 Pg…
+Answer key terms:
+> 伺服器端, 模式衝突造成, 模式下, 伺服器連線上, 自動準備, 關掉自動準備, prepare_threshold, none
+
+### U4 (2 messages, +2d 9h)
+Question:
+> 週末想去花蓮，兩天一夜怎麼排？
+Answer, first sentence:
+> 第一天可以走太魯閣的砂卡礑步道，晚上住市區逛東大門夜市。
+Answer, last sentence:
+> 第二天往南到七星潭看日出，再沿台 11 線去石梯坪。
+Answer key terms:
+> 走太魯閣, 砂卡礑步道, 晚上住市區逛, 第二天往南到, 沿台, 線去石梯坪
